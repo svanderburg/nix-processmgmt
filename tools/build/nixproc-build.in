@@ -1,0 +1,138 @@
+#!/bin/bash -e
+
+# Shows the usage of this command to the user
+
+showUsage()
+{
+    cat <<EOF
+Usage: $0 [OPTION] PATH
+
+This command builds a Nix profile containing multiple sysvinit scripts, and
+their start and stop symlinks.
+
+Options:
+  -P, --process-manager=MANAGER
+                     Process manager to build for
+      --state-dir    Changes the directory in which the state of the processes
+                     are stored
+      --runtime-dir  Changes the directory in which the PID files are stored
+      --log-dir      Changes the directory in which the log files are stored
+      --tmp-dir      Changes the directory in which temp files are stored
+      --force-disable-user-change
+                     Forces to not create users, groups or change user
+                     permissions
+      --no-out-link  Do not create a symlink to the output path
+      --show-trace   Shows a trace of the output
+  -h, --help         Shows the usage of this command
+
+Environment:
+  NIXPROC_STATE_DIR    Changes the directory in which the state of the
+                       processes is stored
+  NIXPROC_RUNTIME_DIR  Changes the directory in which the PID files are stored
+  NIXPROC_LOG_DIR      Changes the directory in which log files are stored
+  NIXPROC_TMP_DIR      Changes the directory in which temp files are stored
+  NIXPROC_FORCE_DISABLE_USER_CHANGE
+                       Forces to not create users, groups or change user
+                       permissions
+EOF
+}
+
+# Parse valid argument options
+
+PARAMS=`@getopt@ -n $0 -o P:h -l process-manager:,state-dir:,runtime-dir:,log-dir:,tmp-dir:,force-disable-user-change,no-out-link,show-trace,help -- "$@"`
+
+if [ $? != 0 ]
+then
+    showUsage
+    exit 1
+fi
+
+# Evaluate valid options
+
+eval set -- "$PARAMS"
+
+while [ "$1" != "--" ]
+do
+    case "$1" in
+        -P|--process-manager)
+            processManager="$2"
+            ;;
+        --state-dir)
+            stateDirArg="--argstr stateDir $2"
+            ;;
+        --runtime-dir)
+            runtimeDirArg="--argstr runtimeDir $2"
+            ;;
+        --log-dir)
+            logDir="--argstr logDir $2"
+            ;;
+        --tmp-dir)
+            tmpDir="--argstr tmpDir $2"
+            ;;
+        --force-disable-user-change)
+            forceDisableUserChangeArg="--arg forceDisableUserChange true"
+            ;;
+        --no-out-link)
+            noOutLinkArg="--no-out-link"
+            ;;
+        --show-trace)
+            showTraceArg="--show-trace"
+            ;;
+        -h|--help)
+            showUsage
+            exit 0
+            ;;
+    esac
+
+    shift
+done
+
+shift
+
+if [ "$processManager" = "" ]
+then
+    echo "No process manager specified!" >&2
+    exit 1
+else
+    processManagerArg="--argstr processManager $processManager"
+fi
+
+if [ "$1" = "" ]
+then
+    echo "No processes expression provided!" >&2
+    exit 1
+else
+    exprFile=$(@readlink@ -f "$1")
+fi
+
+# Validate the given options
+
+if [ "$NIXPROC_STATE_DIR" != "" ]
+then
+    stateDirArg="--argstr stateDir $NIXPROC_STATE_DIR"
+fi
+
+if [ "$NIXPROC_RUNTIME_DIR" != "" ]
+then
+    runtimeDirArg="--argstr stateDir $NIXPROC_RUNTIME_DIR"
+fi
+
+if [ "$NIXPROC_LOG_DIR" != "" ]
+then
+    logDirArg="--argstr logDir $NIXPROC_LOG_DIR"
+fi
+
+if [ "$NIXPROC_TMP_DIR" != "" ]
+then
+    tmpDirArg="--argstr tmpDir $NIXPROC_TMP_DIR"
+fi
+
+if [ "$NIXPROC_FORCE_DISABLE_USER_CHANGE" = "1" ]
+then
+    forceDisableUserChangeArg="--arg forceDisableUserChange true"
+fi
+
+NIXPROC=${NIXPROC:-@NIXPROC@}
+
+# Build the profile
+nix-build $stateDirArg $runtimeDirArg $logDirArg $tmpDirArg $forceDisableUserChangeArg $noOutLinkArg $showTraceArg $processManagerArg --argstr exprFile "$exprFile" $NIXPROC/create-managed-process/$processManager/build-$processManager-env.nix

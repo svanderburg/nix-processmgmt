@@ -1,0 +1,181 @@
+#!/bin/bash
+set -e
+shopt -s nullglob
+
+# Shows the usage of this command to the user
+
+showUsage()
+{
+    cat <<EOF
+Usage: $0 [OPTION] PATH
+
+This command starts all sysvinit scripts in the provided Nix profile and
+optionally deactivates all obsolete sysvinit scripts in the previous Nix
+profile generation.
+
+If the provided path is a file then it is considered a Nix expression that
+produces a Nix profile. If the provided path is a directory, then it is
+considered a pre-built Nix profile.
+
+Options:
+  -p, --profile=NAME    Name of the Nix profile that stores the sysvinit scripts
+                        (defaults to: processes)
+  -o, --old-profile=PATH
+                        Path to the previously deployed Nix profile (by default,
+                        it gets auto detected)
+      --runlevel=LEVEL  Specifies which runlevel to activate (defaults to the
+                        runlevel of the system)
+      --state-dir       Changes the directory in which the state of the
+                        processes are stored
+      --runtime-dir     Changes the directory in which the PID files are stored
+      --log-dir         Changes the directory in which the log files are stored
+      --tmp-dir         Changes the directory in which temp files are stored
+      --force-disable-user-change
+                        Forces to not create users, groups or change user
+                        permissions
+      --show-trace      Shows a trace of the output
+  -h, --help            Shows the usage of this command
+
+Environment:
+  NIX_STATE_DIR        Overrides the location of the Nix state directory
+  NIXPROC_STATE_DIR    Changes the directory in which the state of the
+                       processes is stored
+  NIXPROC_RUNTIME_DIR  Changes the directory in which the PID files are stored
+  NIXPROC_LOG_DIR      Changes the directory in which log files are stored
+  NIXPROC_TMP_DIR      Changes the directory in which temp files are stored
+  NIXPROC_FORCE_DISABLE_USER_CHANGE
+                       Forces to not create users, groups or change user
+                       permissions
+EOF
+}
+
+# Parse valid argument options
+
+PARAMS=`@getopt@ -n $0 -o p:o:h -l profile:,old-profile:,state-dir:,runtime-dir:,log-dir:,tmp-dir:,force-disable-user-change,runlevel:,show-trace,help -- "$@"`
+
+if [ $? != 0 ]
+then
+    showUsage
+    exit 1
+fi
+
+# Evaluate valid options
+
+eval set -- "$PARAMS"
+
+while [ "$1" != "--" ]
+do
+    case "$1" in
+        -p|--profile)
+            profile="$2"
+            ;;
+        -o|--old-profile)
+            oldProfilePath="$2"
+            ;;
+        --state-dir)
+            stateDirArg="--state-dir $2"
+            ;;
+        --runtime-dir)
+            runtimeDirArg="--runtime-dir $2"
+            ;;
+        --log-dir)
+            logDirArg="--log-dir $2"
+            ;;
+        --tmp-dir)
+            tmpDirArg="--tmp-dir $2"
+            ;;
+        --force-disable-user-change)
+            forceDisableUserChangeArg="--force-disable-user-change"
+            ;;
+        --runlevel)
+            runlevel="$2"
+            ;;
+        --show-trace)
+            showTraceArg="--show-trace"
+            ;;
+        -h|--help)
+            showUsage
+            exit 0
+            ;;
+    esac
+
+    shift
+done
+
+shift
+
+path="$1"
+
+# Validate the given options
+
+source @commonchecks@
+
+checkNixStateDir
+checkProfile
+composeOldProfilePath
+
+source @sysvinitchecks@
+
+checkRunlevel
+
+# Build the environment with sysvinit scripts
+buildProfile sysvinit
+
+rcnew="$profilePath/etc/rc.d/rc${runlevel}.d"
+rcold="$oldProfilePath/etc/rc.d/rc${runlevel}.d"
+
+# Determine paths of old scripts
+
+oldscripts=()
+
+if [ -d "$rcold" ]
+then
+    echo "Using previous Nix profile: $rcold" >&2
+
+    for i in $(ls $rcold/S* | sort -r)
+    do
+        currentPath=$(readlink -f $i)
+        oldscripts+=($currentPath)
+    done
+fi
+
+# Determine paths of new scripts
+
+newscripts=()
+
+for i in $(ls $rcnew/S*)
+do
+    currentPath=$(readlink -f $i)
+    newscripts+=($currentPath)
+done
+
+# Create new groups and users
+createNewGroups
+createNewUsers
+
+# Stop obsolete scripts
+
+for i in ${oldscripts[@]}
+do
+    if ! containsElement "$i" "${newscripts[@]}"
+    then
+        $i stop
+    fi
+done
+
+# Start new scripts
+
+for i in ${newscripts[@]}
+do
+    if ! containsElement "$i" "${oldscripts[@]}"
+    then
+        $i start
+    fi
+done
+
+# Delete obsolete users and groups
+deleteObsoleteUsers
+deleteObsoleteGroups
+
+# Set new profile
+setNixProfile

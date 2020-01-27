@@ -1,0 +1,10 @@
+#!/bin/bash -e
+
+checkSupervisordConfDir()
+{
+    if [ "$SUPERVISORD_CONF_DIR" = "" ]
+    then
+        echo "Please set SUPERVISORD_CONF_DIR to the directory where the supervisord.conf configuration resides!" >&2
+        exit 1
+    fi
+}

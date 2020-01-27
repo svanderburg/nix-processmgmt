@@ -1,0 +1,100 @@
+#!/bin/bash
+set -e
+shopt -s nullglob
+
+# Shows the usage of this command to the user
+
+showUsage()
+{
+    cat <<EOF
+Usage: $0 [OPTION] ACTIVITY [PATH]
+
+This command runs a deployment activity on all sysvinit scripts in a Nix
+profile. The scripts are traversed in sequence order.
+
+Options:
+  -p, --profile=NAME    Name of the Nix profile that stores the sysvinit scripts
+                        (defaults to: processes)
+  -r, --reverse         Traverse the sysvinit scripts in the reverse order
+      --runlevel=LEVEL  Specifies which runlevel to activate (defaults to the
+                        runlevel of the system)
+  -h, --help            Shows the usage of this command
+
+Environment:
+  NIX_STATE_DIR     Overrides the location of the Nix state directory
+EOF
+}
+
+# Parse valid argument options
+
+PARAMS=`@getopt@ -n $0 -o p:rh -l profile:,reverse,runlevel:,help -- "$@"`
+
+if [ $? != 0 ]
+then
+    showUsage
+    exit 1
+fi
+
+# Evaluate valid options
+
+eval set -- "$PARAMS"
+
+while [ "$1" != "--" ]
+do
+    case "$1" in
+        -p|--profile)
+            profile="$2"
+            ;;
+        -r|--reverse)
+            reverse=1
+            ;;
+        --runlevel)
+            runlevel="$2"
+            ;;
+        -h|--help)
+            showUsage
+            exit 0
+            ;;
+    esac
+
+    shift
+done
+
+shift
+
+activity="$1"
+
+# Validate the given options
+
+if [ "$activity" = "" ]
+then
+    echo "No activity specified!" >&2
+    exit 1
+fi
+
+source @commonchecks@
+
+checkNixStateDir
+checkProfile
+composeOldProfilePath
+
+source @sysvinitchecks@
+
+checkRunlevel
+
+# Execute the activities
+
+rcpath="$oldProfilePath/etc/rc.d/rc${runlevel}.d"
+
+if [ "$reverse" = "1" ]
+then
+    for i in $(ls $rcpath/S* | sort -r)
+    do
+        $i $activity
+    done
+else
+    for i in $(ls $rcpath/S*)
+    do
+        $i $activity
+    done
+fi

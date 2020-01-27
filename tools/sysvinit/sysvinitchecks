@@ -1,0 +1,9 @@
+#!/bin/bash -e
+
+checkRunlevel()
+{
+    if [ "$runlevel" = "" ]
+    then
+        runlevel=$(runlevel | cut -d ' ' -f2)
+    fi
+}

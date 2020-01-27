@@ -1,0 +1,197 @@
+#!/bin/bash
+set -e
+shopt -s nullglob
+
+# Shows the usage of this command to the user
+
+showUsage()
+{
+    cat <<EOF
+Usage: $0 [OPTION] PATH
+
+This command starts all BSD rc scripts in the provided Nix profile and
+optionally deactivates all obsolete sysvinit scripts in the previous Nix
+profile generation.
+
+If the provided path is a file then it is considered a Nix expression that
+produces a Nix profile. If the provided path is a directory, then it is
+considered a pre-built Nix profile.
+
+Options:
+  -p, --profile=NAME    Name of the Nix profile that stores the BSD rc scripts
+                        (defaults to: processes)
+  -o, --old-profile=PATH
+                        Path to the previously deployed Nix profile (by default,
+                        it gets auto detected)
+      --enable-at-boot  Configures the rc scripts so that they are started at
+                        boot
+      --state-dir       Changes the directory in which the state of the
+                        processes are stored
+      --runtime-dir     Changes the directory in which the PID files are stored
+      --log-dir         Changes the directory in which the log files are stored
+      --tmp-dir         Changes the directory in which temp files are stored
+      --force-disable-user-change
+                        Forces to not create users, groups or change user
+                        permissions
+      --show-trace      Shows a trace of the output
+  -h, --help            Shows the usage of this command
+
+Environment:
+  NIX_STATE_DIR        Overrides the location of the Nix state directory
+  BSDRC_TARGET_DIR     Directory in which the BSD rc scripts reside (defaults to:
+                       /usr/local/etc/rc.d)
+  NIXPROC_STATE_DIR    Changes the directory in which the state of the
+                       processes is stored
+  NIXPROC_RUNTIME_DIR  Changes the directory in which the PID files are stored
+  NIXPROC_LOG_DIR      Changes the directory in which log files are stored
+  NIXPROC_TMP_DIR      Changes the directory in which temp files are stored
+  NIXPROC_FORCE_DISABLE_USER_CHANGE
+                       Forces to not create users, groups or change user
+                       permissions
+EOF
+}
+
+# Parse valid argument options
+
+PARAMS=`@getopt@ -n $0 -o p:o:h -l profile:,old-profile:,enable-at-boot,state-dir:,runtime-dir:,log-dir:,tmp-dir:,force-disable-user-change,show-trace,help -- "$@"`
+
+if [ $? != 0 ]
+then
+    showUsage
+    exit 1
+fi
+
+# Evaluate valid options
+
+eval set -- "$PARAMS"
+
+while [ "$1" != "--" ]
+do
+    case "$1" in
+        -p|--profile)
+            profile="$2"
+            ;;
+        -o|--old-profile)
+            oldProfilePath="$2"
+            ;;
+        --enable-at-boot)
+            enableAtBoot=1
+            ;;
+        --state-dir)
+            stateDirArg="--state-dir $2"
+            ;;
+        --runtime-dir)
+            runtimeDirArg="--runtime-dir $2"
+            ;;
+        --log-dir)
+            logDirArg="--log-dir $2"
+            ;;
+        --tmp-dir)
+            tmpDirArg="--tmp-dir $2"
+            ;;
+        --force-disable-user-change)
+            forceDisableUserChangeArg="--force-disable-user-change"
+            ;;
+        --show-trace)
+            showTraceArg="--show-trace"
+            ;;
+        -h|--help)
+            showUsage
+            exit 0
+            ;;
+    esac
+
+    shift
+done
+
+shift
+
+path="$1"
+
+# Validate the given options
+
+source @commonchecks@
+
+checkNixStateDir
+checkProfile
+composeOldProfilePath
+
+BSDRC_TARGET_DIR=${BSDRC_TARGET_DIR:-/usr/local/etc/rc.d}
+
+# Build the environment with supervisord config files
+buildProfile bsdrc
+
+rcnew="$profilePath/etc/rc.d"
+rcold="$oldProfilePath/etc/rc.d"
+
+# Determine paths of old scripts
+
+oldscripts=()
+
+if [ -d "$rcold" ]
+then
+    echo "Using previous Nix profile: $rcold" >&2
+
+    for i in $(rcorder $rcold/* | tail -r)
+    do
+        currentPath=$(readlink -f $i)
+        oldscripts+=($currentPath)
+    done
+fi
+
+# Determine paths of new scripts
+
+newscripts=()
+
+for i in $(rcorder $rcnew/*)
+do
+    currentPath=$(readlink -f $i)
+    newscripts+=($currentPath)
+done
+
+# Create new groups and users
+createNewGroups
+createNewUsers
+
+# Stop and remove obsolete scripts
+
+for i in $(rcorder $rcold/* | tail -r)
+do
+    if ! containsElement "$(readlink -f "$i")" "${newscripts[@]}"
+    then
+        if [ "$enableAtBoot" = "1" ]
+        then
+            scriptName="$(basename $i)"
+            /usr/local/etc/$scriptName stop || true
+            @sed@ -i -e "/^${scriptName}_enabled=YES"'$'"/d" /etc/rc.conf
+            rm -f /usr/local/etc/$scriptName
+        else
+            "$i" onestop
+        fi
+    fi
+done
+
+# Install and start new scripts
+
+for i in $(rcorder $rcnew/*)
+do
+    if ! containsElement "$(readlink -f "$i")" "${oldscripts[@]}"
+    then
+        if [ "$enableAtBoot" = "1" ]
+        then
+            scriptName="$(basename $i)"
+            ln -sfn $rcnew/$scriptName /usr/local/etc
+            echo "${scriptName}_enabled=YES" >> /etc/rc.conf
+            /usr/local/etc/$scriptName start
+        else
+            "$i" onestart
+        fi
+    fi
+done
+
+# Delete obsolete users and groups
+deleteObsoleteUsers
+deleteObsoleteGroups
+
+# Set new profile
+setNixProfile

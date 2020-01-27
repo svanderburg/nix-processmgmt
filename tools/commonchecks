@@ -1,0 +1,96 @@
+#!/bin/bash
+set -e
+shopt -s nullglob
+
+containsElement()
+{
+    local element match="$1"
+    shift
+
+    for element
+    do
+        [[ "$element" == "$match" ]] && return 0
+    done
+    return 1
+}
+
+checkNixStateDir()
+{
+    NIX_STATE_DIR=${NIX_STATE_DIR:-/nix/var/nix}
+}
+
+checkProfile()
+{
+    profile=${profile:-processes}
+}
+
+buildProfile()
+{
+    local processManager="$1"
+    profilePath=$(nixproc-build --process-manager $processManager $stateDirArg $runtimeDirArg $logDirArg $tmpDirArg $forceDisableUserChangeArg $showTraceArg --no-out-link "$path")
+}
+
+composeOldProfilePath()
+{
+    if [ "$oldProfilePath" = "" ]
+    then
+        oldProfilePath="$NIX_STATE_DIR/profiles/$profile"
+    fi
+}
+
+setNixProfile()
+{
+    nix-env -p "$NIX_STATE_DIR/profiles/$profile" --set "$profilePath"
+}
+
+createNewGroups()
+{
+    for groupfile in $profilePath/dysnomia-support/groups/*
+    do
+        local groupname="$(basename $groupfile)"
+
+        if [ ! -f "$oldProfilePath/dysnomia-support/groups/$groupname" ]
+        then
+            echo dysnomia-addgroups "$profilePath/dysnomia-support/groups/$groupname"
+        fi
+    done
+}
+
+createNewUsers()
+{
+    for userfile in $profilePath/dysnomia-support/users/*
+    do
+        local username="$(basename $userfile)"
+
+        if [ ! -f "$oldProfilePath/dysnomia-support/users/$username" ]
+        then
+            echo dysnomia-addusers "$profilePath/dysnomia-support/users/$username"
+        fi
+    done
+}
+
+deleteObsoleteUsers()
+{
+    for userfile in $oldProfilePath/dysnomia-support/users/*
+    do
+        local username="$(basename $userfile)"
+
+        if [ ! -f "$profilePath/dysnomia-support/users/$username" ]
+        then
+            echo dysnomia-delusers "$oldProfilePath/dysnomia-support/users/$username"
+        fi
+    done
+}
+
+deleteObsoleteGroups()
+{
+    for groupfile in $oldProfilePath/dysnomia-support/groups/*
+    do
+        local groupname="$(basename $groupfile)"
+
+        if [ ! -f "$profilePath/dysnomia-support/groups/$groupname" ]
+        then
+            echo dysnomia-delgroups "$oldProfilePath/dysnomia-support/groups/$groupname"
+        fi
+    done
+}
