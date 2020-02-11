@@ -1,6 +1,6 @@
 Nix-based process management framework
 ======================================
-This repository contains a very experimental prototype implementation of a
+This repository contains a very experimental prototype implementation of an
 operating system and process manager agnostic Nix-based process managed
 framework that can be used to run multiple instances of services on a single
 machine, using Nix to deliver and isolate all required package dependencies and
@@ -11,8 +11,11 @@ Features:
   definitions (corresponding to constructors), function invocations (that
   compose running process instances from constructors) and Nix profiles (that
   assembles multiple process configurations into one package).
-* The ability to deploy *multiple instances* of processes.
-* Deploying processes/services as an *unprivileged* user.
+* It identifies process dependencies, so that a process manager can ensure that
+  processes are activated and deactivated in the right order.
+* The ability to deploy *multiple instances* of the same process, by making
+  conflicting resources configurable.
+* Deploying processes/services as an *unprivileged user*.
 * Operating system and process manager *agnostic* -- it can be used on any
   operating system that supports the Nix package manager and works with a
   variety of process managers.
@@ -170,7 +173,7 @@ the implementations in `nixproc/create-managed-process` for more information.
 Writing a process manager-agnostic process management configuration
 -------------------------------------------------------------------
 This repository contains generator functions for a variety of process managers.
-What you will notice is that they require parameters that looks quite similar.
+What you will notice is that they require parameters that look quite similar.
 
 When it is desired to target multiple process managers, it is also possible to
 write a process manager-agnostic configuration from which a variety of
@@ -222,27 +225,28 @@ createManagedProcess {
 ```
 
 In the above example, we invoke `createManagedProcess` to construct a
-configuration for a process manager. It captures similar properties that
-are described in the sysvinit-specific configuration, as shown in the previous
-example.
+configuration for any process manager supported by this framework. It captures
+similar properties that are described in the sysvinit-specific configuration,
+as shown in the previous example.
 
-To allow it to target a variety of process managers, we must specify:
+To allow the specification to target a variety of process managers, we must
+specify:
 
-* How the process can be started in foreground mode. The `process`
+* How the process can be started in foreground and daemon mode. The `process`
   parameter gets translated to `foregroundProcess` and `daemon`. The former
   specifies how the service should be started as a foreground process and the
   latter how it should start as a daemon.
 * The `daemonArgs` parameter specifies which command-line parameters the process
-  should take
+  should take when it is supposed to run as a daemon.
 
 Under the hood, the `createManagedProcess` function invokes a generator function
-which calls the corresponding process manager-specific create function.
+that calls the corresponding process manager-specific create function.
 
 The `createManagedProcess` abstraction function does not support all
 functionality that the process manager-specific abstraction functions provide --
-It only supports a common subset. To get non-standardized functionality working,
-you can also define `overrides`, that augments the generated function parameters
-with  process manager-specific parameters.
+it only supports a common subset. To get non-standardized functionality working,
+you can also define `overrides`, that augment the generated function parameters
+with process manager-specific parameters.
 
 In the above example, we define an override to specify the `runlevels`. Runlevels
 is a concept only supported by sysvinit scripts.
@@ -371,7 +375,7 @@ instances:
 * `nginxReverseProxy` is an Nginx server that forwards requests to the
   web application processes. If the virtual host is `webapp1.local` then the
   first `webapp1` process responds, if the virtual host is `webapp2.local` then
-  the second process (`webapp2`) responds.
+  the second process (`webapp2`) responds. Nginx listens on TCP port 8080.
 
 Building a process configurations profile
 -----------------------------------------
@@ -429,7 +433,9 @@ It is also possible to do unprivileged user deployments. Unfortunately,
 unprivileged users cannot create new groups and/or users or change permissions
 of running processes.
 
-This can be globally disabled with the `--force-disable-user-change` parameter.
+To still allow unprivileged user deployments, user configuration and switching
+can be globally disabled with the `--force-disable-user-change` parameter.
+Then the `credentials` and `user` switching parameters are ignored.
 
 The following command makes it possible to deploy all processes as an
 unprivileged user:

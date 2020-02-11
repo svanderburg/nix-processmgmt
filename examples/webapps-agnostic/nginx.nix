@@ -1,5 +1,5 @@
-{createManagedProcess, stdenv, nginx, stateDir, forceDisableUserChange}:
-{daemonConfigFile, foregroundConfigFile, dependencies ? [], instanceSuffix ? ""}:
+{createManagedProcess, stdenv, nginx, stateDir, runtimeDir, forceDisableUserChange}:
+{configFile, dependencies ? [], instanceSuffix ? ""}:
 
 let
   instanceName = "nginx${instanceSuffix}";
@@ -17,9 +17,9 @@ createManagedProcess {
     ''}
   '';
   process = "${nginx}/bin/nginx";
-  args = [ "-p" "${stateDir}/${instanceName}" ];
-  foregroundProcessExtraArgs = [ "-c" foregroundConfigFile ];
-  daemonExtraArgs = [ "-c" daemonConfigFile ];
+  args = [ "-p" "${stateDir}/${instanceName}" "-c" configFile ];
+  foregroundProcessExtraArgs = [ "-g" "daemon off;" ];
+  daemonExtraArgs = [ "-g" "pid ${runtimeDir}/${instanceName}.pid;" ];
 
   inherit dependencies instanceName;
 

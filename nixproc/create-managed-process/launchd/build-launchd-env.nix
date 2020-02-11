@@ -19,7 +19,7 @@ let
 
   processes = processesFun processesArgs;
 in
-buildEnv {
+pkgs.buildEnv {
   name = "launchd";
   paths = map (processName:
     let

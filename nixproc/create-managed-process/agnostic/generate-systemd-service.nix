@@ -32,7 +32,7 @@ createSystemdService (stdenv.lib.recursiveUpdate {
     Description = description;
   };
   Service = {
-    ExecStart = if foregroundProcess != null then "${foregroundProcess} ${toString foregroundProcessArgs}" else "${daemon} ${toString daemonArgs}";
+    ExecStart = if foregroundProcess != null then "${foregroundProcess} ${stdenv.lib.escapeShellArgs foregroundProcessArgs}" else "${daemon} ${stdenv.lib.escapeShellArgs daemonArgs}";
     Type = if foregroundProcess != null then "simple" else "forking";
   } // stdenv.lib.optionalAttrs (initialize != "") {
     ExecStartPre = stdenv.lib.optionalString (user != null) "+" + generatePreStartScript {

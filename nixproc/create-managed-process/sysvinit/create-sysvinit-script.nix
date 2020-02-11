@@ -107,7 +107,7 @@ let
       activity = "Starting";
       instruction =
         initialize +
-        (if processIsDaemon then "${startDaemon} ${stdenv.lib.optionalString (pidFile != null) "-f -p ${pidFile}"} ${stdenv.lib.optionalString (nice != null) "-n ${nice}"} ${stdenv.lib.optionalString (_user != null) "su ${_user} -c '"} ${process} ${toString args} ${stdenv.lib.optionalString (_user != null) "'"}"
+        (if processIsDaemon then "${startDaemon} ${stdenv.lib.optionalString (pidFile != null) "-f -p ${pidFile}"} ${stdenv.lib.optionalString (nice != null) "-n ${nice}"} ${stdenv.lib.optionalString (_user != null) "su ${_user} -c '"} ${process} ${stdenv.lib.escapeShellArgs args} ${stdenv.lib.optionalString (_user != null) "'"}"
         else "${startProcessAsDaemon} -U -i ${if pidFile == null then "-P ${runtimeDir} -n $(basename ${process})" else "-F ${pidFile}"} ${stdenv.lib.optionalString (_user != null) "-u ${_user}"} -- ${process} ${toString args}");
     };
     stop = {

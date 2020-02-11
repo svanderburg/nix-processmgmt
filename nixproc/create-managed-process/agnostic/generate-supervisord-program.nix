@@ -36,7 +36,7 @@ let
         inherit instanceName;
       } // stdenv.lib.optionalAttrs (pidFile != null) {
         inherit pidFile;
-      })) + " ${toString foregroundProcessArgs}"
+      })) + " ${stdenv.lib.escapeShellArgs foregroundProcessArgs}"
     else (generateForegroundWrapper ({
       wrapDaemon = true;
       executable = daemon;
@@ -45,7 +45,7 @@ let
       inherit instanceName;
     } // stdenv.lib.optionalAttrs (pidFile != null) {
       inherit pidFile;
-    })) + " ${toString daemonArgs}";
+    })) + " ${stdenv.lib.escapeShellArgs daemonArgs}";
 in
 createSupervisordProgram (stdenv.lib.recursiveUpdate ({
   inherit name command path environment dependencies credentials;

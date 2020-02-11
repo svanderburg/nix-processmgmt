@@ -18,6 +18,8 @@ let
     else if processManager == "sysvinit" then "sysvinit-script"
     else if processManager == "systemd" then "systemd-unit"
     else if processManager == "supervisord" then "supervisord-program"
+    else if processManager == "bsdrc" then "bsdrc-script"
+    else if processManager == "cygrunsrv" then "cygrunsrv-service"
     else throw "Unknown process manager: ${processManager}";
 in
 rec {

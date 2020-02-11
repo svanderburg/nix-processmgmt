@@ -135,7 +135,7 @@ let
       command=${_command}
     ''
     + stdenv.lib.optionalString (_commandArgs != []) ''
-      command_args="${toString _commandArgs}"
+      command_args="${stdenv.lib.escapeShellArgs _commandArgs}"
     ''
     + stdenv.lib.optionalString (requiredDirs != []) ''
       required_dirs="${toString requiredDirs}"

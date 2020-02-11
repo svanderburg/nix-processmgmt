@@ -51,7 +51,7 @@ createNewGroups()
 
         if [ ! -f "$oldProfilePath/dysnomia-support/groups/$groupname" ]
         then
-            echo dysnomia-addgroups "$profilePath/dysnomia-support/groups/$groupname"
+            dysnomia-addgroups "$profilePath/dysnomia-support/groups/$groupname"
         fi
     done
 }
@@ -64,7 +64,7 @@ createNewUsers()
 
         if [ ! -f "$oldProfilePath/dysnomia-support/users/$username" ]
         then
-            echo dysnomia-addusers "$profilePath/dysnomia-support/users/$username"
+            dysnomia-addusers "$profilePath/dysnomia-support/users/$username"
         fi
     done
 }
@@ -77,7 +77,7 @@ deleteObsoleteUsers()
 
         if [ ! -f "$profilePath/dysnomia-support/users/$username" ]
         then
-            echo dysnomia-delusers "$oldProfilePath/dysnomia-support/users/$username"
+            dysnomia-delusers "$oldProfilePath/dysnomia-support/users/$username"
         fi
     done
 }
@@ -90,7 +90,7 @@ deleteObsoleteGroups()
 
         if [ ! -f "$profilePath/dysnomia-support/groups/$groupname" ]
         then
-            echo dysnomia-delgroups "$oldProfilePath/dysnomia-support/groups/$groupname"
+            dysnomia-delgroups "$oldProfilePath/dysnomia-support/groups/$groupname"
         fi
     done
 }

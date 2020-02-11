@@ -8,11 +8,10 @@ let
   dependencies = webapps ++ (builtins.attrValues interDeps);
 in
 import ./nginx.nix {
-  inherit createSystemVInitScript nginx instanceSuffix;
+  inherit createSystemVInitScript nginx;
   stateDir = nginxStateDir;
-
-  dependencies = map (webapp: webapp.pkg) dependencies;
-
+} {
+  inherit instanceSuffix;
   configFile = writeTextFile {
     name = "nginx.conf";
     text = ''
@@ -64,4 +63,5 @@ import ./nginx.nix {
       }
     '';
   };
+  dependencies = map (webapp: webapp.pkg) dependencies;
 }
