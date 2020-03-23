@@ -4,19 +4,21 @@
 let
   instanceName = "mysqld${instanceSuffix}";
   dataDir = "${stateDir}/db/${instanceName}";
+  instanceRuntimeDir = "${runtimeDir}/${instanceName}";
   user = instanceName;
   group = instanceName;
 in
 createManagedProcess {
   name = instanceName;
-  inherit instanceName user;
+  inherit instanceName;
 
   initialize = ''
     mkdir -m0700 -p ${dataDir}
-    mkdir -m0700 -p ${runtimeDir}
+    mkdir -m0700 -p ${instanceRuntimeDir}
 
     ${stdenv.lib.optionalString (!forceDisableUserChange) ''
       chown ${user}:${group} ${dataDir}
+      chown ${user}:${group} ${instanceRuntimeDir}
     ''}
 
     if [ ! -e "${dataDir}/mysql" ]
@@ -26,7 +28,7 @@ createManagedProcess {
   '';
 
   foregroundProcess = "${mysql}/bin/mysqld";
-  foregroundProcessArgs = [ "--basedir" mysql "--datadir" dataDir "--port" port "--socket" "${runtimeDir}/${instanceName}.sock" ]
+  foregroundProcessArgs = [ "--basedir" mysql "--datadir" dataDir "--port" port "--socket" "${instanceRuntimeDir}/${instanceName}.sock" ]
     ++ stdenv.lib.optionals (!forceDisableUserChange) [ "--user" user ];
 
   credentials = {
