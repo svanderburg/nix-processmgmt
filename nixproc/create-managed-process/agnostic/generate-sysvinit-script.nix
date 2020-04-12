@@ -18,11 +18,12 @@
 , dependencies
 , credentials
 , overrides
+, postInstall
 }:
 
 createSystemVInitScript (stdenv.lib.recursiveUpdate ({
   inherit name description path environment directory umask nice dependencies credentials;
-  inherit instanceName initialize user;
+  inherit instanceName initialize user postInstall;
 
   process = if daemon != null then daemon else foregroundProcess;
   processIsDaemon = daemon != null;

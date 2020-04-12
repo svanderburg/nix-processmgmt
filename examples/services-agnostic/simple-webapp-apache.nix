@@ -1,12 +1,12 @@
 {createManagedProcess, stdenv, apacheHttpd, writeTextFile, logDir, runtimeDir, forceDisableUserChange}:
-{instanceSuffix ? "", port ? 80}:
+{instanceSuffix ? "", port ? 80, modules ? [], serverName ? "localhost", serverAdmin, documentRoot ? ./webapp, extraConfig ? "", postInstall ? ""}:
 
 let
   instanceName = "httpd${instanceSuffix}";
   user = instanceName;
   group = instanceName;
 
-  modules = [
+  baseModules = [
     "mpm_prefork"
     "authn_file"
     "authn_core"
@@ -36,13 +36,22 @@ in
 import ./apache.nix {
   inherit createManagedProcess apacheHttpd;
 } {
-  inherit instanceSuffix;
+  inherit instanceSuffix postInstall;
 
   initialize = ''
     mkdir -m0700 -p ${apacheLogDir}
+
     ${stdenv.lib.optionalString (!forceDisableUserChange) ''
       chown ${user}:${group} ${apacheLogDir}
     ''}
+
+    if [ ! -e "${documentRoot}" ]
+    then
+        mkdir -p "${documentRoot}"
+        ${stdenv.lib.optionalString (!forceDisableUserChange) ''
+          chown ${user}:${group} ${documentRoot}
+        ''}
+    fi
   '';
 
   configFile = writeTextFile {
@@ -56,18 +65,23 @@ import ./apache.nix {
         Group ${group}
       ''}
 
-      ServerName localhost
+      ServerName ${serverName}
       ServerRoot ${apacheHttpd}
 
       Listen ${toString port}
 
       ${stdenv.lib.concatMapStrings (module: ''
         LoadModule ${module}_module ${apacheHttpd}/modules/mod_${module}.so
+      '') baseModules}
+      ${stdenv.lib.concatMapStrings (module: ''
+        LoadModule ${module.name}_module ${module.module}
       '') modules}
 
-      ServerAdmin root@localhost
+      ServerAdmin ${serverAdmin}
 
-      DocumentRoot "${./webapp}"
+      DocumentRoot "${documentRoot}"
+
+      ${extraConfig}
     '';
   };
 }

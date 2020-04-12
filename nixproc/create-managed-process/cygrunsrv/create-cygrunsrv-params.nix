@@ -37,6 +37,8 @@ name
 , dependencies ? []
 # Specifies which packages need to be in the PATH
 , environmentPath ? []
+# Arbitrary commands executed after generating the configuration files
+, postInstall ? ""
 }:
 
 let
@@ -108,5 +110,6 @@ stdenv.mkDerivation {
   buildCommand = ''
     mkdir -p $out
     ln -s ${cygrunsrvConfig} $out/${prefix}${name}-cygrunsrvparams
+    ${postInstall}
   '';
 }

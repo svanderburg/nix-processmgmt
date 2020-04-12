@@ -22,6 +22,7 @@
 , dependencies
 , credentials
 , overrides
+, postInstall
 }:
 
 let
@@ -52,7 +53,7 @@ let
   ProgramArguments = [ Program ] ++ (if foregroundProcess != null then foregroundProcessArgs else daemonArgs);
 
   daemonConfig = createLaunchdDaemon (stdenv.lib.recursiveUpdate ({
-    inherit name credentials Program;
+    inherit name credentials postInstall Program;
   } // stdenv.lib.optionalAttrs (ProgramArguments != [ Program ]) {
     inherit ProgramArguments;
   } // stdenv.lib.optionalAttrs (environment != {}) {

@@ -22,6 +22,8 @@ name
 , path ? []
 # Specifies which groups and users that need to be created.
 , credentials ? {}
+# Arbitrary commands executed after generating the configuration files
+, postInstall ? ""
 # The remainder of the parameters directly get translated to sections and properties
 # See: https://www.freedesktop.org/software/systemd/man/systemd.unit.html
 # and: https://www.freedesktop.org/software/systemd/man/systemd.service.html
@@ -29,7 +31,7 @@ name
 }@args:
 
 let
-  sections = removeAttrs args [ "name" "environment" "dependencies" "path" "credentials" ];
+  sections = removeAttrs args [ "name" "environment" "dependencies" "path" "credentials" "postInstall" ];
 
   _environment = {
     PATH = builtins.concatStringsSep ":" (map (package: "${package}/bin") (basePackages ++ path));
@@ -113,5 +115,7 @@ stdenv.mkDerivation {
     ${stdenv.lib.optionalString (credentialsSpec != null) ''
       ln -s ${credentialsSpec}/dysnomia-support $out/dysnomia-support
     ''}
+
+    ${postInstall}
   '';
 }

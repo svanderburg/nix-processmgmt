@@ -45,6 +45,8 @@ name
 , credentials ? {}
 # Specifies process manager specific properties that augmented to the generated function parameters
 , overrides ? {}
+# Arbitrary build commands executed after generating the configuration files
+, postInstall ? ""
 }@properties:
 
 let
@@ -54,6 +56,6 @@ let
 in
 if processManager == null then createAgnosticConfig properties
 else generateProcessFun {
-  inherit name description initialize daemon daemonArgs instanceName pidFile foregroundProcess foregroundProcessArgs path environment directory umask nice user dependencies credentials;
+  inherit name description initialize daemon daemonArgs instanceName pidFile foregroundProcess foregroundProcessArgs path environment directory umask nice user dependencies credentials postInstall;
   overrides = if builtins.hasAttr processManager overrides then builtins.getAttr processManager overrides else {};
 }

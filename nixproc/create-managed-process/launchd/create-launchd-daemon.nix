@@ -15,6 +15,8 @@ name
 , path ? []
 # Specifies which groups and users that need to be created.
 , credentials ? {}
+# Arbitrary build commands executed after generating the configuration files
+, postInstall ? ""
 # The remaining parameters are directly translated to plist XML properties.
 # Possible configuration options can be found here: https://www.launchd.info
 , ...
@@ -29,7 +31,7 @@ let
 
   properties = {
     Label = label;
-  } // removeAttrs args ([ "name" "path" "credentials" ] ++ stdenv.lib.optional forceDisableUserChange "UserName") // stdenv.lib.optionalAttrs (environment != {}) {
+  } // removeAttrs args ([ "name" "path" "credentials" "postInstall" ] ++ stdenv.lib.optional forceDisableUserChange "UserName") // stdenv.lib.optionalAttrs (environment != {}) {
     EnvironmentVariables = environment;
   };
 
@@ -92,5 +94,7 @@ stdenv.mkDerivation {
     ${stdenv.lib.optionalString (credentialsSpec != null) ''
       ln -s ${credentialsSpec}/dysnomia-support $out/dysnomia-support
     ''}
+
+    ${postInstall}
   '';
 }

@@ -17,12 +17,14 @@ name
 , dependencies ? []
 # Specifies which groups and users that need to be created.
 , credentials ? {}
+# Arbitrary commands executed after generating the configuration files
+, postInstall ? ""
 # The remainder of the parameters directly translate to the properties described in: http://supervisord.org/configuration.html
 , ...
 }@params:
 
 let
-  properties = removeAttrs params ([ "name" "command" "useProxy" "pidFile" "path" "environment" "dependencies" "credentials" ] ++ stdenv.lib.optional forceDisableUserChange "user");
+  properties = removeAttrs params ([ "name" "command" "useProxy" "pidFile" "path" "environment" "dependencies" "credentials" "postInstall" ] ++ stdenv.lib.optional forceDisableUserChange "user");
 
   priority = if dependencies == [] then 1
     else builtins.head (builtins.sort (a: b: a > b) (map (dependency: dependency.priority) dependencies)) + 1;
@@ -67,5 +69,7 @@ stdenv.mkDerivation {
     ${stdenv.lib.optionalString (credentialsSpec != null) ''
       ln -s ${credentialsSpec}/dysnomia-support $out/dysnomia-support
     ''}
+
+    ${postInstall}
   '';
 }

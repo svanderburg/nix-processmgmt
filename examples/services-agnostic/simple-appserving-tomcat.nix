@@ -1,5 +1,5 @@
 {createManagedProcess, stdenv, tomcat, jre, stateDir, runtimeDir, tmpDir, forceDisableUserChange}:
-{instanceSuffix ? "", serverPort ? 8005, httpPort ? 8080, httpsPort ? 8443, ajpPort ? 8009}:
+{instanceSuffix ? "", serverPort ? 8005, httpPort ? 8080, httpsPort ? 8443, ajpPort ? 8009, commonLibs ? [], postInstall ? ""}:
 
 let
   tomcatConfigFiles = stdenv.mkDerivation {
@@ -23,7 +23,7 @@ let
   };
 in
 import ./tomcat.nix {
-  inherit createManagedProcess stdenv tomcat jre stateDir runtimeDir tmpDir forceDisableUserChange;
+  inherit createManagedProcess stdenv tomcat jre stateDir runtimeDir tmpDir forceDisableUserChange commonLibs;
 } {
-  inherit tomcatConfigFiles instanceSuffix;
+  inherit tomcatConfigFiles instanceSuffix postInstall;
 }

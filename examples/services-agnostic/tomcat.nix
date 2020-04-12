@@ -1,5 +1,5 @@
-{createManagedProcess, stdenv, tomcat, jre, stateDir, runtimeDir, tmpDir, forceDisableUserChange}:
-{instanceSuffix ? "", tomcatConfigFiles}:
+{createManagedProcess, stdenv, tomcat, jre, stateDir, runtimeDir, tmpDir, forceDisableUserChange, commonLibs ? []}:
+{instanceSuffix ? "", tomcatConfigFiles, postInstall ? ""}:
 
 let
   instanceName = "tomcat${instanceSuffix}";
@@ -10,7 +10,8 @@ let
 in
 createManagedProcess rec {
   name = "tomcat";
-  inherit instanceName user pidFile;
+  inherit instanceName user pidFile postInstall;
+
   process = "${tomcat}/bin/catalina.sh";
   args = [ "run" ];
   environment = {
@@ -27,6 +28,27 @@ createManagedProcess rec {
 
         cp -av ${tomcatConfigFiles}/* .
         chmod -R u+w .
+
+        mkdir -p ${baseDir}/lib
+
+        # Symlink all the given common libs files or paths into the lib/ directory
+        for i in ${tomcat} ${toString commonLibs}
+        do
+            if [ -f "$i" ]
+            then
+                # If the given web application is a file, symlink it into the common/lib/ directory
+                ln -sfn $i ${baseDir}/lib/$(basename $i)
+            elif [ -d "$i" ]
+            then
+                # If the given web application is a directory, then iterate over the files
+                # in the special purpose directories and symlink them into the tomcat tree
+
+                for j in $i/lib/*
+                do
+                    ln -sfn $j ${baseDir}/lib/$(basename $j)
+               done
+            fi
+        done
 
         ${stdenv.lib.optionalString (!forceDisableUserChange) ''
           chown -R ${user}:${group} ${baseDir}

@@ -18,6 +18,7 @@
 , dependencies
 , credentials
 , overrides
+, postInstall
 }:
 
 let
@@ -26,7 +27,7 @@ let
   };
 in
 createSystemdService (stdenv.lib.recursiveUpdate {
-  inherit name path environment dependencies credentials;
+  inherit name path environment dependencies credentials postInstall;
 
   Unit = {
     Description = description;

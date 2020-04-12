@@ -87,6 +87,8 @@ name
 , dependencies ? []
 # Specifies which groups and users that need to be created.
 , credentials ? {}
+# Arbitrary commands executed after generating the configuration files
+, postInstall ? ""
 }:
 
 let
@@ -243,5 +245,8 @@ stdenv.mkDerivation {
     ${stdenv.lib.optionalString (credentialsSpec != null) ''
       ln -s ${credentialsSpec}/dysnomia-support $out/dysnomia-support
     ''}
+
+    cd $TMPDIR
+    ${postInstall}
   '';
 }

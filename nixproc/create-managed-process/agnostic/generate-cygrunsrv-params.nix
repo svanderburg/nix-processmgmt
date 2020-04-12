@@ -22,6 +22,7 @@
 , dependencies
 , credentials
 , overrides
+, postInstall
 }:
 
 # TODO: credentials
@@ -36,7 +37,7 @@ let
   };
 in
 createCygrunsrvParams (stdenv.lib.recursiveUpdate ({
-  inherit name environment dependencies;
+  inherit name environment dependencies postInstall;
 
   environmentPath = path;
 

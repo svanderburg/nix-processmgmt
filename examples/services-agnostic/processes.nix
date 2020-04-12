@@ -14,10 +14,10 @@ let
   };
 in
 rec {
-  static-webapp-apache = rec {
+  simple-webapp-apache = rec {
     port = 8080;
 
-    pkg = constructors.static-webapp-apache {
+    pkg = constructors.simple-webapp-apache {
       inherit port;
     };
   };

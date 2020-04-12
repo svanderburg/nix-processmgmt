@@ -1,5 +1,5 @@
 {createManagedProcess, stdenv, mysql, stateDir, runtimeDir, forceDisableUserChange}:
-{port ? 3306, instanceSuffix ? ""}:
+{port ? 3306, instanceSuffix ? "", postInstall ? ""}:
 
 let
   instanceName = "mysqld${instanceSuffix}";
@@ -10,7 +10,7 @@ let
 in
 createManagedProcess {
   name = instanceName;
-  inherit instanceName;
+  inherit instanceName postInstall;
 
   initialize = ''
     mkdir -m0700 -p ${dataDir}

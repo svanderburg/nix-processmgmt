@@ -18,13 +18,14 @@
 , dependencies
 , credentials
 , overrides
+, postInstall
 }:
 
 # TODO: umask
 
 createBSDRCScript (stdenv.lib.recursiveUpdate ({
   inherit name environment path directory nice dependencies;
-  inherit user instanceName credentials;
+  inherit user instanceName credentials postInstall;
 
   command = if daemon != null then daemon else foregroundProcess;
   commandIsDaemon = daemon != null;

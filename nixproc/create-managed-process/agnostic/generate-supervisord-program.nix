@@ -18,6 +18,7 @@
 , dependencies
 , credentials
 , overrides
+, postInstall
 }:
 
 let
@@ -48,7 +49,7 @@ let
     })) + " ${stdenv.lib.escapeShellArgs daemonArgs}";
 in
 createSupervisordProgram (stdenv.lib.recursiveUpdate ({
-  inherit name command path environment dependencies credentials;
+  inherit name command path environment dependencies credentials postInstall;
 } // stdenv.lib.optionalAttrs (umask != null) {
   inherit umask;
 } // stdenv.lib.optionalAttrs (nice != null) {

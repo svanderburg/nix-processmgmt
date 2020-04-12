@@ -18,7 +18,7 @@ in
     inherit (pkgs) apacheHttpd;
   };
 
-  static-webapp-apache = import ./static-webapp-apache.nix {
+  simple-webapp-apache = import ./simple-webapp-apache.nix {
     inherit createManagedProcess logDir runtimeDir forceDisableUserChange;
     inherit (pkgs) stdenv apacheHttpd writeTextFile;
   };
