@@ -2,7 +2,7 @@
 {port, instanceSuffix ? ""}:
 
 let
-  webapp = import ../webapp;
+  webapp = import ../../webapp;
   instanceName = "webapp${instanceSuffix}";
 in
 createManagedProcess {

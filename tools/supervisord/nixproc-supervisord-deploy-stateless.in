@@ -21,6 +21,7 @@ Options:
       --force-disable-user-change
                         Forces to not create users, groups or change user
                         permissions
+      --show-trace      Shows a trace of the output
   -h, --help            Shows the usage of this command
 
 Environment:
@@ -37,7 +38,7 @@ EOF
 
 # Parse valid argument options
 
-PARAMS=`@getopt@ -n $0 -o h -l state-dir:,runtime-dir:,log-dir:,tmp-dir:,force-disable-user-change,help -- "$@"`
+PARAMS=`@getopt@ -n $0 -o h -l state-dir:,runtime-dir:,log-dir:,tmp-dir:,force-disable-user-change,show-trace,help -- "$@"`
 
 if [ $? != 0 ]
 then
@@ -66,6 +67,9 @@ do
             ;;
         --force-disable-user-change)
             forceDisableUserChangeArg="--force-disable-user-change"
+            ;;
+        --show-trace)
+            showTraceArg="--show-trace"
             ;;
         -h|--help)
             showUsage
