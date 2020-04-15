@@ -21,9 +21,4 @@ in
   webapp = import webappExpr {
     inherit createManagedProcess runtimeDir;
   };
-
-  nginxReverseProxy = import ./nginx-reverse-proxy.nix {
-    inherit createManagedProcess stateDir logDir runtimeDir forceDisableUserChange;
-    inherit (pkgs) stdenv writeTextFile nginx;
-  };
 }

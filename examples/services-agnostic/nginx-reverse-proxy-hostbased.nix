@@ -1,4 +1,4 @@
-{createManagedProcess, stdenv, writeTextFile, nginx, runtimeDir, stateDir, logDir, forceDisableUserChange}:
+{createManagedProcess, stdenv, writeTextFile, nginx, runtimeDir, stateDir, cacheDir, forceDisableUserChange}:
 {port ? 80, webapps ? [], instanceSuffix ? ""}:
 interDeps:
 
@@ -8,10 +8,11 @@ let
   group = instanceName;
 
   nginxStateDir = "${stateDir}/${instanceName}";
+  nginxLogDir = "${nginxStateDir}/logs";
   dependencies = webapps ++ (builtins.attrValues interDeps);
 in
 import ./nginx.nix {
-  inherit createManagedProcess stdenv nginx stateDir forceDisableUserChange runtimeDir;
+  inherit createManagedProcess stdenv nginx stateDir forceDisableUserChange runtimeDir cacheDir;
 } {
   inherit instanceSuffix;
 
@@ -20,7 +21,7 @@ import ./nginx.nix {
   configFile = writeTextFile {
     name = "nginx.conf";
     text = ''
-      error_log ${nginxStateDir}/logs/error.log;
+      error_log ${nginxLogDir}/error.log;
 
       ${stdenv.lib.optionalString (!forceDisableUserChange) ''
         user ${user} ${group};

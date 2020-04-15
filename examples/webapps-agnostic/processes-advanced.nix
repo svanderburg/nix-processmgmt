@@ -3,6 +3,7 @@
 , stateDir ? "/var"
 , runtimeDir ? "${stateDir}/run"
 , logDir ? "${stateDir}/log"
+, cacheDir ? "${stateDir}/cache"
 , tmpDir ? (if stateDir == "/var" then "/tmp" else "${stateDir}/tmp")
 , forceDisableUserChange ? false
 , processManager ? "sysvinit"
@@ -10,6 +11,10 @@
 }:
 
 let
+  sharedConstructors = import ../services-agnostic/constructors.nix {
+    inherit pkgs stateDir runtimeDir logDir cacheDir tmpDir forceDisableUserChange processManager;
+  };
+
   constructors = import ./constructors.nix {
     inherit pkgs stateDir runtimeDir logDir tmpDir forceDisableUserChange processManager webappMode;
   };
@@ -58,7 +63,7 @@ rec {
   nginxReverseProxy = rec {
     port = 8080;
 
-    pkg = constructors.nginxReverseProxy {
+    pkg = sharedConstructors.nginxReverseProxyHostBased {
       webapps = [ webapp1 webapp2 webapp3 webapp4 ];
       inherit port;
     } {};
@@ -87,7 +92,7 @@ rec {
   nginxReverseProxy2 = rec {
     port = 8081;
 
-    pkg = constructors.nginxReverseProxy {
+    pkg = sharedConstructors.nginxReverseProxyHostBased {
       webapps = [ webapp5 webapp6 ];
       inherit port;
       instanceSuffix = "2";

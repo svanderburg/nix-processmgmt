@@ -1,23 +1,28 @@
-{createManagedProcess, stdenv, nginx, stateDir, runtimeDir, forceDisableUserChange}:
+{createManagedProcess, stdenv, nginx, stateDir, runtimeDir, cacheDir, forceDisableUserChange}:
 {configFile, dependencies ? [], instanceSuffix ? ""}:
 
 let
   instanceName = "nginx${instanceSuffix}";
   user = instanceName;
   group = instanceName;
-  nginxLogDir = "${stateDir}/${instanceName}/logs";
+
+  nginxStateDir = "${stateDir}/${instanceName}";
+  nginxLogDir = "${nginxStateDir}/logs";
+  nginxCacheDir = "${cacheDir}/${instanceName}";
 in
 createManagedProcess {
   name = instanceName;
   description = "Nginx";
   initialize = ''
     mkdir -p ${nginxLogDir}
+    mkdir -p ${nginxCacheDir}
     ${stdenv.lib.optionalString (!forceDisableUserChange) ''
       chown ${user}:${group} ${nginxLogDir}
+      chown ${user}:${group} ${nginxCacheDir}
     ''}
   '';
   process = "${nginx}/bin/nginx";
-  args = [ "-p" "${stateDir}/${instanceName}" "-c" configFile ];
+  args = [ "-p" "${nginxStateDir}" "-c" configFile ];
   foregroundProcessExtraArgs = [ "-g" "daemon off;" ];
   daemonExtraArgs = [ "-g" "pid ${runtimeDir}/${instanceName}.pid;" ];
 

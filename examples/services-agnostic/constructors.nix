@@ -2,6 +2,7 @@
 , stateDir
 , logDir
 , runtimeDir
+, cacheDir
 , tmpDir
 , forceDisableUserChange
 , processManager
@@ -45,5 +46,20 @@ in
     inherit (pkgs) stdenv;
     jre = pkgs.jre8;
     tomcat = pkgs.tomcat9;
+  };
+
+  nginx = import ./nginx.nix {
+    inherit createManagedProcess stateDir runtimeDir cacheDir forceDisableUserChange;
+    inherit (pkgs) stdenv nginx;
+  };
+
+  nginxReverseProxyHostBased = import ./nginx-reverse-proxy-hostbased.nix {
+    inherit createManagedProcess stateDir runtimeDir cacheDir forceDisableUserChange;
+    inherit (pkgs) stdenv writeTextFile nginx;
+  };
+
+  nginxReverseProxyPathBased = import ./nginx-reverse-proxy-pathbased.nix {
+    inherit createManagedProcess stateDir runtimeDir cacheDir forceDisableUserChange;
+    inherit (pkgs) stdenv writeTextFile nginx;
   };
 }

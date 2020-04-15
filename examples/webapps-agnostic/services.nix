@@ -2,12 +2,17 @@
 , stateDir ? "/var"
 , runtimeDir ? "${stateDir}/run"
 , logDir ? "${stateDir}/log"
+, cacheDir ? "${stateDir}/cache"
 , tmpDir ? (if stateDir == "/var" then "/tmp" else "${stateDir}/tmp")
 , forceDisableUserChange ? false
 , processManager ? null # "sysvinit"
 }:
 
 let
+  sharedConstructors = import ../services-agnostic/constructors.nix {
+    inherit pkgs stateDir runtimeDir logDir cacheDir tmpDir forceDisableUserChange processManager;
+  };
+
   constructors = import ./constructors.nix {
     inherit pkgs stateDir runtimeDir logDir tmpDir forceDisableUserChange processManager;
     webappMode = null;
@@ -20,6 +25,7 @@ let
     else if processManager == "supervisord" then "supervisord-program"
     else if processManager == "bsdrc" then "bsdrc-script"
     else if processManager == "cygrunsrv" then "cygrunsrv-service"
+    else if processManager == "launchd" then "launchd-daemon"
     else throw "Unknown process manager: ${processManager}";
 in
 rec {
@@ -36,7 +42,7 @@ rec {
   nginxReverseProxy = rec {
     name = "nginxReverseProxy";
     port = 8080;
-    pkg = constructors.nginxReverseProxy {
+    pkg = sharedConstructors.nginxReverseProxyHostBased {
       inherit port;
     };
     dependsOn = {
