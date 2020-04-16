@@ -62,4 +62,14 @@ in
     inherit createManagedProcess stateDir runtimeDir cacheDir forceDisableUserChange;
     inherit (pkgs) stdenv writeTextFile nginx;
   };
+
+  mongodb = import ./mongodb.nix {
+    inherit createManagedProcess runtimeDir;
+    inherit (pkgs) mongodb;
+  };
+
+  simplemongodb = import ./simplemongodb.nix {
+    inherit createManagedProcess runtimeDir stateDir forceDisableUserChange;
+    inherit (pkgs) stdenv mongodb writeTextFile;
+  };
 }

@@ -3,6 +3,7 @@
 , stateDir ? "/var"
 , runtimeDir ? "${stateDir}/run"
 , logDir ? "${stateDir}/log"
+, cacheDir ? "${stateDir}/cache"
 , tmpDir ? (if stateDir == "/var" then "/tmp" else "${stateDir}/tmp")
 , forceDisableUserChange ? false
 , processManager ? "sysvinit"
@@ -10,7 +11,7 @@
 
 let
   constructors = import ./constructors.nix {
-    inherit pkgs stateDir runtimeDir logDir tmpDir forceDisableUserChange processManager;
+    inherit pkgs stateDir runtimeDir logDir tmpDir cacheDir forceDisableUserChange processManager;
   };
 in
 rec {
@@ -44,5 +45,9 @@ rec {
     pkg = constructors.simple-appserving-tomcat {
       inherit httpPort;
     };
+  };
+
+  simplemongodb = rec {
+    pkg = constructors.simplemongodb {};
   };
 }
