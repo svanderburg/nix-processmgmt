@@ -21,7 +21,7 @@ in
 
   simple-webapp-apache = import ./simple-webapp-apache.nix {
     inherit createManagedProcess logDir runtimeDir forceDisableUserChange;
-    inherit (pkgs) stdenv apacheHttpd writeTextFile;
+    inherit (pkgs) stdenv apacheHttpd php writeTextFile;
   };
 
   mysql = import ./mysql.nix {

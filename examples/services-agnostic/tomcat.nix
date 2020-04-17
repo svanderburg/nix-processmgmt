@@ -9,7 +9,7 @@ let
   pidFile = "${runtimeDir}/${instanceName}.pid";
 in
 createManagedProcess rec {
-  name = "tomcat";
+  name = instanceName;
   inherit instanceName user pidFile postInstall;
 
   process = "${tomcat}/bin/catalina.sh";

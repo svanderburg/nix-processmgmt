@@ -1,5 +1,5 @@
-{createManagedProcess, stdenv, apacheHttpd, writeTextFile, logDir, runtimeDir, forceDisableUserChange}:
-{instanceSuffix ? "", port ? 80, modules ? [], serverName ? "localhost", serverAdmin, documentRoot ? ./webapp, extraConfig ? "", postInstall ? ""}:
+{createManagedProcess, stdenv, apacheHttpd, php, writeTextFile, logDir, runtimeDir, forceDisableUserChange}:
+{instanceSuffix ? "", port ? 80, modules ? [], serverName ? "localhost", serverAdmin, documentRoot ? ./webapp, enablePHP ? false, extraConfig ? "", postInstall ? ""}:
 
 let
   instanceName = "httpd${instanceSuffix}";
@@ -76,10 +76,23 @@ import ./apache.nix {
       ${stdenv.lib.concatMapStrings (module: ''
         LoadModule ${module.name}_module ${module.module}
       '') modules}
+      ${stdenv.lib.optionalString enablePHP ''
+        LoadModule php7_module ${php}/modules/libphp7.so
+      ''}
 
       ServerAdmin ${serverAdmin}
 
       DocumentRoot "${documentRoot}"
+
+      ${stdenv.lib.optionalString enablePHP ''
+        <FilesMatch \.php$>
+          SetHandler application/x-httpd-php
+        </FilesMatch>
+
+        <Directory ${documentRoot}>
+          DirectoryIndex index.php
+        </Directory>
+      ''}
 
       ${extraConfig}
     '';
