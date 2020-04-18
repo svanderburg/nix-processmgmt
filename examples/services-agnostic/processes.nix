@@ -15,11 +15,12 @@ let
   };
 in
 rec {
-  simple-webapp-apache = rec {
+  simpleWebappApache = rec {
     port = 8080;
 
-    pkg = constructors.simple-webapp-apache {
+    pkg = constructors.simpleWebappApache {
       inherit port;
+      serverAdmin = "root@localhost";
     };
   };
 
@@ -42,12 +43,16 @@ rec {
   simple-appserving-tomcat = rec {
     httpPort = 8081;
 
-    pkg = constructors.simple-appserving-tomcat {
+    pkg = constructors.simpleAppservingTomcat {
       inherit httpPort;
     };
   };
 
-  simplemongodb = rec {
-    pkg = constructors.simplemongodb {};
+  /*simpleMongodb = rec {
+    pkg = constructors.simpleMongodb {};
+  };*/
+
+  extendableSupervisord = rec {
+    pkg = constructors.extendableSupervisord {};
   };
 }

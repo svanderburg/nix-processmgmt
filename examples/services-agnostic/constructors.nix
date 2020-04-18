@@ -19,7 +19,7 @@ in
     inherit (pkgs) apacheHttpd;
   };
 
-  simple-webapp-apache = import ./simple-webapp-apache.nix {
+  simpleWebappApache = import ./simple-webapp-apache.nix {
     inherit createManagedProcess logDir runtimeDir forceDisableUserChange;
     inherit (pkgs) stdenv apacheHttpd php writeTextFile;
   };
@@ -41,7 +41,7 @@ in
     tomcat = pkgs.tomcat9;
   };
 
-  simple-appserving-tomcat = import ./simple-appserving-tomcat.nix {
+  simpleAppservingTomcat = import ./simple-appserving-tomcat.nix {
     inherit createManagedProcess stateDir runtimeDir tmpDir forceDisableUserChange;
     inherit (pkgs) stdenv;
     jre = pkgs.jre8;
@@ -68,8 +68,19 @@ in
     inherit (pkgs) mongodb;
   };
 
-  simplemongodb = import ./simplemongodb.nix {
+  simpleMongodb = import ./simplemongodb.nix {
     inherit createManagedProcess runtimeDir stateDir forceDisableUserChange;
     inherit (pkgs) stdenv mongodb writeTextFile;
+  };
+
+  supervisord = import ./supervisord.nix {
+    inherit createManagedProcess runtimeDir logDir;
+    inherit (pkgs.pythonPackages) supervisor;
+  };
+
+  extendableSupervisord = import ./extendable-supervisord.nix {
+    inherit createManagedProcess stateDir runtimeDir logDir;
+    inherit (pkgs) writeTextFile;
+    inherit (pkgs.pythonPackages) supervisor;
   };
 }
