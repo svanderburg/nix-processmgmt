@@ -21,7 +21,7 @@ createManagedProcess rec {
     CATALINA_PID = pidFile;
   };
   initialize = ''
-    if [ ! -d "${baseDir}" ]
+    if [ ! -d "${baseDir}/logs" ]
     then
         mkdir -p ${baseDir}/logs
         cd ${baseDir}
@@ -63,6 +63,8 @@ createManagedProcess rec {
     users = {
       "${user}" = {
         inherit group;
+        homeDir = baseDir;
+        createHomeDir = true;
         description = "Tomcat user";
       };
     };
