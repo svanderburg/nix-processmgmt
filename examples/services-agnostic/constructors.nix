@@ -15,12 +15,12 @@ let
 in
 {
   apache = import ./apache.nix {
-    inherit createManagedProcess;
+    inherit createManagedProcess cacheDir;
     inherit (pkgs) apacheHttpd;
   };
 
   simpleWebappApache = import ./simple-webapp-apache.nix {
-    inherit createManagedProcess logDir runtimeDir forceDisableUserChange;
+    inherit createManagedProcess logDir cacheDir runtimeDir forceDisableUserChange;
     inherit (pkgs) stdenv apacheHttpd php writeTextFile;
   };
 
@@ -82,5 +82,10 @@ in
     inherit createManagedProcess stateDir runtimeDir logDir;
     inherit (pkgs) writeTextFile;
     inherit (pkgs.pythonPackages) supervisor;
+  };
+
+  svnserve = import ./svnserve.nix {
+    inherit createManagedProcess runtimeDir forceDisableUserChange;
+    inherit (pkgs) stdenv subversion;
   };
 }

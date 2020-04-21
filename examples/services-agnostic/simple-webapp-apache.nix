@@ -1,5 +1,5 @@
-{createManagedProcess, stdenv, apacheHttpd, php, writeTextFile, logDir, runtimeDir, forceDisableUserChange}:
-{instanceSuffix ? "", port ? 80, modules ? [], serverName ? "localhost", serverAdmin, documentRoot ? ./webapp, enablePHP ? false, extraConfig ? "", postInstall ? ""}:
+{createManagedProcess, stdenv, apacheHttpd, php, writeTextFile, logDir, runtimeDir, cacheDir, forceDisableUserChange}:
+{instanceSuffix ? "", port ? 80, modules ? [], serverName ? "localhost", serverAdmin, documentRoot ? ./webapp, enablePHP ? false, enableCGI ? false, extraConfig ? "", postInstall ? ""}:
 
 let
   instanceName = "httpd${instanceSuffix}";
@@ -29,12 +29,13 @@ let
     "autoindex"
     "alias"
     "dir"
-  ];
+  ]
+  ++ stdenv.lib.optional enableCGI "cgi";
 
   apacheLogDir = "${logDir}/${instanceName}";
 in
 import ./apache.nix {
-  inherit createManagedProcess apacheHttpd;
+  inherit createManagedProcess apacheHttpd cacheDir;
 } {
   inherit instanceSuffix postInstall;
 

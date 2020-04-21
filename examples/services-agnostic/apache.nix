@@ -1,4 +1,4 @@
-{createManagedProcess, apacheHttpd}:
+{createManagedProcess, apacheHttpd, cacheDir}:
 {instanceSuffix ? "", configFile, initialize ? "", postInstall ? ""}:
 
 let
@@ -21,6 +21,7 @@ createManagedProcess {
     users = {
       "${user}" = {
         inherit group;
+        homeDir = "${cacheDir}/${user}";
         description = "Apache HTTP daemon user";
       };
     };

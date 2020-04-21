@@ -53,4 +53,11 @@ in
       enableSupervisordProgram = true;
     });
   };
+
+  svnserve = import ./svnserve.nix {
+    svnserveConstructorFun = constructors.svnserve;
+    dysnomia = pkgs.dysnomia.override (origArgs: {
+      enableSubversionRepository = true;
+    });
+  };
 }

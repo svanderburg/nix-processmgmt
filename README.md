@@ -456,7 +456,8 @@ This repository contains three example systems, that can be found in the
   manager agnostic configuration. It can be used to target all process managers
   that this toolset supports.
 * `services-agnostic` is a process manager-agnostic configuration set of common
-  system services: Apache HTTP server, MySQL, PostgreSQL and Apache Tomcat.
+  system services, such as Apache HTTP server, MySQL, PostgreSQL and
+  Apache Tomcat.
 * `service-containers-agnostic` extends the previous examples with configuration
   files so that these system services can be deployed as Disnix containers --
   services in which other services can be hosted.
