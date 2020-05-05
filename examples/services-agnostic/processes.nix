@@ -50,7 +50,7 @@ rec {
 
   /*simpleMongodb = rec {
     pkg = constructors.simpleMongodb {};
-  };*/
+  };
 
   extendableSupervisord = {
     pkg = constructors.extendableSupervisord {};
@@ -61,5 +61,5 @@ rec {
       svnBaseDir = "/repos";
       svnGroup = "root";
     };
-  };
+  };*/
 }
