@@ -60,4 +60,11 @@ in
       enableSubversionRepository = true;
     });
   };
+
+  simpleInfluxdb = import ./simpleinfluxdb.nix {
+    influxdbConstructorFun = constructors.simpleInfluxdb;
+    dysnomia = pkgs.dysnomia.override (origArgs: {
+      enableInfluxDatabase = true;
+    });
+  };
 }

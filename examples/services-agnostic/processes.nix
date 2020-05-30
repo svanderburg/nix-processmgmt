@@ -48,7 +48,7 @@ rec {
     };
   };
 
-  /*simpleMongodb = rec {
+  simpleMongodb = rec {
     pkg = constructors.simpleMongodb {};
   };
 
@@ -61,5 +61,9 @@ rec {
       svnBaseDir = "/repos";
       svnGroup = "root";
     };
-  };*/
+  };
+
+  simpleInfluxdb = {
+    pkg = constructors.simpleInfluxdb {};
+  };
 }

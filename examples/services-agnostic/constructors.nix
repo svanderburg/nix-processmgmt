@@ -88,4 +88,14 @@ in
     inherit createManagedProcess runtimeDir forceDisableUserChange;
     inherit (pkgs) stdenv subversion;
   };
+
+  simpleInfluxdb = import ./simpleinfluxdb.nix {
+    inherit createManagedProcess stateDir;
+    inherit (pkgs) influxdb writeTextFile;
+  };
+
+  influxdb = import ./influxdb.nix {
+    inherit createManagedProcess;
+    inherit (pkgs) influxdb;
+  };
 }
