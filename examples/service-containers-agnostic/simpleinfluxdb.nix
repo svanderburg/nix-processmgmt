@@ -8,6 +8,7 @@ let
       # Add Dysnomia container configuration file for InfluxDB
       mkdir -p $out/etc/dysnomia/containers
       cat > $out/etc/dysnomia/containers/influx-database${instanceSuffix} <<EOF
+      httpPort=${toString httpPort}
       EOF
 
       # Copy the Dysnomia module that manages an InfluxDB database
@@ -18,6 +19,6 @@ let
 in
 rec {
   name = "influxdb${instanceSuffix}";
-  inherit pkg type;
+  inherit pkg type httpPort;
   providesContainer = "influx-database${instanceSuffix}";
 }
