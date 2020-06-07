@@ -82,6 +82,16 @@ let
     inherit (pkgs) stdenv writeTextFile;
     inherit createCygrunsrvParams runtimeDir;
   };
+
+  createProcessScript = import ../disnix/create-process-script.nix {
+    inherit (pkgs) stdenv;
+    inherit createCredentials forceDisableUserChange;
+  };
+
+  generateProcessScript = import ../agnostic/generate-process-script.nix {
+    inherit (pkgs) stdenv writeTextFile daemon;
+    inherit createProcessScript runtimeDir tmpDir forceDisableUserChange basePackages;
+  };
 in
 import ./create-managed-process.nix {
   inherit processManager;
@@ -94,5 +104,6 @@ import ./create-managed-process.nix {
     else if processManager == "bsdrc" then generateBSDRCScript
     else if processManager == "launchd" then generateLaunchdDaemon
     else if processManager == "cygrunsrv" then generateCygrunsrvParams
+    else if processManager == "disnix" then generateProcessScript
     else throw "Unknown process manager: ${processManager}";
 }

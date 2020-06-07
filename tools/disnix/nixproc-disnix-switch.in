@@ -1,0 +1,110 @@
+#!/bin/bash -e
+
+showUsage()
+{
+    cat <<EOF
+Usage: $0 [OPTION] PATH
+
+This command uses Disnix's deployment facilities to deploy a set of running
+processes taking the process dependencies into account for activating and
+deactivating them in the right order.
+
+Options:
+  -p, --profile=NAME    Name of the Nix profile that stores the sysvinit scripts
+                        (defaults to: processes)
+  -o, --old-profile=PATH
+                        Path to the previously deployed Nix profile (by default,
+                        it gets auto detected)
+      --state-dir       Changes the directory in which the state of the
+                        processes are stored
+      --runtime-dir     Changes the directory in which the PID files are stored
+      --log-dir         Changes the directory in which the log files are stored
+      --tmp-dir         Changes the directory in which temp files are stored
+      --force-disable-user-change
+                        Forces to not create users, groups or change user
+                        permissions
+      --show-trace      Shows a trace of the output
+  -h, --help            Shows the usage of this command
+
+Environment:
+  NIX_STATE_DIR         Overrides the location of the Nix state directory
+  NIXPROC_STATE_DIR     Changes the directory in which the state of the
+                        processes is stored
+  NIXPROC_RUNTIME_DIR   Changes the directory in which the PID files are stored
+  NIXPROC_LOG_DIR       Changes the directory in which log files are stored
+  NIXPROC_TMP_DIR       Changes the directory in which temp files are stored
+  NIXPROC_FORCE_DISABLE_USER_CHANGE
+                        Forces to not create users, groups or change user
+                        permissions
+EOF
+}
+
+# Parse valid argument options
+
+PARAMS=`@getopt@ -n $0 -o p:o:h -l profile:,old-profile:,state-dir:,runtime-dir:,log-dir:,tmp-dir:,force-disable-user-change,show-trace,help -- "$@"`
+
+if [ $? != 0 ]
+then
+    showUsage
+    exit 1
+fi
+
+# Evaluate valid options
+
+eval set -- "$PARAMS"
+
+while [ "$1" != "--" ]
+do
+    case "$1" in
+        -p|--profile)
+            profile="$2"
+            ;;
+        -o|--old-profile)
+            oldProfileArg="-o $2"
+            ;;
+        --state-dir)
+            stateDirArg="--state-dir $2"
+            ;;
+        --runtime-dir)
+            runtimeDirArg="--runtime-dir $2"
+            ;;
+        --log-dir)
+            logDirArg="--log-dir $2"
+            ;;
+        --tmp-dir)
+            tmpDirArg="--tmp-dir $2"
+            ;;
+        --force-disable-user-change)
+            forceDisableUserChangeArg="--force-disable-user-change"
+            ;;
+        --show-trace)
+            showTraceArg="--show-trace"
+            ;;
+        -h|--help)
+            showUsage
+            exit 0
+            ;;
+    esac
+
+    shift
+done
+
+shift
+
+path="$1"
+
+# Validate the given options
+
+source @commonchecks@
+
+checkNixStateDir
+checkProfile
+
+# Determine the Disnix data directory from the executable
+export DISNIX_PATH="$(readlink -f "$(dirname $(readlink -f $(type -p disnix-deploy)))/../share/disnix")"
+
+# Build the environment resulting in a Disnix manifest file
+buildProfile disnix
+
+# Deploy the manifest with Disnix
+disnix-deploy $oldProfileArg $profilePath

@@ -32,6 +32,11 @@ Currently, the following process managers are supported:
 * `systemd`: [systemd](https://www.freedesktop.org/wiki/Software/systemd)
 * `launchd`: [launchd](https://www.launchd.info)
 * `cygrunsrv`: Cygwin's [cygrunsrv](http://web.mit.edu/cygwin/cygwin_v1.3.2/usr/doc/Cygwin/cygrunsrv.README)
+* `disnix`: Technically [Disnix](https://github.com/svanderburg/disnix) is not
+  a process manager but it is flexible enough to start daemons and arrange
+  activation ordering. This target backend is not designed for managing
+  production systems, but it is quite convenient as a simple solution
+  for experimentation that is supported on most UNIX-like systems.
 
 Prerequisites
 =============

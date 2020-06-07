@@ -19,6 +19,10 @@ rec {
     inherit (pkgs) stdenv getopt;
   };
 
+  disnix = import ./disnix {
+    inherit (pkgs) stdenv getopt;
+  };
+
   launchd = import ./launchd {
     inherit (pkgs) stdenv getopt;
   };
