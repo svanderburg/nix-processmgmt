@@ -31,7 +31,7 @@ let
   _path = basePackages ++ [ daemonPkg ] ++ path;
 
   _environment = {
-    PATH = "${builtins.concatStringsSep ":" (map(package: "${package}/bin" ) _path)}:$PATH";
+    PATH = builtins.concatStringsSep ":" (map(package: "${package}/bin" ) _path);
   } // environment;
 
   _pidFile =

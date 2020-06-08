@@ -151,7 +151,7 @@ let
     else defaultStop;
 
   _environment = stdenv.lib.optionalAttrs (path != []) {
-    PATH = "${builtins.concatStringsSep ":" (map(package: "${package}/bin" ) path)}:$PATH";
+    PATH = builtins.concatStringsSep ":" (map(package: "${package}/bin" ) path);
   } // environment;
 
   initdScript = writeTextFile {
