@@ -4,6 +4,8 @@
 let
   mysqlSocket = "${runtimeDir}/mysqld${instanceSuffix}/mysqld${instanceSuffix}.sock";
 
+  mysqlUsername = "root";
+
   pkg = mysqlConstructorFun {
     inherit port instanceSuffix;
     postInstall = ''
@@ -11,7 +13,7 @@ let
       mkdir -p $out/etc/dysnomia/containers
       cat > $out/etc/dysnomia/containers/mysql-database${instanceSuffix} <<EOF
       mysqlPort=${toString port}
-      mysqlUsername=root
+      mysqlUsername="${mysqlUsername}"
       mysqlPassword=
       mysqlSocket=${mysqlSocket}
       EOF
@@ -26,7 +28,7 @@ rec {
   name = "mysql${instanceSuffix}";
   mysqlPort = port;
 
-  inherit pkg type mysqlSocket;
+  inherit pkg type mysqlSocket mysqlUsername;
 
   providesContainer = "mysql-database${instanceSuffix}";
 }

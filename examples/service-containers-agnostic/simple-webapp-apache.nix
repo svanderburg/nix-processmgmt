@@ -1,4 +1,4 @@
-{apacheConstructorFun, dysnomia}:
+{apacheConstructorFun, dysnomia, forceDisableUserChange}:
 {instanceSuffix ? "", port ? 80, modules ? [], serverName ? "localhost", serverAdmin, documentRoot ? ./webapp, extraConfig ? "", enableCGI ? false, enablePHP ? false, filesetOwner ? null, type}:
 
 let
@@ -20,8 +20,8 @@ let
 in
 {
   name = "simpleWebappApache${instanceSuffix}";
-  inherit pkg type port;
+  inherit pkg type port documentRoot;
   providesContainer = "apache-webapplication";
-} // (if filesetOwner == null then {} else {
+} // (if forceDisableUserChange || filesetOwner == null then {} else {
   inherit filesetOwner;
 })

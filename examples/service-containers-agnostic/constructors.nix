@@ -19,6 +19,7 @@ in
     dysnomia = pkgs.dysnomia.override (origArgs: {
       enableApacheWebApplication = true;
     });
+    inherit forceDisableUserChange;
   };
 
   simpleAppservingTomcat = import ./simple-appserving-tomcat.nix {
