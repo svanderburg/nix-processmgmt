@@ -1,6 +1,6 @@
 {createManagedProcess, stdenv, writeTextFile, nginx, runtimeDir, stateDir, cacheDir, forceDisableUserChange}:
 {port ? 80, webapps ? [], instanceSuffix ? ""}:
-interDeps:
+interDependencies:
 
 let
   instanceName = "nginx${instanceSuffix}";
@@ -9,14 +9,14 @@ let
 
   nginxStateDir = "${stateDir}/${instanceName}";
   nginxLogDir = "${nginxStateDir}/logs";
-  dependencies = webapps ++ (builtins.attrValues interDeps);
 in
 import ./nginx.nix {
   inherit createManagedProcess stdenv nginx stateDir forceDisableUserChange runtimeDir cacheDir;
 } {
   inherit instanceSuffix;
 
-  dependencies = map (webapp: webapp.pkg) dependencies;
+  dependencies = map (webapp: webapp.pkg) webapps
+    ++ map (interDependency: interDependency.pkgs."${stdenv.system}") (builtins.attrValues interDependencies);
 
   configFile = writeTextFile {
     name = "nginx.conf";
@@ -38,15 +38,15 @@ import ./nginx.nix {
           }
         '') webapps}
 
-        ${stdenv.lib.concatMapStrings (dependencyName:
+        ${stdenv.lib.concatMapStrings (paramName:
           let
-            dependency = builtins.getAttr dependencyName interDeps;
+            dependency = builtins.getAttr paramName interDependencies;
           in
           ''
             upstream webapp${toString dependency.port} {
               server ${dependency.target.properties.hostname}:${toString dependency.port};
             }
-          '') (builtins.attrNames interDeps)}
+          '') (builtins.attrNames interDependencies)}
 
         # Fallback virtual host displaying an error page. This is what users see
         # if they connect to a non-deployed web application.
@@ -68,7 +68,7 @@ import ./nginx.nix {
               proxy_pass  http://webapp${toString dependency.port};
             }
           }
-        '') dependencies}
+        '') (webapps ++ builtins.attrValues interDependencies)}
       }
     '';
   };

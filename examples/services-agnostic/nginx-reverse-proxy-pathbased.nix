@@ -1,6 +1,6 @@
 {createManagedProcess, stdenv, writeTextFile, nginx, runtimeDir, stateDir, cacheDir, forceDisableUserChange}:
 {port ? 80, webapps ? [], instanceSuffix ? "", enableCache ? false}:
-interDeps:
+interDependencies:
 
 let
   instanceName = "nginx${instanceSuffix}";
@@ -11,14 +11,15 @@ let
   nginxLogDir = "${nginxStateDir}/logs";
   nginxCacheDir = "${cacheDir}/${instanceName}";
 
-  dependencies = webapps ++ (builtins.attrValues interDeps);
+  dependencies = webapps ++ (builtins.attrValues interDependencies);
 in
 import ./nginx.nix {
   inherit createManagedProcess stdenv nginx stateDir forceDisableUserChange runtimeDir cacheDir;
 } {
   inherit instanceSuffix;
 
-  dependencies = map (webapp: builtins.trace ("we have a: ${toString (builtins.toJSON (builtins.functionArgs webapp.pkg))}") webapp.pkg) webapps;# dependencies;
+  dependencies = map (webapp: webapp.pkg) webapps
+    ++ map (interDependency: interDependency.pkgs."${stdenv.system}") (builtins.attrValues interDependencies);
 
   configFile = writeTextFile {
     name = "nginx.conf";
