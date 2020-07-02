@@ -32,6 +32,14 @@ Currently, the following process managers are supported:
 * `systemd`: [systemd](https://www.freedesktop.org/wiki/Software/systemd)
 * `launchd`: [launchd](https://www.launchd.info)
 * `cygrunsrv`: Cygwin's [cygrunsrv](http://web.mit.edu/cygwin/cygwin_v1.3.2/usr/doc/Cygwin/cygrunsrv.README)
+
+It can also work with the following solutions that are technically not
+categorized as process managers (but can still be used as such):
+
+* `docker`: [Docker](https://docker.com) is technically more than just a process
+  manager, but by sharing the host's network, Nix store, and bind mounting
+  relevant state directories, it can also serve as a process manager with
+  similar functionality as the others described above.
 * `disnix`: Technically [Disnix](https://github.com/svanderburg/disnix) is not
   a process manager but it is flexible enough to start daemons and arrange
   activation ordering. This target backend is not designed for managing

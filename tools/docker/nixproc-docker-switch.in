@@ -1,0 +1,226 @@
+#!/bin/bash
+set -e
+shopt -s nullglob
+
+showUsage()
+{
+    cat <<EOF
+Usage: $0 [OPTION] PATH
+
+This command repopulates a folder with systemd configuration files and updates
+the configuration so that obsolete services will be stoppped and new services
+will be started.
+
+Options:
+  -p, --profile=NAME    Name of the Nix profile that stores the sysvinit scripts
+                        (defaults to: processes)
+  -o, --old-profile=PATH
+                        Path to the previously deployed Nix profile (by default,
+                        it gets auto detected)
+      --state-dir       Changes the directory in which the state of the
+                        processes are stored
+      --runtime-dir     Changes the directory in which the PID files are stored
+      --log-dir         Changes the directory in which the log files are stored
+      --tmp-dir         Changes the directory in which temp files are stored
+      --force-disable-user-change
+                        Forces to not create users, groups or change user
+                        permissions
+      --show-trace      Shows a trace of the output
+  -h, --help            Shows the usage of this command
+
+Environment:
+  NIX_STATE_DIR         Overrides the location of the Nix state directory
+  SYSTEMD_TARGET_DIR    Directory in which the unit configuration files are
+                        managed (defaults to: /etc/systemd/system)
+  NIXPROC_STATE_DIR     Changes the directory in which the state of the
+                        processes is stored
+  NIXPROC_RUNTIME_DIR   Changes the directory in which the PID files are stored
+  NIXPROC_LOG_DIR       Changes the directory in which log files are stored
+  NIXPROC_TMP_DIR       Changes the directory in which temp files are stored
+  NIXPROC_FORCE_DISABLE_USER_CHANGE
+                        Forces to not create users, groups or change user
+                        permissions
+EOF
+}
+
+# Parse valid argument options
+
+PARAMS=`@getopt@ -n $0 -o p:o:h -l profile:,old-profile:,state-dir:,runtime-dir:,log-dir:,tmp-dir:,force-disable-user-change,show-trace,help -- "$@"`
+
+if [ $? != 0 ]
+then
+    showUsage
+    exit 1
+fi
+
+# Evaluate valid options
+
+eval set -- "$PARAMS"
+
+while [ "$1" != "--" ]
+do
+    case "$1" in
+        -p|--profile)
+            profile="$2"
+            ;;
+        -o|--old-profile)
+            oldProfilePath="$2"
+            ;;
+        --state-dir)
+            stateDirArg="--state-dir $2"
+            ;;
+        --runtime-dir)
+            runtimeDirArg="--runtime-dir $2"
+            ;;
+        --log-dir)
+            logDirArg="--log-dir $2"
+            ;;
+        --tmp-dir)
+            tmpDirArg="--tmp-dir $2"
+            ;;
+        --force-disable-user-change)
+            forceDisableUserChangeArg="--force-disable-user-change"
+            forceDisableUserChange=1
+            ;;
+        --show-trace)
+            showTraceArg="--show-trace"
+            ;;
+        -h|--help)
+            showUsage
+            exit 0
+            ;;
+    esac
+
+    shift
+done
+
+shift
+
+path="$1"
+
+# Validate the given options
+
+source @commonchecks@
+
+checkNixStateDir
+checkProfile
+composeOldProfilePath
+
+# Build the environment with docker container config files
+buildProfile docker
+
+deployContainer()
+{
+    local configDir="$1"
+    local containerName="$2"
+
+    (
+        source $configDir/$containerName-docker-settings
+        dockerContainerName="nixproc-$containerName"
+
+        # Load the Docker image if it does not exists
+        if [ "$(docker images -f "reference=$dockerImageTag" | wc -l)" = "1" ]
+        then
+            docker load -i $dockerImage
+        fi
+
+        # Create the container if it does not exists yet
+        if [ "$(docker ps -a -f "name=$dockerContainerName" | wc -l)" = "1" ]
+        then
+            (
+            cat $configDir/*-docker-createparams
+            echo "--name"
+            echo "$dockerContainerName"
+
+            if [ "$forceDisableUserChange" = "1" ]
+            then
+                echo "--user"
+                id -u
+            fi
+
+            echo "$dockerImageTag"
+            ) | @xargs@ -d '\n' docker create
+        fi
+
+        if [ "$(docker ps -f "name=$dockerContainerName" | wc -l)" = "1" ]
+        then
+            docker start $dockerContainerName
+        fi
+    )
+}
+
+undeployContainer()
+{
+    local configDir="$1"
+    local containerName="$2"
+
+    (
+        source $configDir/$containerName-docker-settings
+        dockerContainerName="nixproc-$containerName"
+        dockerStopTimeout=${dockerStopTimeout:-1}
+
+        if [ "$(docker ps -f "name=$dockerContainerName" | wc -l)" = "2" ]
+        then
+            docker stop -t $dockerStopTimeout $dockerContainerName
+        fi
+
+        if [ "$(docker ps -a -f "name=$dockerContainerName" | wc -l)" = "2" ]
+        then
+            docker rm $dockerContainerName
+        fi
+
+        if [ "$(docker images -f "reference=$dockerImageTag" | wc -l)" = "2" ]
+        then
+            docker rmi $dockerImageTag
+        fi
+    )
+}
+
+# Determine paths of old containers
+
+oldunits=()
+
+if [ -d "$oldProfilePath" ]
+then
+    for i in $oldProfilePath/*-docker-settings
+    do
+        currentPath=$(readlink -f "$i")
+        oldunits+=($currentPath)
+    done
+fi
+
+# Determine paths of new containers
+
+newunits=()
+
+for i in $profilePath/*-docker-settings
+do
+    currentPath=$(readlink -f "$i")
+    newunits+=($currentPath)
+done
+
+if [ "$oldProfilePath" != "" ]
+then
+    # Undeploy obsolete containers
+
+    for i in $oldProfilePath/*-docker-settings
+    do
+        if ! containsElement "$(readlink -f "$i")" "${newunits[@]}"
+        then
+            undeployContainer "$(dirname "$i")" "$(basename "$i" -docker-settings)"
+        fi
+    done
+fi
+
+# Deploy new containers
+
+for i in $profilePath/*-docker-settings
+do
+    if ! containsElement "$(readlink -f "$i")" "${oldunits[@]}"
+    then
+        deployContainer "$(dirname "$i")" "$(basename "$i" -docker-settings)"
+    fi
+done
+
+# Set new profile
+setNixProfile

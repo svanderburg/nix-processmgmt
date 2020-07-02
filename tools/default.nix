@@ -23,6 +23,10 @@ rec {
     inherit (pkgs) stdenv getopt;
   };
 
+  docker = import ./docker {
+    inherit (pkgs) stdenv getopt;
+  };
+
   launchd = import ./launchd {
     inherit (pkgs) stdenv getopt;
   };

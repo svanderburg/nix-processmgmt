@@ -1,4 +1,4 @@
-{pkgs, runtimeDir, tmpDir, forceDisableUserChange ? false, processManager ? null}:
+{pkgs, runtimeDir, tmpDir, stateDir, forceDisableUserChange ? false, processManager ? null}:
 
 let
   basePackages = [
@@ -92,6 +92,15 @@ let
     inherit (pkgs) stdenv writeTextFile daemon;
     inherit createProcessScript runtimeDir tmpDir forceDisableUserChange basePackages;
   };
+
+  createDockerContainer = import ../docker/create-docker-container.nix {
+    inherit (pkgs) stdenv;
+  };
+
+  generateDockerContainer = import ../agnostic/generate-docker-container.nix {
+    inherit (pkgs) stdenv writeTextFile dockerTools findutils glibc dysnomia;
+    inherit createDockerContainer basePackages runtimeDir stateDir forceDisableUserChange createCredentials;
+  };
 in
 import ./create-managed-process.nix {
   inherit processManager;
@@ -105,5 +114,6 @@ import ./create-managed-process.nix {
     else if processManager == "launchd" then generateLaunchdDaemon
     else if processManager == "cygrunsrv" then generateCygrunsrvParams
     else if processManager == "disnix" then generateProcessScript
+    else if processManager == "docker" then generateDockerContainer
     else throw "Unknown process manager: ${processManager}";
 }
