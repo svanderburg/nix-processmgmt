@@ -20,7 +20,7 @@ let
   };
 in
 rec {
-/*  webapp = rec {
+  webapp = rec {
     port = 5000;
     dnsName = "webapp.local";
 
@@ -36,5 +36,5 @@ rec {
       webapps = [ webapp ];
       inherit port;
     } {};
-  };*/
+  };
 }

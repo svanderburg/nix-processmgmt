@@ -103,7 +103,7 @@ let
   } overrides.image or {});
 in
 createDockerContainer (stdenv.lib.recursiveUpdate {
-  inherit name dockerImage postInstall cmd;
+  inherit name dockerImage postInstall cmd dependencies;
   dockerImageTag = "${name}:latest";
   useHostNixStore = true;
   useHostNetwork = true;

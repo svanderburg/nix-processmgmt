@@ -143,11 +143,14 @@ fi
 
 newscripts=()
 
-for i in $(ls $rcnew/S*)
-do
-    currentPath=$(readlink -f $i)
-    newscripts+=($currentPath)
-done
+if [ -d "$rcnew" ]
+then
+    for i in $(ls $rcnew/S*)
+    do
+       currentPath=$(readlink -f $i)
+       newscripts+=($currentPath)
+    done
+fi
 
 # Create new groups and users
 createNewGroups

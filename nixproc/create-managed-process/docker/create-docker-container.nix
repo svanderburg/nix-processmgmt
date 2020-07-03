@@ -26,6 +26,10 @@ let
 
   priority = if dependencies == [] then 1
     else builtins.head (builtins.sort (a: b: a > b) (map (dependency: dependency.priority) dependencies)) + 1;
+
+  sequenceNumberToString = number:
+    if number < 10 then "0${toString number}"
+    else toString number;
 in
 stdenv.mkDerivation {
   inherit name priority;
@@ -44,7 +48,7 @@ stdenv.mkDerivation {
     ) _dockerCreateParameters}
     EOF
 
-    echo "${toString priority}" > $out/${name}-docker-priority
+    touch $out/${sequenceNumberToString priority}-${name}-docker-priority
 
     ${stdenv.lib.optionalString useHostNixStore ''
       # Add configuration files with Nix store paths used from the host system so that they will not be garbage collected

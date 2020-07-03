@@ -182,7 +182,7 @@ oldunits=()
 
 if [ -d "$oldProfilePath" ]
 then
-    for i in $oldProfilePath/*-docker-settings
+    for i in $oldProfilePath/*-docker-priority
     do
         currentPath=$(readlink -f "$i")
         oldunits+=($currentPath)
@@ -193,7 +193,7 @@ fi
 
 newunits=()
 
-for i in $profilePath/*-docker-settings
+for i in $profilePath/*-docker-priority
 do
     currentPath=$(readlink -f "$i")
     newunits+=($currentPath)
@@ -203,22 +203,24 @@ if [ "$oldProfilePath" != "" ]
 then
     # Undeploy obsolete containers
 
-    for i in $oldProfilePath/*-docker-settings
+    for i in $(echo $oldProfilePath/*-docker-priority | sort -r)
     do
         if ! containsElement "$(readlink -f "$i")" "${newunits[@]}"
         then
-            undeployContainer "$(dirname "$i")" "$(basename "$i" -docker-settings)"
+            priorityFile="$(basename "$i" -docker-priority)"
+            undeployContainer "$(dirname "$i")" "${priorityFile:3}"
         fi
     done
 fi
 
 # Deploy new containers
 
-for i in $profilePath/*-docker-settings
+for i in $profilePath/*-docker-priority
 do
     if ! containsElement "$(readlink -f "$i")" "${oldunits[@]}"
     then
-        deployContainer "$(dirname "$i")" "$(basename "$i" -docker-settings)"
+        priorityFile="$(basename "$i" -docker-priority)"
+        deployContainer "$(dirname "$i")" "${priorityFile:3}"
     fi
 done
 
