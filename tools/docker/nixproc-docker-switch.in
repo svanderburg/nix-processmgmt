@@ -125,7 +125,7 @@ deployContainer()
         fi
 
         # Create the container if it does not exists yet
-        if [ "$(docker ps -a -f "name=$dockerContainerName" | wc -l)" = "1" ]
+        if [ "$(docker ps -a -f "name=$dockerContainerName\$" | wc -l)" = "1" ]
         then
             (
             cat $configDir/*-docker-createparams
@@ -142,7 +142,7 @@ deployContainer()
             ) | @xargs@ -d '\n' docker create
         fi
 
-        if [ "$(docker ps -f "name=$dockerContainerName" | wc -l)" = "1" ]
+        if [ "$(docker ps -f "name=$dockerContainerName\$" | wc -l)" = "1" ]
         then
             docker start $dockerContainerName
         fi
@@ -159,12 +159,12 @@ undeployContainer()
         dockerContainerName="nixproc-$containerName"
         dockerStopTimeout=${dockerStopTimeout:-1}
 
-        if [ "$(docker ps -f "name=$dockerContainerName" | wc -l)" = "2" ]
+        if [ "$(docker ps -f "name=$dockerContainerName\$" | wc -l)" = "2" ]
         then
             docker stop -t $dockerStopTimeout $dockerContainerName
         fi
 
-        if [ "$(docker ps -a -f "name=$dockerContainerName" | wc -l)" = "2" ]
+        if [ "$(docker ps -a -f "name=$dockerContainerName\$" | wc -l)" = "2" ]
         then
             docker rm $dockerContainerName
         fi
@@ -203,14 +203,17 @@ if [ "$oldProfilePath" != "" ]
 then
     # Undeploy obsolete containers
 
-    for i in $(echo $oldProfilePath/*-docker-priority | sort -r)
-    do
-        if ! containsElement "$(readlink -f "$i")" "${newunits[@]}"
-        then
-            priorityFile="$(basename "$i" -docker-priority)"
-            undeployContainer "$(dirname "$i")" "${priorityFile:3}"
-        fi
-    done
+    if [ "$(echo $oldProfilePath/*-docker-priority)" != "" ]
+    then
+        for i in $(ls $oldProfilePath/*-docker-priority | sort -r)
+        do
+            if ! containsElement "$(readlink -f "$i")" "${newunits[@]}"
+            then
+                priorityFile="$(basename "$i" -docker-priority)"
+                undeployContainer "$(dirname "$i")" "${priorityFile:3}"
+            fi
+        done
+    fi
 fi
 
 # Deploy new containers
