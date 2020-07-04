@@ -62,7 +62,7 @@ let
 
   # Remove the Nix store references so that these Nix store paths won't end up in the image.
   # Instead, we mount the host system's Nix store so that the software is still accessible inside the container.
-  cmdWithoutContext = map (arg: builtins.unsafeDiscardStringContext arg) cmd;
+  cmdWithoutContext = map (arg: if builtins.isAttrs arg then builtins.unsafeDiscardStringContext arg else toString arg) cmd;
 
   _path = basePackages ++ path;
 
