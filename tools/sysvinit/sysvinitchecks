@@ -6,4 +6,10 @@ checkRunlevel()
     then
         runlevel=$(runlevel | cut -d ' ' -f2)
     fi
+
+    # If the runlevel is unknown, fall back to 3
+    if [ "$runlevel" = "unknown" ]
+    then
+        runlevel=3
+    fi
 }

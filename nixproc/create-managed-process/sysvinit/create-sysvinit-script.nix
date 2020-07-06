@@ -109,7 +109,7 @@ let
       activity = "Starting";
       instruction =
         initialize +
-        (if processIsDaemon then "${startDaemon} ${stdenv.lib.optionalString (pidFile != null) "-f -p ${pidFile}"} ${stdenv.lib.optionalString (nice != null) "-n ${nice}"} ${stdenv.lib.optionalString (_user != null) "su ${_user} -c '"} ${process} ${stdenv.lib.escapeShellArgs args} ${stdenv.lib.optionalString (_user != null) "'"}"
+        (if processIsDaemon then "${startDaemon} ${stdenv.lib.optionalString (pidFile != null) "-f -p ${pidFile}"} ${stdenv.lib.optionalString (nice != null) "-n ${nice}"} ${stdenv.lib.optionalString (_user != null) "$(type -p su) ${_user} -c '"}${process} ${stdenv.lib.escapeShellArgs args} ${stdenv.lib.optionalString (_user != null) "'"}"
         else "${startProcessAsDaemon} -U -i ${if pidFile == null then "-P ${runtimeDir} -n $(basename ${process})" else "-F ${pidFile}"} ${stdenv.lib.optionalString (_user != null) "-u ${_user}"} -- ${process} ${toString args}");
     };
     stop = {
@@ -151,7 +151,7 @@ let
     else defaultStop;
 
   _environment = stdenv.lib.optionalAttrs (path != []) {
-    PATH = builtins.concatStringsSep ":" (map(package: "${package}/bin" ) path);
+    PATH = builtins.concatStringsSep ":" (map (package: "${package}/bin") path) + ":$PATH";
   } // environment;
 
   initdScript = writeTextFile {

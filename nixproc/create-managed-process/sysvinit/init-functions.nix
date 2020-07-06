@@ -1,7 +1,7 @@
 {stdenv, fetchurl, basePackages, runtimeDir}:
 
 let
-  basePath = builtins.concatStringsSep ":" (map (package: "${package}/bin") basePackages);
+  basePath = builtins.concatStringsSep ":" (map (package: "${package}/bin") basePackages) + ":\\$PATH";
 
   src = fetchurl {
     url = http://www.linuxfromscratch.org/lfs/downloads/9.0/lfs-bootscripts-20190524.tar.xz;

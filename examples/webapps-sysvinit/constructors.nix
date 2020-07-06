@@ -24,11 +24,11 @@ let
 in
 {
   webapp = import ./webapp.nix {
-    inherit createSystemVInitScript runtimeDir;
+    inherit createSystemVInitScript tmpDir;
   };
 
   nginxReverseProxy = import ./nginx-reverse-proxy.nix {
-    inherit createSystemVInitScript stateDir logDir runtimeDir;
+    inherit createSystemVInitScript stateDir logDir runtimeDir forceDisableUserChange;
     inherit (pkgs) stdenv writeTextFile nginx;
   };
 }

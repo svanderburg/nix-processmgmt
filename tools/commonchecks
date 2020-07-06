@@ -30,17 +30,28 @@ buildProfile()
     profilePath=$(nixproc-build --process-manager $processManager $stateDirArg $runtimeDirArg $logDirArg $tmpDirArg $forceDisableUserChangeArg $showTraceArg --no-out-link "$path")
 }
 
+composeProfileDir()
+{
+    if [ "$NIX_USER_PROFILE_DIR" = "" ]
+    then
+        echo "$NIX_STATE_DIR/profiles/$profile"
+    else
+        echo "$NIX_USER_PROFILE_DIR/$profile"
+    fi
+}
+
 composeOldProfilePath()
 {
     if [ "$oldProfilePath" = "" ]
     then
-        oldProfilePath="$NIX_STATE_DIR/profiles/$profile"
+        oldProfilePath=$(composeProfileDir)
     fi
 }
 
 setNixProfile()
 {
-    nix-env -p "$NIX_STATE_DIR/profiles/$profile" --set "$profilePath"
+    local profileDir=$(composeProfileDir)
+    nix-env -p "$profileDir" --set "$profilePath"
 }
 
 createNewGroups()

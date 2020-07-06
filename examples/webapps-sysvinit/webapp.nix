@@ -1,4 +1,4 @@
-{createSystemVInitScript, runtimeDir}:
+{createSystemVInitScript, tmpDir}:
 {port, instanceSuffix ? ""}:
 
 let
@@ -12,7 +12,7 @@ createSystemVInitScript {
   args = [ "-D" ];
   environment = {
     PORT = port;
-    PID_FILE = "${runtimeDir}/${instanceName}.pid";
+    PID_FILE = "${tmpDir}/${instanceName}.pid";
   };
 
   runlevels = [ 3 4 5 ];

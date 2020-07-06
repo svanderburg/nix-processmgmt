@@ -19,6 +19,6 @@ let
 in
 {
   webapp = import webappExpr {
-    inherit createManagedProcess runtimeDir;
+    inherit createManagedProcess tmpDir;
   };
 }

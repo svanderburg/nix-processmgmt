@@ -1,17 +1,20 @@
-{createSystemVInitScript, nginx, stateDir}:
+{createSystemVInitScript, stdenv, nginx, stateDir, forceDisableUserChange}:
 {configFile, dependencies ? [], instanceSuffix ? ""}:
 
 let
   instanceName = "nginx${instanceSuffix}";
   user = instanceName;
   group = instanceName;
-  nginxLogDir = "${stateDir}/${instanceName}/logs";
+  nginxLogDir = "${stateDir}/logs";
 in
 createSystemVInitScript {
   name = instanceName;
   description = "Nginx";
   initialize = ''
     mkdir -p ${nginxLogDir}
+    ${stdenv.lib.optionalString (!forceDisableUserChange) ''
+      chown ${user}:${group} ${nginxLogDir}
+    ''}
   '';
   process = "${nginx}/bin/nginx";
   args = [ "-c" configFile "-p" stateDir ];

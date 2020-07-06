@@ -1,22 +1,32 @@
-{createSystemVInitScript, stdenv, writeTextFile, nginx, runtimeDir, stateDir, logDir}:
+{createSystemVInitScript, stdenv, writeTextFile, nginx, runtimeDir, stateDir, logDir, forceDisableUserChange}:
 {port ? 80, webapps ? [], instanceSuffix ? ""}:
-interDeps:
+interDependencies:
 
 let
   instanceName = "nginx${instanceSuffix}";
+  user = instanceName;
+  group = instanceName;
+
   nginxStateDir = "${stateDir}/${instanceName}";
-  dependencies = webapps ++ (builtins.attrValues interDeps);
+  nginxLogDir = "${nginxStateDir}/logs";
 in
 import ./nginx.nix {
-  inherit createSystemVInitScript nginx;
+  inherit createSystemVInitScript stdenv nginx forceDisableUserChange;
   stateDir = nginxStateDir;
 } {
   inherit instanceSuffix;
+
+  dependencies = map (webapp: webapp.pkg) webapps
+    ++ map (interDependency: interDependency.pkgs."${stdenv.system}") (builtins.attrValues interDependencies);
+
   configFile = writeTextFile {
     name = "nginx.conf";
     text = ''
-      error_log ${nginxStateDir}/logs/error.log;
-      pid ${runtimeDir}/${instanceName}.pid;
+      error_log ${nginxLogDir}/error.log;
+
+      ${stdenv.lib.optionalString (!forceDisableUserChange) ''
+        user ${user} ${group};
+      ''}
 
       events {
         worker_connections 190000;
@@ -29,15 +39,15 @@ import ./nginx.nix {
           }
         '') webapps}
 
-        ${stdenv.lib.concatMapStrings (dependencyName:
+        ${stdenv.lib.concatMapStrings (paramName:
           let
-            dependency = builtins.getAttr dependencyName interDeps;
+            dependency = builtins.getAttr paramName interDependencies;
           in
           ''
             upstream webapp${toString dependency.port} {
               server ${dependency.target.properties.hostname}:${toString dependency.port};
             }
-          '') (builtins.attrNames interDeps)}
+          '') (builtins.attrNames interDependencies)}
 
         # Fallback virtual host displaying an error page. This is what users see
         # if they connect to a non-deployed web application.
@@ -56,12 +66,11 @@ import ./nginx.nix {
             server_name ${dependency.dnsName};
 
             location / {
-              proxy_pass        http://webapp${toString dependency.port};
+              proxy_pass  http://webapp${toString dependency.port};
             }
           }
-        '') dependencies}
+        '') (webapps ++ builtins.attrValues interDependencies)}
       }
     '';
   };
-  dependencies = map (webapp: webapp.pkg) dependencies;
 }

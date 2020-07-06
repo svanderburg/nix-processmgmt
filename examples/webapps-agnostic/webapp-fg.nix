@@ -1,4 +1,4 @@
-{createManagedProcess, runtimeDir}:
+{createManagedProcess, tmpDir}:
 {port, instanceSuffix ? ""}:
 
 let

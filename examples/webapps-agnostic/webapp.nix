@@ -1,4 +1,4 @@
-{createManagedProcess, runtimeDir}:
+{createManagedProcess, tmpDir}:
 {port, instanceSuffix ? ""}:
 
 let
@@ -17,7 +17,7 @@ createManagedProcess {
 
   environment = {
     PORT = port;
-    PID_FILE = "${runtimeDir}/${instanceName}.pid";
+    PID_FILE = "${tmpDir}/${instanceName}.pid";
   };
   user = instanceName;
   credentials = {
