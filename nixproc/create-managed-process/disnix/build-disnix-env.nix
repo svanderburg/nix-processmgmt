@@ -6,7 +6,7 @@
 , tmpDir ? (if stateDir == "/var" then "/tmp" else "${stateDir}/tmp")
 , forceDisableUserChange ? false
 , clientInterface ? (if builtins.getEnv "DISNIX_CLIENT_INTERFACE" == "" then "disnix-run-activity" else builtins.getEnv "DISNIX_CLIENT_INTERFACE")
-, disnixPath ? (if builtins.getEnv "DISNIX_PATH" == "" then throw "Set DISNIX_PATH to the data directory of Disnix" else builtins.getEnv "DISNIX_PATH")
+, disnixDataDir ? (if builtins.getEnv "DISNIX_DATA_DIR" == "" then throw "Set DISNIX_DATA_DIR to the data directory of Disnix" else builtins.getEnv "DISNIX_DATA_DIR")
 , extraParams ? {}
 , exprFile
 }@args:
@@ -46,7 +46,7 @@ let
       inherit services;
     };
 
-  manifest = import "${disnixPath}/manifest.nix";
+  manifest = import "${disnixDataDir}/manifest.nix";
 in
 manifest.generateManifestFromArchitectureFun {
   inherit pkgs clientInterface architectureFun;

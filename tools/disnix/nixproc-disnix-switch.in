@@ -107,7 +107,7 @@ checkNixStateDir
 checkProfile
 
 # Determine the Disnix data directory from the executable
-export DISNIX_PATH="$(readlink -f "$(dirname $(readlink -f $(type -p disnix-deploy)))/../share/disnix")"
+export DISNIX_DATA_DIR="$(readlink -f "$(dirname $(readlink -f $(type -p disnix-deploy)))/../share/disnix")"
 
 # Build the environment resulting in a Disnix manifest file
 buildProfile disnix

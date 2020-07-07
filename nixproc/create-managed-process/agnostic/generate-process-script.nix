@@ -31,14 +31,14 @@ let
   _path = basePackages ++ [ daemonPkg ] ++ path;
 
   _environment = {
-    PATH = builtins.concatStringsSep ":" (map(package: "${package}/bin" ) _path);
+    PATH = builtins.concatStringsSep ":" (map (package: "${package}/bin") _path) + ":$PATH";
   } // environment;
 
   _pidFile =
     if pidFile == null
       then if instanceName == null
         then null
-        else if user == null || user == "root" || forceDisableUserChange
+        else if user == null || user == "root"
           then "${runtimeDir}/${instanceName}.pid"
           else "${tmpDir}/${instanceName}.pid"
     else pidFile;
@@ -59,7 +59,7 @@ createProcessScript (stdenv.lib.recursiveUpdate ({
           value = builtins.getAttr name _environment;
         in
         ''
-          export ${name}=${stdenv.lib.escapeShellArg value}
+          export ${name}=${if name == "PATH" then value else stdenv.lib.escapeShellArg value}
         ''
       ) (builtins.attrNames _environment)
     + stdenv.lib.optionalString (umask != null) ''
