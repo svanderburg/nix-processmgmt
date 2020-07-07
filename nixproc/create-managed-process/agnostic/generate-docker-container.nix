@@ -25,7 +25,7 @@
 # nice unsupported
 
 let
-  generateForegroundWrapper = import ./generate-foreground-wrapper.nix {
+  generateForegroundProxy = import ./generate-foreground-proxy.nix {
     inherit stdenv writeTextFile;
   };
 
@@ -35,7 +35,7 @@ let
       then [ foregroundProcess ] ++ foregroundProcessArgs
       else
         let
-          wrapper = generateForegroundWrapper ({
+          wrapper = generateForegroundProxy ({
             wrapDaemon = false;
             executable = foregroundProcess;
             inherit name initialize runtimeDir stdenv;
@@ -48,7 +48,7 @@ let
         [ wrapper ] ++ foregroundProcessArgs
     else
       let
-        wrapper = generateForegroundWrapper ({
+        wrapper = generateForegroundProxy ({
           wrapDaemon = true;
           executable = daemon;
           inherit name initialize runtimeDir stdenv;

@@ -13,7 +13,7 @@ let
   _pidFile = if pidFile == null then "${runtimeDir}/$(basename ${executable}).pid" else pidFile;
 in
 writeTextFile {
-  name = "${name}-foregroundwrapper.sh";
+  name = "${name}-foregroundproxy.sh";
   text = ''
     #! ${stdenv.shell} -e
 
@@ -42,7 +42,7 @@ writeTextFile {
       ${executable} "$@"
 
       # Wait for the PID file to become available. Useful to work with daemons that don't behave well enough.
-      count=0
+      count=1 # Start with 1, because 0 returns a non-zero exit status when incrementing it
 
       while [ ! -f "${_pidFile}" ]
       do
@@ -55,7 +55,7 @@ writeTextFile {
           echo "Waiting for ${_pidFile} to become available..."
           sleep 1
 
-          ((count=count++))
+          ((count++))
       done
 
       # Determine the daemon's PID by using the PID file

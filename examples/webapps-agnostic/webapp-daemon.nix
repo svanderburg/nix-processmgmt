@@ -4,6 +4,7 @@
 let
   webapp = import ../../webapp;
   instanceName = "webapp${instanceSuffix}";
+  pidFile = "${tmpDir}/${instanceName}.pid";
 in
 createManagedProcess {
   name = instanceName;
@@ -16,8 +17,11 @@ createManagedProcess {
 
   environment = {
     PORT = port;
-    PID_FILE = "${tmpDir}/${instanceName}.pid";
+    PID_FILE = pidFile;
   };
+
+  inherit pidFile;
+
   user = instanceName;
   credentials = {
     groups = {

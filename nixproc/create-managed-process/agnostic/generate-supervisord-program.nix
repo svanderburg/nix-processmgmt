@@ -22,14 +22,14 @@
 }:
 
 let
-  generateForegroundWrapper = import ./generate-foreground-wrapper.nix {
+  generateForegroundProxy = import ./generate-foreground-proxy.nix {
     inherit stdenv writeTextFile;
   };
 
   command = if foregroundProcess != null then
     (if initialize == ""
       then foregroundProcess
-      else generateForegroundWrapper ({
+      else generateForegroundProxy ({
         wrapDaemon = false;
         executable = foregroundProcess;
         inherit name initialize runtimeDir stdenv;
@@ -38,7 +38,7 @@ let
       } // stdenv.lib.optionalAttrs (pidFile != null) {
         inherit pidFile;
       })) + " ${stdenv.lib.escapeShellArgs foregroundProcessArgs}"
-    else (generateForegroundWrapper ({
+    else (generateForegroundProxy ({
       wrapDaemon = true;
       executable = daemon;
       inherit name initialize runtimeDir stdenv;
