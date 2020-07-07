@@ -7,6 +7,7 @@
 , forceDisableUserChange ? false
 , clientInterface ? (if builtins.getEnv "DISNIX_CLIENT_INTERFACE" == "" then "disnix-run-activity" else builtins.getEnv "DISNIX_CLIENT_INTERFACE")
 , disnixPath ? (if builtins.getEnv "DISNIX_PATH" == "" then throw "Set DISNIX_PATH to the data directory of Disnix" else builtins.getEnv "DISNIX_PATH")
+, extraParams ? {}
 , exprFile
 }@args:
 
@@ -17,7 +18,7 @@ let
 
   processesArgs = builtins.intersectAttrs processesFormalArgs (args // {
     processManager = "disnix";
-  });
+  } // extraParams);
 
   processes = processesFun processesArgs;
 

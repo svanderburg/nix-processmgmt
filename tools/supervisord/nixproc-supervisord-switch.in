@@ -30,6 +30,9 @@ Options:
                         Forces to not create users, groups or change user
                         permissions
       --show-trace      Shows a trace of the output
+      --extra-params=PARAMS
+                        A string with an attribute set in the Nix expression
+                        language propagating extra parameters to the input models
   -h, --help            Shows the usage of this command
 
 Environment:
@@ -48,7 +51,7 @@ EOF
 
 # Parse valid argument options
 
-PARAMS=`@getopt@ -n $0 -o p:o:h -l profile:,old-profile:,state-dir:,runtime-dir:,log-dir:,tmp-dir:,force-disable-user-change,show-trace,help -- "$@"`
+PARAMS=`@getopt@ -n $0 -o p:o:h -l profile:,old-profile:,state-dir:,runtime-dir:,log-dir:,tmp-dir:,force-disable-user-change,show-trace,extra-params:,help -- "$@"`
 
 if [ $? != 0 ]
 then
@@ -86,6 +89,9 @@ do
             ;;
         --show-trace)
             showTraceArg="--show-trace"
+            ;;
+        --extra-params)
+            extraParamsArg=("--extra-params" "$2")
             ;;
         -h|--help)
             showUsage

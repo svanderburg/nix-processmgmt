@@ -5,6 +5,7 @@
 , logDir ? "${stateDir}/log"
 , tmpDir ? (if stateDir == "/var" then "/tmp" else "${stateDir}/tmp")
 , forceDisableUserChange ? false
+, extraParams ? {}
 , exprFile
 }@args:
 
@@ -15,7 +16,7 @@ let
 
   processesArgs = builtins.intersectAttrs processesFormalArgs (args // {
     processManager = "docker";
-  });
+  } // extraParams);
 
   processes = processesFun processesArgs;
 in

@@ -6,6 +6,7 @@
 , tmpDir ? (if stateDir == "/var" then "/tmp" else "${stateDir}/tmp")
 , forceDisableUserChange ? false
 , exprFile
+, extraParams ? {}
 }@args:
 
 let
@@ -15,7 +16,7 @@ let
 
   processesArgs = builtins.intersectAttrs processesFormalArgs (args // {
     processManager = "bsdrc";
-  });
+  } // extraParams);
 
   processes = processesFun processesArgs;
 in

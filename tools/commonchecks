@@ -27,7 +27,7 @@ checkProfile()
 buildProfile()
 {
     local processManager="$1"
-    profilePath=$(nixproc-build --process-manager $processManager $stateDirArg $runtimeDirArg $logDirArg $tmpDirArg $forceDisableUserChangeArg $showTraceArg --no-out-link "$path")
+    profilePath=$(nixproc-build --process-manager $processManager $stateDirArg $runtimeDirArg $logDirArg $tmpDirArg $forceDisableUserChangeArg $showTraceArg "${extraParamsArg[@]}" --no-out-link "$path")
 }
 
 composeProfileDir()

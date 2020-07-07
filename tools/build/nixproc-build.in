@@ -12,18 +12,21 @@ their start and stop symlinks.
 
 Options:
   -P, --process-manager=MANAGER
-                     Process manager to build for
-      --state-dir    Changes the directory in which the state of the processes
-                     are stored
-      --runtime-dir  Changes the directory in which the PID files are stored
-      --log-dir      Changes the directory in which the log files are stored
-      --tmp-dir      Changes the directory in which temp files are stored
+                      Process manager to build for
+      --state-dir     Changes the directory in which the state of the processes
+                      are stored
+      --runtime-dir   Changes the directory in which the PID files are stored
+      --log-dir       Changes the directory in which the log files are stored
+      --tmp-dir       Changes the directory in which temp files are stored
       --force-disable-user-change
-                     Forces to not create users, groups or change user
-                     permissions
-      --no-out-link  Do not create a symlink to the output path
-      --show-trace   Shows a trace of the output
-  -h, --help         Shows the usage of this command
+                      Forces to not create users, groups or change user
+                      permissions
+      --no-out-link   Do not create a symlink to the output path
+      --show-trace    Shows a trace of the output
+      --extra-params=PARAMS
+                      A string with an attribute set in the Nix expression
+                      language propagating extra parameters to the input models
+  -h, --help          Shows the usage of this command
 
 Environment:
   NIXPROC_STATE_DIR    Changes the directory in which the state of the
@@ -39,7 +42,7 @@ EOF
 
 # Parse valid argument options
 
-PARAMS=`@getopt@ -n $0 -o P:h -l process-manager:,state-dir:,runtime-dir:,log-dir:,tmp-dir:,force-disable-user-change,no-out-link,show-trace,help -- "$@"`
+PARAMS=`@getopt@ -n $0 -o P:h -l process-manager:,state-dir:,runtime-dir:,log-dir:,tmp-dir:,force-disable-user-change,no-out-link,show-trace,extra-params:,help -- "$@"`
 
 if [ $? != 0 ]
 then
@@ -77,6 +80,9 @@ do
             ;;
         --show-trace)
             showTraceArg="--show-trace"
+            ;;
+        --extra-params)
+            extraParamsArg=("--arg" "extraParams" "$2")
             ;;
         -h|--help)
             showUsage
@@ -135,4 +141,4 @@ fi
 NIXPROC=${NIXPROC:-@NIXPROC@}
 
 # Build the profile
-nix-build $stateDirArg $runtimeDirArg $logDirArg $tmpDirArg $forceDisableUserChangeArg $noOutLinkArg $showTraceArg $processManagerArg --argstr exprFile "$exprFile" $NIXPROC/create-managed-process/$processManager/build-$processManager-env.nix
+nix-build $stateDirArg $runtimeDirArg $logDirArg $tmpDirArg $forceDisableUserChangeArg $noOutLinkArg $showTraceArg $processManagerArg "${extraParamsArg[@]}" --argstr exprFile "$exprFile" $NIXPROC/create-managed-process/$processManager/build-$processManager-env.nix
