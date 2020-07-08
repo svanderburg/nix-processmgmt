@@ -66,4 +66,8 @@ rec {
   simpleInfluxdb = {
     pkg = constructors.simpleInfluxdb {};
   };
+
+  docker = {
+    pkg = constructors.docker;
+  };
 }

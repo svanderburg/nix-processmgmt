@@ -98,4 +98,9 @@ in
     inherit createManagedProcess;
     inherit (pkgs) influxdb;
   };
+
+  docker = import ./docker.nix {
+    inherit createManagedProcess;
+    inherit (pkgs) docker kmod;
+  };
 }

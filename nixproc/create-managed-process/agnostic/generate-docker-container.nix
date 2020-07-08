@@ -51,7 +51,7 @@ let
         wrapper = generateForegroundProxy ({
           wrapDaemon = true;
           executable = daemon;
-          inherit name initialize runtimeDir stdenv;
+          inherit name runtimeDir initialize stdenv;
         } // stdenv.lib.optionalAttrs (instanceName != null) {
           inherit instanceName;
         } // stdenv.lib.optionalAttrs (pidFile != null) {
@@ -79,6 +79,10 @@ let
     tag = "latest";
     runAsRoot = ''
       ${dockerTools.shadowSetup}
+
+      # Create a temp dir, because many apps rely on it
+      mkdir -p /tmp
+      chmod 1777 /tmp
 
       ${stdenv.lib.optionalString (credentialsSpec != null) ''
         export PATH=$PATH:${findutils}/bin:${glibc.bin}/bin

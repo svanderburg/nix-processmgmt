@@ -134,7 +134,7 @@ deployContainer()
         if [ "$(docker ps -a -f "name=$dockerContainerName\$" | wc -l)" = "1" ]
         then
             (
-            cat $configDir/*-docker-createparams
+            cat $configDir/$containerName-docker-createparams
             echo "--name"
             echo "$dockerContainerName"
 
