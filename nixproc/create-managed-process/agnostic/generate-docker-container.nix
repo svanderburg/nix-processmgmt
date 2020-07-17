@@ -25,6 +25,10 @@
 # nice unsupported
 
 let
+  util = import ../util {
+    inherit (stdenv) lib;
+  };
+
   generateForegroundProxy = import ./generate-foreground-proxy.nix {
     inherit stdenv writeTextFile;
   };
@@ -64,15 +68,16 @@ let
   # Instead, we mount the host system's Nix store so that the software is still accessible inside the container.
   cmdWithoutContext = map (arg: if builtins.isAttrs arg then builtins.unsafeDiscardStringContext arg else toString arg) cmd;
 
-  _path = basePackages ++ path;
-
-  _environment = {
-    PATH = builtins.concatStringsSep ":" (map(package: "${package}/bin" ) _path);
-  } // environment;
+  _environment = util.appendPathToEnvironment {
+    inherit environment;
+    path = basePackages ++ path;
+  };
 
   credentialsSpec = if credentials == {} || forceDisableUserChange then null else createCredentials credentials;
 
-  _user = if forceDisableUserChange then null else user;
+  _user = util.determineUser {
+    inherit user forceDisableUserChange;
+  };
 
   dockerImage = dockerTools.buildImage (stdenv.lib.recursiveUpdate {
     inherit name;

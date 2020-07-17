@@ -54,16 +54,6 @@ makeTest {
       virtualisation.memorySize = 8192;
       virtualisation.diskSize = 4096;
 
-      users.extraUsers = {
-        webapp = {
-          uid = 1000;
-          group = "users";
-          shell = "/bin/sh";
-          description = "Unprivileged user";
-          home = "/var/empty";
-        };
-      };
-
       # We can't download any substitutes in a test environment. To make tests
       # faster, we disable substitutes so that Nix does not waste any time by
       # attempting to download them.
@@ -113,6 +103,11 @@ makeTest {
     )
 
     machine.wait_for_unit("nix-process-docker")
+
+    machine.succeed("mkdir -p /home/sbu")
+    machine.succeed(
+        "cp ${/home/sbu/dysnomia-0.10pre1234.tar.gz} /home/sbu/dysnomia-0.10pre1234.tar.gz"
+    )
 
     # Deploy the system with foreground webapp processes
 

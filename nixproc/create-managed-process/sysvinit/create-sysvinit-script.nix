@@ -92,6 +92,13 @@ name
 }:
 
 let
+  util = import ../util {
+    inherit (stdenv) lib;
+  };
+
+  isCommonActivity = {activityName}:
+    activityName == "start" && activityName == "stop" && activityName == "reload" && activityName == "restart" && activityName == "status" && activityName == "*";
+
   # Enumerates the activities in a logical order -- the common activities first, then the remaining activities in alphabetical order
   enumerateActivities = activities:
     stdenv.lib.optional (activities ? start) "start"
@@ -99,10 +106,17 @@ let
     ++ stdenv.lib.optional (activities ? reload) "reload"
     ++ stdenv.lib.optional (activities ? restart) "restart"
     ++ stdenv.lib.optional (activities ? status) "status"
-    ++ builtins.filter (activityName: activityName != "start" && activityName != "stop" && activityName != "reload" && activityName != "restart" && activityName != "status" && activityName != "*") (builtins.attrNames activities)
+    ++ builtins.filter (activityName: !isCommonActivity { inherit activityName; }) (builtins.attrNames activities)
     ++ stdenv.lib.optional (activities ? "*") "*";
 
-  _user = if forceDisableUserChange then null else user;
+  _user = util.determineUser {
+    inherit user forceDisableUserChange;
+  };
+
+  pidFilesDir = util.determinePIDFilesDir {
+    user = _user;
+    inherit runtimeDir tmpDir;
+  };
 
   _instructions = (stdenv.lib.optionalAttrs (process != null) {
     start = {
@@ -110,7 +124,11 @@ let
       instruction =
         initialize +
         (if processIsDaemon then "${startDaemon} ${stdenv.lib.optionalString (pidFile != null) "-f -p ${pidFile}"} ${stdenv.lib.optionalString (nice != null) "-n ${nice}"} ${stdenv.lib.optionalString (_user != null) "$(type -p su) ${_user} -c '"}${process} ${stdenv.lib.escapeShellArgs args} ${stdenv.lib.optionalString (_user != null) "'"}"
-        else "${startProcessAsDaemon} -U -i ${if pidFile == null then "-P ${runtimeDir} -n $(basename ${process})" else "-F ${pidFile}"} ${stdenv.lib.optionalString (_user != null) "-u ${_user}"} -- ${process} ${toString args}");
+        else util.daemonizeForegroundProcess {
+          daemon = startProcessAsDaemon;
+          user = _user;
+          inherit process args pidFile pidFilesDir;
+        });
     };
     stop = {
       activity = "Stopping";
@@ -150,9 +168,9 @@ let
   _defaultStop = if runlevels != [] then stdenv.lib.subtractLists _defaultStart supportedRunlevels
     else defaultStop;
 
-  _environment = stdenv.lib.optionalAttrs (path != []) {
-    PATH = builtins.concatStringsSep ":" (map (package: "${package}/bin") path) + ":$PATH";
-  } // environment;
+  _environment = util.appendPathToEnvironment {
+    inherit environment path;
+  };
 
   initdScript = writeTextFile {
     inherit name;
@@ -182,14 +200,10 @@ let
     + stdenv.lib.optionalString (directory != null) ''
       cd ${directory}
     ''
-    + stdenv.lib.concatMapStrings (name:
-        let
-          value = builtins.getAttr name _environment;
-        in
-        ''
-          export ${name}=${stdenv.lib.escapeShellArg value}
-        ''
-      ) (builtins.attrNames _environment)
+    + util.printShellEnvironmentVariables {
+      environment = _environment;
+      allowSystemPath = true;
+    }
     + ''
 
       case "$1" in

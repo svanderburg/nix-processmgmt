@@ -28,6 +28,10 @@ in
 }:
 
 let
+  util = import ../util {
+    inherit (stdenv) lib;
+  };
+
   _path = basePackages ++ [ daemonPkg ] ++ path;
 
   _environment = {
@@ -43,7 +47,14 @@ let
           else "${tmpDir}/${instanceName}.pid"
     else pidFile;
 
-  _user = if forceDisableUserChange then null else user;
+  _user = util.determineUser {
+    inherit user forceDisableUserChange;
+  };
+
+  pidFilesDir = util.determinePIDFilesDir {
+    user = _user;
+    inherit runtimeDir tmpDir;
+  };
 in
 createProcessScript (stdenv.lib.recursiveUpdate ({
   inherit name dependencies credentials postInstall;
@@ -76,9 +87,15 @@ createProcessScript (stdenv.lib.recursiveUpdate ({
     ''
     + (if (daemon != null) then ''
       exec ${stdenv.lib.optionalString (_user != null) "su ${_user} -c '"} ${daemon} ${stdenv.lib.escapeShellArgs daemonArgs} ${stdenv.lib.optionalString (_user != null) "'"}
-    '' else if (foregroundProcess != null) then ''
-      exec daemon -U -i ${if _pidFile == null then "-P ${runtimeDir} -n $(basename ${foregroundProcess})" else "-F ${_pidFile}"} ${stdenv.lib.optionalString (nice != null) "-n ${nice}"} ${stdenv.lib.optionalString (_user != null) "-u ${_user}"} -- ${foregroundProcess} ${stdenv.lib.escapeShellArgs foregroundProcessArgs}
-    '' else throw "I don't know how to start this process!");
+    '' else if (foregroundProcess != null) then util.daemonizeForegroundProcess {
+      daemon = "daemon";
+      process = foregroundProcess;
+      args = foregroundProcessArgs;
+      pidFile = _pidFile;
+      user = _user;
+      inherit pidFilesDir;
+    }
+    else throw "I don't know how to start this process!");
   };
 } // stdenv.lib.optionalAttrs (_pidFile != null) {
   pidFile = _pidFile;

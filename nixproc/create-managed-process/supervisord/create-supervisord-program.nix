@@ -24,6 +24,10 @@ name
 }@params:
 
 let
+  util = import ../util {
+    inherit (stdenv) lib;
+  };
+
   properties = removeAttrs params ([ "name" "command" "useProxy" "pidFile" "path" "environment" "dependencies" "credentials" "postInstall" ] ++ stdenv.lib.optional forceDisableUserChange "user");
 
   priority = if dependencies == [] then 1
@@ -31,9 +35,10 @@ let
 
   _command = (stdenv.lib.optionalString useProxy "${supervisor}/bin/pidproxy ${runtimeDir}/${pidFile} ") + command;
 
-  _environment = {
-    PATH = builtins.concatStringsSep ":" (map (package: "${package}/bin") (basePackages ++ path));
-  } // environment;
+  _environment = util.appendPathToEnvironment {
+    inherit environment;
+    path = basePackages ++ path;
+  };
 
   confFile = writeTextFile {
     name = "${name}.conf";

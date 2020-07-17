@@ -80,15 +80,21 @@ name
 assert command == null -> commands ? start && commands ? stop;
 
 let
+  util = import ../util {
+    inherit (stdenv) lib;
+  };
+
   extraCommands = builtins.attrNames (removeAttrs commands builtinCommands);
 
-  _user = if forceDisableUserChange then null else user;
+  _user = util.determineUser {
+    inherit user forceDisableUserChange;
+  };
 
   _command = if commandIsDaemon then command else "daemon";
   _commandArgs = if commandIsDaemon then commandArgs else
-   stdenv.lib.optionals (pidFile != null) [ "-p" pidFile ]
-   ++ [ command ]
-   ++ commandArgs;
+    stdenv.lib.optionals (pidFile != null) [ "-p" pidFile ]
+    ++ [ command ]
+    ++ commandArgs;
 
   _requires = map (dependency: dependency.name) dependencies ++ requires;
 
@@ -188,7 +194,7 @@ let
     ) (builtins.attrNames commands)
     + stdenv.lib.optionalString (path != []) ''
 
-      PATH="${builtins.concatStringsSep ":" (map(package: "${package}/bin") path)}:$PATH"
+      PATH="${util.composePathEnvVariable { inherit path; }}"
       export PATH
     ''
     + "\n"

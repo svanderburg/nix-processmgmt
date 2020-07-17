@@ -31,11 +31,16 @@ name
 }@args:
 
 let
+  util = import ../util {
+    inherit (stdenv) lib;
+  };
+
   sections = removeAttrs args [ "name" "environment" "dependencies" "path" "credentials" "postInstall" ];
 
-  _environment = {
-    PATH = builtins.concatStringsSep ":" (map (package: "${package}/bin") (basePackages ++ path));
-  } // environment;
+  _environment = util.appendPathToEnvironment {
+    inherit environment;
+    path = basePackages ++ path;
+  };
 
   generateEnvironmentVariables = environment:
     stdenv.lib.concatMapStrings (name:

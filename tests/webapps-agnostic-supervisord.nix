@@ -25,6 +25,14 @@ let
     exprFile = ../examples/webapps-agnostic/processes.nix;
   };
 
+  processesEnvAdvanced = import ../nixproc/create-managed-process/supervisord/build-supervisord-env.nix {
+    exprFile = ../examples/webapps-agnostic/processes-advanced.nix;
+  };
+
+  processesEnvEmpty = import ../nixproc/create-managed-process/supervisord/build-supervisord-env.nix {
+    exprFile = ../examples/webapps-agnostic/processes-empty.nix;
+  };
+
   tools = import ../tools {};
 
   nix-processmgmt = ./..;
@@ -36,20 +44,9 @@ makeTest {
     {pkgs, ...}:
 
     {
-      virtualisation.pathsInNixDB = [ pkgs.stdenv ] ++ pkgs.coreutils.all ++ [ supervisordProcessEnv processesEnvForeground processesEnvDaemon processesEnvAuto ];
+      virtualisation.pathsInNixDB = [ pkgs.stdenv ] ++ pkgs.coreutils.all ++ [ supervisordProcessEnv processesEnvForeground processesEnvDaemon processesEnvAuto processesEnvAdvanced processesEnvEmpty ];
       virtualisation.writableStore = true;
       virtualisation.memorySize = 1024;
-
-      users.extraUsers = {
-        unprivileged = {
-          uid = 1000;
-          group = "users";
-          shell = "/bin/sh";
-          description = "Unprivileged user";
-          home = "/home/unprivileged";
-          createHome = true;
-        };
-      };
 
       # We can't download any substitutes in a test environment. To make tests
       # faster, we disable substitutes so that Nix does not waste any time by

@@ -28,6 +28,32 @@ let
     exprFile = ../examples/webapps-agnostic/processes.nix;
   };
 
+  processesEnvUnprivileged = import ../nixproc/create-managed-process/sysvinit/build-sysvinit-env.nix {
+    exprFile = ../examples/webapps-agnostic/processes.nix;
+    stateDir = "/home/unprivileged/var";
+    forceDisableUserChange = true;
+  };
+
+  processesEnvAdvanced = import ../nixproc/create-managed-process/sysvinit/build-sysvinit-env.nix {
+    exprFile = ../examples/webapps-agnostic/processes-advanced.nix;
+  };
+
+  processesEnvAdvancedUnprivileged = import ../nixproc/create-managed-process/sysvinit/build-sysvinit-env.nix {
+    exprFile = ../examples/webapps-agnostic/processes-advanced.nix;
+    stateDir = "/home/unprivileged/var";
+    forceDisableUserChange = true;
+  };
+
+  processesEnvEmpty = import ../nixproc/create-managed-process/sysvinit/build-sysvinit-env.nix {
+    exprFile = ../examples/webapps-agnostic/processes-empty.nix;
+  };
+
+  processesEnvEmptyUnprivileged = import ../nixproc/create-managed-process/sysvinit/build-sysvinit-env.nix {
+    exprFile = ../examples/webapps-agnostic/processes-empty.nix;
+    stateDir = "/home/unprivileged/var";
+    forceDisableUserChange = true;
+  };
+
   tools = import ../tools {};
 
   nix-processmgmt = ./..;
@@ -39,7 +65,18 @@ makeTest {
     {pkgs, ...}:
 
     {
-      virtualisation.pathsInNixDB = [ pkgs.stdenv ] ++ pkgs.coreutils.all ++ [ webappUnprivilegedForegroundMode webappUnprivilegedDaemonMode webappUnprivilegedAutoMode processesEnv ];
+      virtualisation.pathsInNixDB = [ pkgs.stdenv ] ++ pkgs.coreutils.all ++ [
+        webappUnprivilegedForegroundMode
+        webappUnprivilegedDaemonMode
+        webappUnprivilegedAutoMode
+        processesEnv
+        processesEnvUnprivileged
+        processesEnvAdvanced
+        processesEnvAdvancedUnprivileged
+        processesEnvEmpty
+        processesEnvEmptyUnprivileged
+      ];
+
       virtualisation.writableStore = true;
 
       users.extraUsers = {

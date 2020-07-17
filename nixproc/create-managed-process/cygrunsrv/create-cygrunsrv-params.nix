@@ -42,9 +42,14 @@ name
 }:
 
 let
-  _environment = stdenv.lib.optionalAttrs (environmentPath != []) {
-    PATH = builtins.concatStringsSep ":" (map (package: "${package}/bin") environmentPath); # Augment path environment variable, if applicable
-  } // environment;
+  util = import ../util {
+    inherit (stdenv) lib;
+  };
+
+  _environment = util.appendPathToEnvironment {
+    inherit environment;
+    path = environmentPath;
+  };
 
   cygrunsrvConfig = writeTextFile {
     name = "${prefix}${name}-cygrunsrv-params";

@@ -23,9 +23,14 @@ name
 }@args:
 
 let
-  environment = stdenv.lib.optionalAttrs (path != []) {
-    PATH = builtins.concatStringsSep ":" (map (package: "${package}/bin") path); # Augment path environment variable, if applicable
-  } // stdenv.lib.mapAttrs (name: value: toString value) args.EnvironmentVariables or {}; # Convert all environment variables to strings
+  util = import ../util {
+    inherit (stdenv) lib;
+  };
+
+  environment = util.appendPathToEnvironment {
+    environment = stdenv.lib.mapAttrs (name: value: toString value) args.EnvironmentVariables or {}; # Convert all environment variables to strings
+    inherit path;
+  };
 
   label = if args ? Label then args.Label else "${prefix}${name}";
 
