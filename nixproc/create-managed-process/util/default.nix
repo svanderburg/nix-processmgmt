@@ -55,7 +55,10 @@ rec {
    * specified.
    */
   autoGeneratePIDFilePath = {pidFile, instanceName, pidFilesDir}:
-    if pidFile == null then "${pidFilesDir}/${instanceName}.pid" else pidFile;
+    if pidFile == null then
+      if instanceName == null then null
+      else "${pidFilesDir}/${instanceName}.pid"
+    else pidFile;
 
   /*
    * Creates a shell command invocation that deamonizes a foreground process by

@@ -66,7 +66,7 @@ name
 # Command-line arguments passed to the process.
 , args ? []
 # Path to a PID file that the system should use to manage the process. If null, it will use a default path.
-, pidFile ? (if instanceName == null then null else if user == null || user == "root" || forceDisableUserChange then "${runtimeDir}/${instanceName}.pid" else "${tmpDir}/${instanceName}.pid")
+, pidFile ? null
 # Specifies as which user the process should run. If null, the user privileges will not be changed.
 , user ? null
 # Specifies which signal should be send to the process to reload its configuration
@@ -114,8 +114,11 @@ let
   };
 
   pidFilesDir = util.determinePIDFilesDir {
-    user = _user;
-    inherit runtimeDir tmpDir;
+    inherit user runtimeDir tmpDir; # We can't use _user because we want to keep the path convention the same
+  };
+
+  _pidFile = util.autoGeneratePIDFilePath {
+    inherit pidFile instanceName pidFilesDir;
   };
 
   _instructions = (stdenv.lib.optionalAttrs (process != null) {
@@ -124,7 +127,7 @@ let
       instruction =
         let
           invocationCommand =
-            if processIsDaemon then "${startDaemon} ${stdenv.lib.optionalString (pidFile != null) "-f -p ${pidFile}"} ${stdenv.lib.optionalString (nice != null) "-n ${nice}"} "
+            if processIsDaemon then "${startDaemon} ${stdenv.lib.optionalString (_pidFile != null) "-f -p ${_pidFile}"} ${stdenv.lib.optionalString (nice != null) "-n ${nice}"} "
               + util.invokeDaemon {
                 inherit process args;
                 su = "$(type -p su)"; # the loadproc command requires a full path to an executable
@@ -133,18 +136,19 @@ let
             else util.daemonizeForegroundProcess {
               daemon = startProcessAsDaemon;
               user = _user;
-              inherit process args pidFile pidFilesDir;
+              pidFile = _pidFile;
+              inherit process args pidFilesDir;
             };
         in
         initialize + invocationCommand;
     };
     stop = {
       activity = "Stopping";
-      instruction = "${stopDaemon} ${stdenv.lib.optionalString (pidFile != null) "-p ${pidFile}"} ${process}";
+      instruction = "${stopDaemon} ${stdenv.lib.optionalString (_pidFile != null) "-p ${_pidFile}"} ${process}";
     };
     reload = {
       activity = "Reloading";
-      instruction = "${reloadDaemon} ${stdenv.lib.optionalString (pidFile != null) "-p ${pidFile}"} ${process} ${reloadSignal}";
+      instruction = "${reloadDaemon} ${stdenv.lib.optionalString (_pidFile != null) "-p ${_pidFile}"} ${process} ${reloadSignal}";
     };
   }) // instructions;
 
@@ -159,7 +163,7 @@ let
       ) _instructions;
 
       defaultActivities = stdenv.lib.optionalAttrs (process != null) {
-        status = "${statusCommand} ${stdenv.lib.optionalString (pidFile != null) "-p ${pidFile}"} ${process}";
+        status = "${statusCommand} ${stdenv.lib.optionalString (_pidFile != null) "-p ${_pidFile}"} ${process}";
         restart = restartActivity;
       } // {
         "*" = ''

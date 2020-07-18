@@ -9,7 +9,11 @@
 }:
 
 let
-  credentialsSpec = credentialsSpec = util.createCredentialsOrNull {
+  util = import ../util {
+    inherit (stdenv) lib;
+  };
+
+  credentialsSpec = util.createCredentialsOrNull {
     inherit createCredentials credentials forceDisableUserChange;
   };
 in

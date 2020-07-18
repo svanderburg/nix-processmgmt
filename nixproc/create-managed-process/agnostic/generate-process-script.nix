@@ -37,32 +37,26 @@ let
     path = basePackages ++ [ daemonPkg ] ++ path;
   };
 
-  _pidFile =
-    if pidFile == null
-      then if instanceName == null
-        then null
-        else if user == null || user == "root"
-          then "${runtimeDir}/${instanceName}.pid"
-          else "${tmpDir}/${instanceName}.pid"
-    else pidFile;
-
   _user = util.determineUser {
     inherit user forceDisableUserChange;
   };
 
   pidFilesDir = util.determinePIDFilesDir {
-    user = _user;
-    inherit runtimeDir tmpDir;
+    inherit user runtimeDir tmpDir; # We can't use _user because we want to keep the path convention the same
+  };
+
+  _pidFile = util.autoGeneratePIDFilePath {
+    inherit pidFile instanceName pidFilesDir;
   };
 
   invocationCommand =
-    if (daemon != null) then util.invokeDaemon {
+    if daemon != null then util.invokeDaemon {
       process = daemon;
       args = daemonArgs;
       su = "su";
       user = _user;
     }
-    else if (foregroundProcess != null) then util.daemonizeForegroundProcess {
+    else if foregroundProcess != null then util.daemonizeForegroundProcess {
       daemon = "daemon";
       process = foregroundProcess;
       args = foregroundProcessArgs;

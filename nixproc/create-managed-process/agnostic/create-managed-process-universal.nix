@@ -51,7 +51,7 @@ let
 
   createBSDRCScript = import ../bsdrc/create-bsdrc-script.nix {
     inherit (pkgs) writeTextFile stdenv;
-    inherit createCredentials forceDisableUserChange runtimeDir;
+    inherit createCredentials forceDisableUserChange runtimeDir tmpDir;
 
     rcSubr = import ../bsdrc/rcsubr.nix {
       inherit (pkgs) stdenv;

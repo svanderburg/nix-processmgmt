@@ -12,6 +12,8 @@
 , defaultStopSignal ? "TERM"
 # Default run time directory where PID files are stored
 , runtimeDir ? "/var/run"
+# Directory in which temp files are stored
+, tmpDir ? "/tmp"
 # Specifies whether user changing functionality should be disabled or not
 , forceDisableUserChange ? false
 }:
@@ -40,7 +42,7 @@ name
 # A name that uniquely identifies each process instance. It is used to generate a unique PID file.
 , instanceName ? null
 # Path to a PID file that the system should use to manage the process. If null, it will use a default path.
-, pidFile ? (if instanceName == null then null else "${runtimeDir}/${instanceName}.pid")
+, pidFile ? null
 # If not null, the nice level be changed before executing any activities
 , nice ? null
 # If not null, the current working directory will be changed before executing any activities
@@ -109,6 +111,14 @@ let
     ) (builtins.attrNames environment);
   };
 
+  pidFilesDir = util.determinePIDFilesDir {
+    inherit user runtimeDir tmpDir; # We can't use _user because we want to keep the path convention the same
+  };
+
+  _pidFile = util.autoGeneratePIDFilePath {
+    inherit pidFile instanceName pidFilesDir;
+  };
+
   rcScript = writeTextFile {
     inherit name;
     executable = true;
@@ -157,8 +167,8 @@ let
     + stdenv.lib.optionalString (requiredModules != []) ''
       required_modules="${toString requiredModules}"
     ''
-    + stdenv.lib.optionalString (pidFile != null) ''
-      pidfile="${pidFile}"
+    + stdenv.lib.optionalString (_pidFile != null) ''
+      pidfile="${_pidFile}"
     ''
     + stdenv.lib.optionalString (reloadSignal != defaultReloadSignal) ''
       sig_reload="${reloadSignal}"
