@@ -32,11 +32,10 @@ let
     inherit (stdenv) lib;
   };
 
-  _path = basePackages ++ [ daemonPkg ] ++ path;
-
-  _environment = {
-    PATH = builtins.concatStringsSep ":" (map (package: "${package}/bin") _path) + ":$PATH";
-  } // environment;
+  _environment = util.appendPathToEnvironment {
+    inherit environment;
+    path = basePackages ++ [ daemonPkg ] ++ path;
+  };
 
   _pidFile =
     if pidFile == null
@@ -55,6 +54,23 @@ let
     user = _user;
     inherit runtimeDir tmpDir;
   };
+
+  invocationCommand =
+    if (daemon != null) then util.invokeDaemon {
+      process = daemon;
+      args = daemonArgs;
+      su = "su";
+      user = _user;
+    }
+    else if (foregroundProcess != null) then util.daemonizeForegroundProcess {
+      daemon = "daemon";
+      process = foregroundProcess;
+      args = foregroundProcessArgs;
+      pidFile = _pidFile;
+      user = _user;
+      inherit pidFilesDir;
+    }
+    else throw "I don't know how to start this process!";
 in
 createProcessScript (stdenv.lib.recursiveUpdate ({
   inherit name dependencies credentials postInstall;
@@ -65,14 +81,10 @@ createProcessScript (stdenv.lib.recursiveUpdate ({
     text = ''
       #! ${stdenv.shell} -e
     ''
-    + stdenv.lib.concatMapStrings (name:
-        let
-          value = builtins.getAttr name _environment;
-        in
-        ''
-          export ${name}=${if name == "PATH" then value else stdenv.lib.escapeShellArg value}
-        ''
-      ) (builtins.attrNames _environment)
+    + util.printShellEnvironmentVariables {
+      environment = _environment;
+      allowSystemPath = true;
+    }
     + stdenv.lib.optionalString (umask != null) ''
       umask ${umask}
     ''
@@ -85,17 +97,7 @@ createProcessScript (stdenv.lib.recursiveUpdate ({
     + stdenv.lib.optionalString (initialize != null) ''
       ${initialize}
     ''
-    + (if (daemon != null) then ''
-      exec ${stdenv.lib.optionalString (_user != null) "su ${_user} -c '"} ${daemon} ${stdenv.lib.escapeShellArgs daemonArgs} ${stdenv.lib.optionalString (_user != null) "'"}
-    '' else if (foregroundProcess != null) then util.daemonizeForegroundProcess {
-      daemon = "daemon";
-      process = foregroundProcess;
-      args = foregroundProcessArgs;
-      pidFile = _pidFile;
-      user = _user;
-      inherit pidFilesDir;
-    }
-    else throw "I don't know how to start this process!");
+    + "exec ${invocationCommand}";
   };
 } // stdenv.lib.optionalAttrs (_pidFile != null) {
   pidFile = _pidFile;

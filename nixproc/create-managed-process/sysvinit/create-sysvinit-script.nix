@@ -97,7 +97,7 @@ let
   };
 
   isCommonActivity = {activityName}:
-    activityName == "start" && activityName == "stop" && activityName == "reload" && activityName == "restart" && activityName == "status" && activityName == "*";
+    activityName == "start" || activityName == "stop" || activityName == "reload" || activityName == "restart" || activityName == "status" || activityName == "*";
 
   # Enumerates the activities in a logical order -- the common activities first, then the remaining activities in alphabetical order
   enumerateActivities = activities:
@@ -122,13 +122,21 @@ let
     start = {
       activity = "Starting";
       instruction =
-        initialize +
-        (if processIsDaemon then "${startDaemon} ${stdenv.lib.optionalString (pidFile != null) "-f -p ${pidFile}"} ${stdenv.lib.optionalString (nice != null) "-n ${nice}"} ${stdenv.lib.optionalString (_user != null) "$(type -p su) ${_user} -c '"}${process} ${stdenv.lib.escapeShellArgs args} ${stdenv.lib.optionalString (_user != null) "'"}"
-        else util.daemonizeForegroundProcess {
-          daemon = startProcessAsDaemon;
-          user = _user;
-          inherit process args pidFile pidFilesDir;
-        });
+        let
+          invocationCommand =
+            if processIsDaemon then "${startDaemon} ${stdenv.lib.optionalString (pidFile != null) "-f -p ${pidFile}"} ${stdenv.lib.optionalString (nice != null) "-n ${nice}"} "
+              + util.invokeDaemon {
+                inherit process args;
+                su = "$(type -p su)"; # the loadproc command requires a full path to an executable
+                user = _user;
+              }
+            else util.daemonizeForegroundProcess {
+              daemon = startProcessAsDaemon;
+              user = _user;
+              inherit process args pidFile pidFilesDir;
+            };
+        in
+        initialize + invocationCommand;
     };
     stop = {
       activity = "Stopping";

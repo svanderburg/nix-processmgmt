@@ -194,7 +194,7 @@ let
     ) (builtins.attrNames commands)
     + stdenv.lib.optionalString (path != []) ''
 
-      PATH="${util.composePathEnvVariable { inherit path; }}"
+      PATH=${util.composePathEnvVariable { inherit path; }}
       export PATH
     ''
     + "\n"

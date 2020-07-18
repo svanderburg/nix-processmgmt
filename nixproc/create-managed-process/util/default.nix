@@ -66,4 +66,15 @@ rec {
     + (if pidFile == null then " --pidfiles ${pidFilesDir} --name $(basename ${process})" else " --pidfile ${pidFile}")
     + lib.optionalString (user != null) " --user ${user}"
     + " -- ${process} ${lib.escapeShellArgs args}";
+
+  /*
+   * Creates a daemon command invocation that escapes parameters and changes the
+   * user, if needed.
+   */
+  invokeDaemon = {process, args, su, user ? null}:
+    let
+      invocation = "${process} ${lib.escapeShellArgs args}";
+    in
+    if user == null then invocation
+    else "${su} ${user} -c ${lib.escapeShellArgs [ invocation ]}";
 }
