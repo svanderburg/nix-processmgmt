@@ -88,7 +88,9 @@ let
     '';
   };
 
-  credentialsSpec = if credentials == {} || forceDisableUserChange then null else createCredentials credentials;
+  credentialsSpec = util.createCredentialsOrNull {
+    inherit createCredentials credentials forceDisableUserChange;
+  };
 in
 stdenv.mkDerivation {
   inherit name;

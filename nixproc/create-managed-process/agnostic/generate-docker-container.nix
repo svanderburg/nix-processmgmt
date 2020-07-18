@@ -73,7 +73,9 @@ let
     path = basePackages ++ path;
   };
 
-  credentialsSpec = if credentials == {} || forceDisableUserChange then null else createCredentials credentials;
+  credentialsSpec = credentialsSpec = util.createCredentialsOrNull {
+    inherit createCredentials credentials forceDisableUserChange;
+  };
 
   _user = util.determineUser {
     inherit user forceDisableUserChange;

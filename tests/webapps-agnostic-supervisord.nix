@@ -25,6 +25,11 @@ let
     exprFile = ../examples/webapps-agnostic/processes.nix;
   };
 
+  processesEnvAutoUnprivileged = import ../nixproc/create-managed-process/supervisord/build-supervisord-env.nix {
+    exprFile = ../examples/webapps-agnostic/processes.nix;
+    forceDisableUserChange = true;
+  };
+
   processesEnvAdvanced = import ../nixproc/create-managed-process/supervisord/build-supervisord-env.nix {
     exprFile = ../examples/webapps-agnostic/processes-advanced.nix;
   };
@@ -44,7 +49,16 @@ makeTest {
     {pkgs, ...}:
 
     {
-      virtualisation.pathsInNixDB = [ pkgs.stdenv ] ++ pkgs.coreutils.all ++ [ supervisordProcessEnv processesEnvForeground processesEnvDaemon processesEnvAuto processesEnvAdvanced processesEnvEmpty ];
+      virtualisation.pathsInNixDB = [ pkgs.stdenv ] ++ pkgs.coreutils.all ++ [
+        supervisordProcessEnv
+        processesEnvForeground
+        processesEnvDaemon
+        processesEnvAuto
+        processesEnvAutoUnprivileged
+        processesEnvAdvanced
+        processesEnvEmpty
+      ];
+
       virtualisation.writableStore = true;
       virtualisation.memorySize = 1024;
 
