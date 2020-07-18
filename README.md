@@ -95,7 +95,7 @@ a sysvinit script that can be used to control a simple web application
 process that just returns a static HTML page:
 
 ```nix
-{createSystemVInitScript, runtimeDir}:
+{createSystemVInitScript, tmpDir}:
 {port, instanceSuffix ? ""}:
 
 let
@@ -109,7 +109,7 @@ createSystemVInitScript {
   args = [ "-D" ];
   environment = {
     PORT = port;
-    PID_FILE = "${runtimeDir}/${instanceName}.pid";
+    PID_FILE = "${tmpDir}/${instanceName}.pid";
   };
 
   runlevels = [ 3 4 5 ];
@@ -195,7 +195,7 @@ configurations can be generated.
 This expression is a process manager-agnostic version of the previous example:
 
 ```nix
-{createManagedProcess, runtimeDir}:
+{createManagedProcess, tmpDir}:
 {port, instanceSuffix ? ""}:
 
 let
@@ -214,7 +214,7 @@ createManagedProcess {
 
   environment = {
     PORT = port;
-    PID_FILE = "${runtimeDir}/${instanceName}.pid";
+    PID_FILE = "${tmpDir}/${instanceName}.pid";
   };
   user = instanceName;
   credentials = {
@@ -290,7 +290,7 @@ let
 in
 {
   webapp = import ./webapp.nix {
-    inherit createManagedProcess runtimeDir;
+    inherit createManagedProcess tmpDir;
   };
 
   nginxReverseProxy = import ./nginx-reverse-proxy.nix {
