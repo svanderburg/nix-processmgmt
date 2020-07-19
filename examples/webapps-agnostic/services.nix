@@ -18,15 +18,9 @@ let
     webappMode = null;
   };
 
-  processType =
-    if processManager == null then "managed-process"
-    else if processManager == "sysvinit" then "sysvinit-script"
-    else if processManager == "systemd" then "systemd-unit"
-    else if processManager == "supervisord" then "supervisord-program"
-    else if processManager == "bsdrc" then "bsdrc-script"
-    else if processManager == "cygrunsrv" then "cygrunsrv-service"
-    else if processManager == "launchd" then "launchd-daemon"
-    else throw "Unknown process manager: ${processManager}";
+  processType = ../../nixproc/derive-dysnomia-process-type.nix {
+    inherit processManager;
+  };
 in
 rec {
   webapp = rec {

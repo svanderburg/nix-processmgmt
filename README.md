@@ -457,6 +457,174 @@ unprivileged user:
 $ nixproc-sysvinit-switch --state-dir /home/sander/var --force-disable-user-change processes.nix
 ```
 
+Integration with Disnix
+-----------------------
+In addition to the fact that this toolset provides a `disnix` backend that
+facilitates universal and easy local deployment, any process model is basically
+a sub set of a Disnix services model.
+
+By augmenting all processes in a processes model with a number of additional
+properties, we can turn it into a fully functional Disnix services model:
+
+```nix
+{ pkgs ? import <nixpkgs> { inherit system; }
+, system ? builtins.currentSystem
+, stateDir ? "/var"
+, runtimeDir ? "${stateDir}/run"
+, logDir ? "${stateDir}/log"
+, tmpDir ? (if stateDir == "/var" then "/tmp" else "${stateDir}/tmp")
+, forceDisableUserChange ? false
+}:
+
+let
+  processManager = "sysvinit";
+
+  constructors = import ./constructors.nix {
+    inherit pkgs stateDir runtimeDir logDir tmpDir forceDisableUserChange processManager;
+  };
+in
+rec {
+  webapp1 = rec {
+    name = "webapp1";
+    port = 5000;
+    dnsName = "webapp1.local";
+
+    pkg = constructors.webapp {
+      inherit port;
+    };
+
+    type = "sysvinit-script";
+  };
+
+  webapp2 = rec {
+    name = "webapp2";
+    port = 5001;
+    dnsName = "webapp2.local";
+
+    pkg = constructors.webapp {
+      inherit port;
+    };
+
+    type = "sysvinit-script";
+  };
+
+  nginxReverseProxy = rec {
+    name = "nginxReverseProxy";
+    port = 8080;
+
+    pkg = constructors.nginxReverseProxy {
+      webapps = [ webapp1 webapp2 ];
+      inherit port;
+    } {};
+
+    type = "sysvinit-script";
+  };
+}
+```
+
+In the above Disnix services, the following changes were made:
+
+* The `processManager` is hardcoded to `sysvinit`.
+* Every process has been turned into a service by augmenting the following
+  properties: `name` corresponds to the key in attribute set, and `type`
+  to the Dysnomia plugin that manages its lifecycle. To manage the lifecycle
+  of a `sysvinit-script` we can use the Dysnomia plugin with the same name.
+
+Dysnomia, the toolset that manages the lifecycles of services, has plugins for
+the same process managers that this toolset supports. With a few small
+modifications, we can make a universal services model that allows us to pick
+any process management solution that this toolset supports based on the on the
+value of the `processManager` parameter:
+
+```nix
+{ pkgs ? import <nixpkgs> { inherit system; }
+, system ? builtins.currentSystem
+, stateDir ? "/var"
+, runtimeDir ? "${stateDir}/run"
+, logDir ? "${stateDir}/log"
+, tmpDir ? (if stateDir == "/var" then "/tmp" else "${stateDir}/tmp")
+, forceDisableUserChange ? false
+, processManager ? "sysvinit"
+}:
+
+let
+  processType = import ../../nixproc/derive-dysnomia-process-type.nix {
+    inherit processManager;
+  };
+
+  constructors = import ./constructors.nix {
+    inherit pkgs stateDir runtimeDir logDir tmpDir forceDisableUserChange processManager;
+  };
+in
+rec {
+  webapp1 = rec {
+    name = "webapp1";
+    port = 5000;
+    dnsName = "webapp1.local";
+
+    pkg = constructors.webapp {
+      inherit port;
+    };
+
+    type = processType;
+  };
+
+  webapp2 = rec {
+    name = "webapp2";
+    port = 5001;
+    dnsName = "webapp2.local";
+
+    pkg = constructors.webapp {
+      inherit port;
+    };
+
+    type = processType;
+  };
+
+  nginxReverseProxy = rec {
+    name = "nginxReverseProxy";
+    port = 8080;
+
+    pkg = constructors.nginxReverseProxy {
+      webapps = [ webapp1 webapp2 ];
+      inherit port;
+    } {};
+
+    type = processType;
+  };
+}
+```
+
+In the services model shown above, we have re-introduced the `processManager`
+parameter. We use a convenience function that derives the `processType` from
+the selected `processManager`. For example, `sysvinit` maps to `sysvinit-script`,
+`systemd` to `systemd-unit`, `supervisord` to `supervisord-program` etc.
+All the service's `type` attributes bind to the derived `processType`.
+
+There is also a special case -- when `processManager` is `null`, then the
+selected type will be `managed-process`, that works with process
+manager-agnostic JSON configuration files that get converted to a
+process-manager specific configuration on the target machines (with
+the `nixproc-generate-config` tool) and deployed as such.
+
+`managed-process` is useful when we want to deploy services in a network of
+machines running various opeating and process managers by using the same
+deployment specifications.
+
+By combining the services model shown above with an infrastructure model, and
+distribution model, we can deploy the system to a network of machines:
+
+```bash
+$ disnix-env -s services.nix -i infrastructure.nix -d distribution.nix
+```
+
+the following command allows us to pick a different process manager, such as
+`systemd`:
+
+```bash
+$ disnix-env -s services.nix -i infrastructure.nix -d distribution.nix --extra-params '{ processManager = "systemd"; }'
+```
+
 Examples
 ========
 This repository contains three example systems, that can be found in the
