@@ -73,7 +73,7 @@ let
     path = basePackages ++ path;
   };
 
-  credentialsSpec = credentialsSpec = util.createCredentialsOrNull {
+  credentialsSpec = util.createCredentialsOrNull {
     inherit createCredentials credentials forceDisableUserChange;
   };
 

@@ -469,6 +469,7 @@ properties, we can turn it into a fully functional Disnix services model:
 ```nix
 { pkgs ? import <nixpkgs> { inherit system; }
 , system ? builtins.currentSystem
+, distribution, invDistribution
 , stateDir ? "/var"
 , runtimeDir ? "${stateDir}/run"
 , logDir ? "${stateDir}/log"
@@ -539,6 +540,7 @@ value of the `processManager` parameter:
 ```nix
 { pkgs ? import <nixpkgs> { inherit system; }
 , system ? builtins.currentSystem
+, distribution, invDistribution
 , stateDir ? "/var"
 , runtimeDir ? "${stateDir}/run"
 , logDir ? "${stateDir}/log"
