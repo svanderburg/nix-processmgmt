@@ -70,7 +70,7 @@ do
             tmpDirArg="--tmp-dir $2"
             ;;
         --force-disable-user-change)
-            forceDisableUserChangeArg="--force-disable-user-change"
+            forceDisableUserChangeArg="--arg forceDisableUserChange true"
             ;;
         --no-out-link)
             noOutLinkArg="--no-out-link"

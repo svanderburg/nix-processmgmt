@@ -12,7 +12,7 @@ let
   createManagedProcessFromConfig = configFile:
     let
       createManagedProcess = import ./create-managed-process-universal.nix {
-        inherit pkgs runtimeDir tmpDir forceDisableUserChange processManager;
+        inherit pkgs stateDir runtimeDir tmpDir forceDisableUserChange processManager;
       };
 
       properties = builtins.fromJSON (builtins.readFile configFile);
