@@ -45,7 +45,6 @@ makeTest {
         pkgs.dysnomia
         tools.build
         tools.generate-config
-        tools.sysvinit
       ];
     };
 
