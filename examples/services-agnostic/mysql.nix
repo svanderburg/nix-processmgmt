@@ -1,8 +1,7 @@
 {createManagedProcess, stdenv, mysql, stateDir, runtimeDir, forceDisableUserChange}:
-{port ? 3306, instanceSuffix ? "", postInstall ? ""}:
+{port ? 3306, instanceSuffix ? "", instanceName ? "mysqld${instanceSuffix}", postInstall ? ""}:
 
 let
-  instanceName = "mysqld${instanceSuffix}";
   dataDir = "${stateDir}/db/${instanceName}";
   instanceRuntimeDir = "${runtimeDir}/${instanceName}";
   user = instanceName;

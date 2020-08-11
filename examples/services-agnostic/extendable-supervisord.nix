@@ -1,14 +1,13 @@
 {createManagedProcess, writeTextFile, supervisor, runtimeDir, logDir, stateDir}:
-{instanceSuffix ? "", inetHTTPServerPort ? 9001, postInstall ? ""}:
+{instanceSuffix ? "", instanceName ? "supervisord${instanceSuffix}", inetHTTPServerPort ? 9001, postInstall ? ""}:
 
 let
-  instanceName = "supervisord${instanceSuffix}";
   includeDir = "${stateDir}/lib/${instanceName}/conf.d";
 in
 import ./supervisord.nix {
   inherit createManagedProcess supervisor logDir runtimeDir;
 } {
-  inherit instanceSuffix postInstall;
+  inherit instanceName postInstall;
 
   initialize = ''
     mkdir -p ${includeDir}

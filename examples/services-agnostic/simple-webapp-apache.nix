@@ -1,8 +1,7 @@
 {createManagedProcess, stdenv, apacheHttpd, php, writeTextFile, logDir, runtimeDir, cacheDir, forceDisableUserChange}:
-{instanceSuffix ? "", port ? 80, modules ? [], serverName ? "localhost", serverAdmin, documentRoot ? ./webapp, enablePHP ? false, enableCGI ? false, extraConfig ? "", postInstall ? ""}:
+{instanceSuffix ? "", instanceName ? "httpd${instanceSuffix}", port ? 80, modules ? [], serverName ? "localhost", serverAdmin, documentRoot ? ./webapp, enablePHP ? false, enableCGI ? false, extraConfig ? "", postInstall ? ""}:
 
 let
-  instanceName = "httpd${instanceSuffix}";
   user = instanceName;
   group = instanceName;
 
@@ -37,7 +36,7 @@ in
 import ./apache.nix {
   inherit createManagedProcess apacheHttpd cacheDir;
 } {
-  inherit instanceSuffix postInstall;
+  inherit instanceName postInstall;
 
   initialize = ''
     mkdir -m0700 -p ${apacheLogDir}

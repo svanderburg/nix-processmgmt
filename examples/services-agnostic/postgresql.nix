@@ -1,8 +1,7 @@
 {createManagedProcess, stdenv, postgresql, stateDir, runtimeDir, forceDisableUserChange}:
-{port ? 5432, instanceSuffix ? ""}:
+{port ? 5432, instanceSuffix ? "", instanceName ? "postgresql${instanceSuffix}"}:
 
 let
-  instanceName = "postgresql${instanceSuffix}";
   dataDir = "${stateDir}/db/${instanceName}/data";
   socketDir = "${runtimeDir}/${instanceName}";
   user = instanceName;

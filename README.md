@@ -96,11 +96,10 @@ process that just returns a static HTML page:
 
 ```nix
 {createSystemVInitScript, tmpDir}:
-{port, instanceSuffix ? ""}:
+{port, instanceSuffix ? "", instanceName ? "webapp${instanceSuffix}"}:
 
 let
   webapp = import ../../webapp;
-  instanceName = "webapp${instanceSuffix}";
 in
 createSystemVInitScript {
   name = instanceName;
@@ -196,11 +195,10 @@ This expression is a process manager-agnostic version of the previous example:
 
 ```nix
 {createManagedProcess, tmpDir}:
-{port, instanceSuffix ? ""}:
+{port, instanceSuffix ? "", instanceName ? "webapp${instanceSuffix}"}:
 
 let
   webapp = import ../../webapp;
-  instanceName = "webapp${instanceSuffix}";
 in
 createManagedProcess {
   name = instanceName;

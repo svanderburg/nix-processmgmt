@@ -1,17 +1,17 @@
 {mysqlConstructorFun, dysnomia, runtimeDir}:
-{port ? 3306, instanceSuffix ? "", type}:
+{port ? 3306, instanceSuffix ? "", instanceName ? "mysql${instanceSuffix}", containerName ? "mysql-database${instanceSuffix}", type}:
 
 let
-  mysqlSocket = "${runtimeDir}/mysqld${instanceSuffix}/mysqld${instanceSuffix}.sock";
+  mysqlSocket = "${runtimeDir}/${instanceName}/${instanceName}.sock";
 
   mysqlUsername = "root";
 
   pkg = mysqlConstructorFun {
-    inherit port instanceSuffix;
+    inherit port instanceName;
     postInstall = ''
       # Add Dysnomia container configuration file for MySQL database
       mkdir -p $out/etc/dysnomia/containers
-      cat > $out/etc/dysnomia/containers/mysql-database${instanceSuffix} <<EOF
+      cat > $out/etc/dysnomia/containers/${containerName} <<EOF
       mysqlPort=${toString port}
       mysqlUsername="${mysqlUsername}"
       mysqlPassword=
@@ -25,10 +25,10 @@ let
   };
 in
 rec {
-  name = "mysql${instanceSuffix}";
+  name = instanceName;
   mysqlPort = port;
 
   inherit pkg type mysqlSocket mysqlUsername;
 
-  providesContainer = "mysql-database${instanceSuffix}";
+  providesContainer = containerName;
 }

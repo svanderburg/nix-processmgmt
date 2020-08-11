@@ -1,15 +1,13 @@
 {svnserveConstructorFun, dysnomia}:
-{instanceSuffix ? "", port ? 3690, svnBaseDir, svnGroup ? "root", type}:
+{instanceSuffix ? "", instanceName ? "svnserve${instanceSuffix}", containerName ? "subversion-repository${instanceSuffix}", port ? 3690, svnBaseDir, svnGroup ? "root", type}:
 
 let
-  instanceName = "svnserve${instanceSuffix}";
-
   pkg = svnserveConstructorFun {
-    inherit instanceSuffix port svnBaseDir svnGroup;
+    inherit instanceName port svnBaseDir svnGroup;
     postInstall = ''
       # Add Dysnomia container configuration file for Subversion repositories
       mkdir -p $out/etc/dysnomia/containers
-      cat > $out/etc/dysnomia/containers/subversion-repository${instanceSuffix} <<EOF
+      cat > $out/etc/dysnomia/containers/${containerName} <<EOF
       svnGroup=${svnGroup}
       svnBaseDir=${svnBaseDir}
       EOF
@@ -23,5 +21,5 @@ in
 {
   name = instanceName;
   inherit pkg type svnGroup svnBaseDir;
-  providesContainer = "subversion-repository";
+  providesContainer = containerName;
 }

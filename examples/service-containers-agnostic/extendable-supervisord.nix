@@ -1,17 +1,15 @@
 {supervisordConstructorFun, stdenv, dysnomia, stateDir}:
-{instanceSuffix ? "", inetHTTPServerPort ? 9001, postInstall ? "", type}:
+{instanceSuffix ? "", instanceName ? "supervisord${instanceSuffix}", containerName ? "supervisord-program${instanceSuffix}", inetHTTPServerPort ? 9001, postInstall ? "", type}:
 
 let
-  instanceName = "supervisord${instanceSuffix}";
-
   supervisordTargetDir = "${stateDir}/lib/${instanceName}/conf.d";
 
   pkg = supervisordConstructorFun {
-    inherit instanceSuffix inetHTTPServerPort;
+    inherit instanceName inetHTTPServerPort;
     postInstall = ''
       # Add Dysnomia container configuration file for Supervisord
       mkdir -p $out/etc/dysnomia/containers
-      cat > $out/etc/dysnomia/containers/supervisord-program${instanceSuffix} <<EOF
+      cat > $out/etc/dysnomia/containers/${containerName} <<EOF
       supervisordTargetDir="${supervisordTargetDir}"
       EOF
 
@@ -22,7 +20,7 @@ let
   };
 in
 {
-  name = "supervisord${instanceSuffix}";
+  name = instanceName;
   inherit pkg type supervisordTargetDir;
-  providesContainer = "supervisord-program";
+  providesContainer = containerName;
 }

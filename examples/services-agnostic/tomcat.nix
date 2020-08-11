@@ -1,8 +1,7 @@
 {createManagedProcess, stdenv, tomcat, jre, stateDir, runtimeDir, tmpDir, forceDisableUserChange, commonLibs ? []}:
-{instanceSuffix ? "", tomcatConfigFiles, postInstall ? ""}:
+{instanceSuffix ? "", instanceName ? "tomcat${instanceSuffix}", tomcatConfigFiles, postInstall ? ""}:
 
 let
-  instanceName = "tomcat${instanceSuffix}";
   baseDir = "${stateDir}/${instanceName}";
   user = instanceName;
   group = instanceName;

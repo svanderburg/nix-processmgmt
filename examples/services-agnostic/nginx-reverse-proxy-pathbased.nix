@@ -1,9 +1,8 @@
 {createManagedProcess, stdenv, writeTextFile, nginx, runtimeDir, stateDir, cacheDir, forceDisableUserChange}:
-{port ? 80, webapps ? [], instanceSuffix ? "", enableCache ? false}:
+{port ? 80, webapps ? [], instanceSuffix ? "", instanceName ? "nginx${instanceSuffix}", enableCache ? false}:
 interDependencies:
 
 let
-  instanceName = "nginx${instanceSuffix}";
   user = instanceName;
   group = instanceName;
 
@@ -16,7 +15,7 @@ in
 import ./nginx.nix {
   inherit createManagedProcess stdenv nginx stateDir forceDisableUserChange runtimeDir cacheDir;
 } {
-  inherit instanceSuffix;
+  inherit instanceName;
 
   dependencies = map (webapp: webapp.pkg) webapps
     ++ map (interDependency: interDependency.pkgs."${stdenv.system}") (builtins.attrValues interDependencies);

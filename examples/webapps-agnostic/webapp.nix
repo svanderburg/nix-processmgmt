@@ -1,9 +1,8 @@
 {createManagedProcess, tmpDir}:
-{port, instanceSuffix ? ""}:
+{port, instanceSuffix ? "", instanceName ? "webapp${instanceSuffix}"}:
 
 let
   webapp = import ../../webapp;
-  instanceName = "webapp${instanceSuffix}";
 in
 createManagedProcess {
   name = instanceName;

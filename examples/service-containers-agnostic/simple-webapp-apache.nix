@@ -1,13 +1,13 @@
 {apacheConstructorFun, dysnomia, forceDisableUserChange}:
-{instanceSuffix ? "", port ? 80, modules ? [], serverName ? "localhost", serverAdmin, documentRoot ? ./webapp, extraConfig ? "", enableCGI ? false, enablePHP ? false, filesetOwner ? null, type}:
+{instanceSuffix ? "", instanceName ? "apache${instanceSuffix}", containerName ? "apache-webapplication${instanceSuffix}", port ? 80, modules ? [], serverName ? "localhost", serverAdmin, documentRoot ? ./webapp, extraConfig ? "", enableCGI ? false, enablePHP ? false, filesetOwner ? null, type}:
 
 let
   pkg = apacheConstructorFun {
-    inherit instanceSuffix port modules serverName serverAdmin documentRoot extraConfig enableCGI enablePHP;
+    inherit instanceName port modules serverName serverAdmin documentRoot extraConfig enableCGI enablePHP;
     postInstall = ''
       # Add Dysnomia container configuration file for the Apache HTTP server
       mkdir -p $out/etc/dysnomia/containers
-      cat > $out/etc/dysnomia/containers/apache-webapplication${instanceSuffix} <<EOF
+      cat > $out/etc/dysnomia/containers/${containerName} <<EOF
       httpPort=${toString port}
       documentRoot=${documentRoot}
       EOF
@@ -19,9 +19,9 @@ let
   };
 in
 {
-  name = "simpleWebappApache${instanceSuffix}";
+  name = instanceName;
   inherit pkg type port documentRoot;
-  providesContainer = "apache-webapplication";
+  providesContainer = containerName;
 } // (if forceDisableUserChange || filesetOwner == null then {} else {
   inherit filesetOwner;
 })

@@ -312,11 +312,10 @@ We can adjust the Nix expression of `webapp` with an `instanceName` parameter:
 
 ```nix
 {createSystemVInitScript}:
-{instanceSuffix ? "", port ? 5000}:
+{instanceSuffix ? "", instanceName ? "webapp${instanceSuffix}", port ? 5000}:
 
 let
   webapp = (import ./webapp {}).package;
-  instanceName = "webapp${instanceSuffix}";
 in
 createSystemVInitScript {
   name = instanceName;
@@ -354,11 +353,10 @@ unprivileged user:
 
 ```nix
 {createSystemVInitScript}:
-{port, instanceSuffix ? ""}:
+{port, instanceSuffix ? "", instanceName ? "webapp${instanceSuffix}"}:
 
 let
   webapp = (import ./webapp {}).package;
-  instanceName = "webapp${instanceSuffix}";
 in
 createSystemVInitScript {
   name = instanceName;

@@ -1,8 +1,7 @@
 {createManagedProcess, stdenv, subversion, runtimeDir, forceDisableUserChange}:
-{instanceSuffix ? "", port ? 3690, svnBaseDir, svnGroup, postInstall ? ""}:
+{instanceSuffix ? "", instanceName ? "svnserve${instanceSuffix}", port ? 3690, svnBaseDir, svnGroup, postInstall ? ""}:
 
 let
-  instanceName = "svnserve${instanceSuffix}";
   pidFile = "${runtimeDir}/${instanceName}.pid";
 in
 createManagedProcess {

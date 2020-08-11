@@ -1,13 +1,13 @@
 {mongodbConstructorFun, stdenv, dysnomia}:
-{instanceSuffix ? "", bindIP ? "127.0.0.1", port ? 27017, mongoDumpArgs ? null, mongoRestoreArgs ? null, type}:
+{instanceSuffix ? "", instanceName ? "mongodb${instanceSuffix}", containerName ? "mongo-database${instanceSuffix}", bindIP ? "127.0.0.1", port ? 27017, mongoDumpArgs ? null, mongoRestoreArgs ? null, type}:
 
 let
   pkg = mongodbConstructorFun {
-    inherit instanceSuffix bindIP port;
+    inherit instanceName bindIP port;
     postInstall = ''
       # Add Dysnomia container configuration file for MongoDB
       mkdir -p $out/etc/dysnomia/containers
-      cat > $out/etc/dysnomia/containers/mongo-database${instanceSuffix} <<EOF
+      cat > $out/etc/dysnomia/containers/${containerName} <<EOF
       ${stdenv.lib.optionalString (mongoDumpArgs != null) (toString mongoDumpArgs)}"}
       ${stdenv.lib.optionalString (mongoRestoreArgs != null) (toString mongoRestoreArgs)}"}
       EOF
@@ -19,10 +19,10 @@ let
   };
 in
 {
-  name = "mongodb${instanceSuffix}";
+  name = instanceName;
   inherit pkg type bindIP port;
 
-  providesContainer = "mongo-database";
+  providesContainer = containerName;
 } // (if mongoDumpArgs == null then {} else {
   inherit mongoDumpArgs;
 }) // (if mongoRestoreArgs == null then {} else {

@@ -1,13 +1,13 @@
 {influxdbConstructorFun, dysnomia}:
-{instanceSuffix ? "", rpcBindIP ? "127.0.0.1", rpcPort ? 8088, httpBindIP ? "", httpPort ? 8086, extraConfig ? "", type}:
+{instanceSuffix ? "", instanceName ? "influxdb${instanceSuffix}", containerName ? "influx-database${instanceSuffix}", rpcBindIP ? "127.0.0.1", rpcPort ? 8088, httpBindIP ? "", httpPort ? 8086, extraConfig ? "", type}:
 
 let
   pkg = influxdbConstructorFun {
-    inherit instanceSuffix rpcBindIP rpcPort httpBindIP httpPort extraConfig;
+    inherit instanceName rpcBindIP rpcPort httpBindIP httpPort extraConfig;
     postInstall = ''
       # Add Dysnomia container configuration file for InfluxDB
       mkdir -p $out/etc/dysnomia/containers
-      cat > $out/etc/dysnomia/containers/influx-database${instanceSuffix} <<EOF
+      cat > $out/etc/dysnomia/containers/${containerName} <<EOF
       httpPort=${toString httpPort}
       EOF
 
@@ -18,7 +18,7 @@ let
   };
 in
 rec {
-  name = "influxdb${instanceSuffix}";
+  name = instanceName;
   inherit pkg type httpPort;
-  providesContainer = "influx-database${instanceSuffix}";
+  providesContainer = containerName;
 }

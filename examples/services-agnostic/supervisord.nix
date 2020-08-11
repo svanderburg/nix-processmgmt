@@ -1,8 +1,7 @@
 {createManagedProcess, supervisor, runtimeDir, logDir}:
-{instanceSuffix ? "", initialize ? "", configFile, postInstall ? ""}:
+{instanceSuffix ? "", instanceName ? "supervisord${instanceSuffix}", initialize ? "", configFile, postInstall ? ""}:
 
 let
-  instanceName = "supervisord${instanceSuffix}";
   pidFile = "${runtimeDir}/${instanceName}.pid";
   logFile = "${logDir}/${instanceName}.log";
 in

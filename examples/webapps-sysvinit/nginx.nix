@@ -1,8 +1,7 @@
 {createSystemVInitScript, stdenv, nginx, stateDir, forceDisableUserChange}:
-{configFile, dependencies ? [], instanceSuffix ? ""}:
+{configFile, dependencies ? [], instanceSuffix ? "", instanceName ? "nginx${instanceSuffix}"}:
 
 let
-  instanceName = "nginx${instanceSuffix}";
   user = instanceName;
   group = instanceName;
   nginxLogDir = "${stateDir}/logs";

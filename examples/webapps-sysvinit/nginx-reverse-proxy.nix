@@ -1,9 +1,8 @@
 {createSystemVInitScript, stdenv, writeTextFile, nginx, runtimeDir, stateDir, logDir, forceDisableUserChange}:
-{port ? 80, webapps ? [], instanceSuffix ? ""}:
+{port ? 80, webapps ? [], instanceSuffix ? "", instanceName ? "nginx${instanceSuffix}"}:
 interDependencies:
 
 let
-  instanceName = "nginx${instanceSuffix}";
   user = instanceName;
   group = instanceName;
 
@@ -14,7 +13,7 @@ import ./nginx.nix {
   inherit createSystemVInitScript stdenv nginx forceDisableUserChange;
   stateDir = nginxStateDir;
 } {
-  inherit instanceSuffix;
+  inherit instanceName;
 
   dependencies = map (webapp: webapp.pkg) webapps
     ++ map (interDependency: interDependency.pkgs."${stdenv.system}") (builtins.attrValues interDependencies);

@@ -1,8 +1,7 @@
 {createManagedProcess, apacheHttpd, cacheDir}:
-{instanceSuffix ? "", configFile, initialize ? "", postInstall ? ""}:
+{instanceSuffix ? "", instanceName ? "httpd${instanceSuffix}", configFile, initialize ? "", postInstall ? ""}:
 
 let
-  instanceName = "httpd${instanceSuffix}";
   user = instanceName;
   group = instanceName;
 in

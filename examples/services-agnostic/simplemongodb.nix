@@ -1,8 +1,7 @@
 {createManagedProcess, stdenv, writeTextFile, mongodb, runtimeDir, stateDir, forceDisableUserChange}:
-{instanceSuffix ? "", bindIP ? "127.0.0.1", port ? 27017, postInstall ? ""}:
+{instanceSuffix ? "", instanceName ? "mongodb${instanceSuffix}", bindIP ? "127.0.0.1", port ? 27017, postInstall ? ""}:
 
 let
-  instanceName = "mongodb${instanceSuffix}";
   mongodbDir = "${stateDir}/db/${instanceName}";
   user = instanceName;
   group = instanceName;
@@ -10,7 +9,7 @@ in
 import ./mongodb.nix {
   inherit createManagedProcess mongodb runtimeDir;
 } {
-  inherit instanceSuffix postInstall;
+  inherit instanceName postInstall;
   configFile = writeTextFile {
     name = "mongodb.conf";
     text = ''
