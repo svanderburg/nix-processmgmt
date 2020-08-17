@@ -35,7 +35,7 @@ let
   };
 
   processesEnvEmpty = import ../nixproc/create-managed-process/supervisord/build-supervisord-env.nix {
-    exprFile = ../examples/webapps-agnostic/processes-empty.nix;
+    exprFile = null;
   };
 
   tools = import ../tools {};
@@ -167,7 +167,7 @@ makeTest {
     # Undeploy the system
 
     machine.succeed(
-        "${env} nixproc-supervisord-switch ${nix-processmgmt}/examples/webapps-agnostic/processes-empty.nix"
+        "${env} nixproc-supervisord-switch --undeploy"
     )
 
     check_system_unavailable()

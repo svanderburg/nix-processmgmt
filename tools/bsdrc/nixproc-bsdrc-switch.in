@@ -8,6 +8,7 @@ showUsage()
 {
     cat <<EOF
 Usage: $0 [OPTION] PATH
+  or: $0 --undeploy [OPTION]
 
 This command starts all BSD rc scripts in the provided Nix profile and
 optionally deactivates all obsolete sysvinit scripts in the previous Nix
@@ -18,6 +19,7 @@ produces a Nix profile. If the provided path is a directory, then it is
 considered a pre-built Nix profile.
 
 Options:
+      --undeploy        Undeploys all previously deployed processes
   -p, --profile=NAME    Name of the Nix profile that stores the BSD rc scripts
                         (defaults to: processes)
   -o, --old-profile=PATH
@@ -56,7 +58,7 @@ EOF
 
 # Parse valid argument options
 
-PARAMS=`@getopt@ -n $0 -o p:o:h -l profile:,old-profile:,enable-at-boot,state-dir:,runtime-dir:,log-dir:,tmp-dir:,force-disable-user-change,show-trace,extra-params:,help -- "$@"`
+PARAMS=`@getopt@ -n $0 -o p:o:h -l undeploy,profile:,old-profile:,enable-at-boot,state-dir:,runtime-dir:,log-dir:,tmp-dir:,force-disable-user-change,show-trace,extra-params:,help -- "$@"`
 
 if [ $? != 0 ]
 then
@@ -71,6 +73,9 @@ eval set -- "$PARAMS"
 while [ "$1" != "--" ]
 do
     case "$1" in
+        --undeploy)
+            undeploy=1
+            ;;
         -p|--profile)
             profile="$2"
             ;;

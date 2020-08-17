@@ -10,7 +10,7 @@ let
   };
 
   processesEnvEmpty = import ../nixproc/create-managed-process/systemd/build-systemd-env.nix {
-    exprFile = ../examples/webapps-agnostic/processes-empty.nix;
+    exprFile = null;
     stateDir = "/home/unprivileged/var";
     forceDisableUserChange = true;
   };
@@ -119,7 +119,7 @@ makeTest {
     # Undeploy the system
 
     machine.succeed(
-        'su - unprivileged -c "${env} nixproc-systemd-switch --user --state-dir /home/unprivileged/var --force-disable-user-change ${nix-processmgmt}/examples/webapps-agnostic/processes-empty.nix"'
+        'su - unprivileged -c "${env} nixproc-systemd-switch --user --state-dir /home/unprivileged/var --force-disable-user-change --undeploy"'
     )
 
     check_system_unavailable()

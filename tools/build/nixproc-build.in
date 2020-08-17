@@ -6,11 +6,13 @@ showUsage()
 {
     cat <<EOF
 Usage: $0 [OPTION] PATH
+  or: $0 --undeploy [OPTION]
 
 This command builds a Nix profile containing multiple sysvinit scripts, and
 their start and stop symlinks.
 
 Options:
+      --undeploy      Generates a configuration to undeploy all processes
   -P, --process-manager=MANAGER
                       Process manager to build for
       --state-dir     Changes the directory in which the state of the processes
@@ -42,7 +44,7 @@ EOF
 
 # Parse valid argument options
 
-PARAMS=`@getopt@ -n $0 -o P:h -l process-manager:,state-dir:,runtime-dir:,log-dir:,tmp-dir:,force-disable-user-change,no-out-link,show-trace,extra-params:,help -- "$@"`
+PARAMS=`@getopt@ -n $0 -o P:h -l undeploy,process-manager:,state-dir:,runtime-dir:,log-dir:,tmp-dir:,force-disable-user-change,no-out-link,show-trace,extra-params:,help -- "$@"`
 
 if [ $? != 0 ]
 then
@@ -57,6 +59,9 @@ eval set -- "$PARAMS"
 while [ "$1" != "--" ]
 do
     case "$1" in
+        --undeploy)
+            undeploy=1
+            ;;
         -P|--process-manager)
             processManager="$2"
             ;;
@@ -95,6 +100,8 @@ done
 
 shift
 
+# Validate the given options
+
 if [ "$processManager" = "" ]
 then
     echo "No process manager specified!" >&2
@@ -105,13 +112,17 @@ fi
 
 if [ "$1" = "" ]
 then
-    echo "No processes expression provided!" >&2
-    exit 1
+    if [ "$undeploy" = "1" ]
+    then
+        exprFileArg="--arg exprFile null"
+    else
+        echo "No processes expression provided!" >&2
+        exit 1
+    fi
 else
-    exprFile=$(@readlink@ -f "$1")
+    exprFile="$(@readlink@ -f "$1")"
+    exprFileArg="--argstr exprFile $exprFile"
 fi
-
-# Validate the given options
 
 if [ "$NIXPROC_STATE_DIR" != "" ]
 then
@@ -141,4 +152,4 @@ fi
 NIXPROC=${NIXPROC:-@NIXPROC@}
 
 # Build the profile
-nix-build $stateDirArg $runtimeDirArg $logDirArg $tmpDirArg $forceDisableUserChangeArg $noOutLinkArg $showTraceArg $processManagerArg "${extraParamsArg[@]}" --argstr exprFile "$exprFile" $NIXPROC/create-managed-process/$processManager/build-$processManager-env.nix
+nix-build $stateDirArg $runtimeDirArg $logDirArg $tmpDirArg $forceDisableUserChangeArg $noOutLinkArg $showTraceArg $processManagerArg "${extraParamsArg[@]}" $exprFileArg $NIXPROC/create-managed-process/$processManager/build-$processManager-env.nix

@@ -5,7 +5,7 @@
 , logDir ? "${stateDir}/log"
 , tmpDir ? (if stateDir == "/var" then "/tmp" else "${stateDir}/tmp")
 , forceDisableUserChange ? false
-, exprFile
+, exprFile ? null
 , extraParams ? {}
 }@args:
 
@@ -18,7 +18,7 @@ let
     processManager = "bsdrc";
   } // extraParams);
 
-  processes = processesFun processesArgs;
+  processes = if exprFile == null then {} else processesFun processesArgs;
 in
 pkgs.buildEnv {
   name = "rc.d";

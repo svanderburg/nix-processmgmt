@@ -6,7 +6,7 @@
 , tmpDir ? (if stateDir == "/var" then "/tmp" else "${stateDir}/tmp")
 , forceDisableUserChange ? false
 , extraParams ? {}
-, exprFile
+, exprFile ? null
 }@args:
 
 let
@@ -18,7 +18,7 @@ let
     processManager = "cygrunsrv";
   } // extraParams);
 
-  processes = processesFun processesArgs;
+  processes = if exprFile == null then {} else processesFun processesArgs;
 in
 pkgs.buildEnv {
   name = "cygrunsrv-env";

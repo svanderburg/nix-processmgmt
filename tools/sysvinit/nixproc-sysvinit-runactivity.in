@@ -88,13 +88,19 @@ rcpath="$oldProfilePath/etc/rc.d/rc${runlevel}.d"
 
 if [ "$reverse" = "1" ]
 then
-    for i in $(ls $rcpath/S* | sort -r)
-    do
-        $i $activity
-    done
+    if [ -n "$(ls -A $rcpath 2> /dev/null)" ]
+    then
+        for i in $(ls $rcpath/S* | sort -r)
+        do
+            $i $activity
+        done
+    fi
 else
-    for i in $(ls $rcpath/S*)
-    do
-        $i $activity
-    done
+    if [ -n "$(ls -A $rcpath 2> /dev/null)" ]
+    then
+        for i in $(ls $rcpath/S*)
+        do
+            $i $activity
+        done
+    fi
 fi

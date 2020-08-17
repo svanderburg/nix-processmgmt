@@ -455,6 +455,16 @@ unprivileged user:
 $ nixproc-sysvinit-switch --state-dir /home/sander/var --force-disable-user-change processes.nix
 ```
 
+Undeploying the system
+----------------------
+It may also be desired to completely undeploy a system when it is no longer
+needed. The following command completely undeploys all previously deployed
+processes:
+
+```bash
+$ nixproc-sysvinit-switch --undeploy
+```
+
 Integration with Disnix
 -----------------------
 In addition to the fact that this toolset provides a `disnix` backend that

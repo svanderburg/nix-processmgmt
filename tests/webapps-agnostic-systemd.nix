@@ -26,7 +26,7 @@ let
   };
 
   processesEnvEmpty = import ../nixproc/create-managed-process/systemd/build-systemd-env.nix {
-    exprFile = ../examples/webapps-agnostic/processes-empty.nix;
+    exprFile = null;
   };
 
   tools = import ../tools {};
@@ -141,7 +141,7 @@ makeTest {
     # Undeploy the system
 
     machine.succeed(
-        "${env} nixproc-systemd-switch ${nix-processmgmt}/examples/webapps-agnostic/processes-empty.nix"
+        "${env} nixproc-systemd-switch --undeploy"
     )
 
     check_system_unavailable()

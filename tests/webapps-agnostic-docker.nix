@@ -35,12 +35,14 @@ let
   };
 
   processesEnvEmpty = import ../nixproc/create-managed-process/docker/build-docker-env.nix {
-    exprFile = ../examples/webapps-agnostic/processes-empty.nix;
+    exprFile = null;
   };
 
   tools = import ../tools {};
 
   nix-processmgmt = ./..;
+
+  procps = (import nixpkgs {}).procps;
 
   env = "NIX_PATH=nixpkgs=${nixpkgs} SYSTEMD_TARGET_DIR=/etc/systemd-mutable/system";
 in
@@ -80,7 +82,9 @@ makeTest {
 
     def check_system_unavailable():
         machine.fail("curl --fail http://localhost:8080")
-        machine.fail("pgrep -f '/bin/webapp'")
+        machine.fail(
+            "docker exec nixproc-webapp ${procps}/bin/pgrep -f '/bin/webapp'"
+        )
 
 
     def check_nginx_multi_instance_redirection():
@@ -116,7 +120,10 @@ makeTest {
     )
 
     machine.succeed("sleep 10")
-    machine.succeed("pgrep -u webapp -f '/bin/webapp$'")
+    machine.succeed(
+        "docker exec nixproc-webapp ${procps}/bin/pgrep -u webapp -f '/bin/webapp$'"
+    )
+
     check_nginx_redirection()
 
     # Deploy the system with daemon webapp processes
@@ -126,7 +133,9 @@ makeTest {
     )
 
     machine.succeed("sleep 10")
-    machine.succeed("pgrep -u webapp -f '/bin/webapp -D$'")
+    machine.succeed(
+        "docker exec nixproc-webapp ${procps}/bin/pgrep -u webapp -f '/bin/webapp -D$'"
+    )
 
     check_nginx_redirection()
 
@@ -137,7 +146,9 @@ makeTest {
     )
 
     machine.succeed("sleep 10")
-    machine.succeed("pgrep -u webapp -f '/bin/webapp$'")
+    machine.succeed(
+        "docker exec nixproc-webapp ${procps}/bin/pgrep -u webapp -f '/bin/webapp$'"
+    )
 
     check_nginx_redirection()
 
@@ -159,14 +170,16 @@ makeTest {
     )
 
     machine.succeed("sleep 10")
-    machine.succeed("pgrep -u root -f '/bin/webapp$'")
+    machine.succeed(
+        "docker exec nixproc-webapp ${procps}/bin/pgrep -u root -f '/bin/webapp$'"
+    )
 
     check_nginx_redirection()
 
     # Undeploy the system
 
     machine.succeed(
-        "${env} nixproc-docker-switch ${nix-processmgmt}/examples/webapps-agnostic/processes-empty.nix"
+        "${env} nixproc-docker-switch --undeploy"
     )
 
     check_system_unavailable()

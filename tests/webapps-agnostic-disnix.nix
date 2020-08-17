@@ -39,7 +39,7 @@ let
 
   processesEnvEmpty = import ../nixproc/create-managed-process/disnix/build-disnix-env.nix {
     inherit disnixDataDir;
-    exprFile = ../examples/webapps-agnostic/processes-empty.nix;
+    exprFile = null;
   };
 
   tools = import ../tools {};
@@ -165,7 +165,7 @@ makeTest {
     # Undeploy the system
 
     machine.succeed(
-        "${env} nixproc-disnix-switch ${nix-processmgmt}/examples/webapps-agnostic/processes-empty.nix"
+        "${env} nixproc-disnix-switch --undeploy"
     )
 
     check_system_unavailable()

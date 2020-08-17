@@ -45,11 +45,11 @@ let
   };
 
   processesEnvEmpty = import ../nixproc/create-managed-process/sysvinit/build-sysvinit-env.nix {
-    exprFile = ../examples/webapps-agnostic/processes-empty.nix;
+    exprFile = null;
   };
 
   processesEnvEmptyUnprivileged = import ../nixproc/create-managed-process/sysvinit/build-sysvinit-env.nix {
-    exprFile = ../examples/webapps-agnostic/processes-empty.nix;
+    exprFile = null;
     stateDir = "/home/unprivileged/var";
     forceDisableUserChange = true;
   };
@@ -190,7 +190,7 @@ makeTest {
 
     # Undeploy the entire system as an unprivileged user
     machine.succeed(
-        "su - unprivileged -c '${env} nixproc-sysvinit-switch --state-dir /home/unprivileged/var --force-disable-user-change ${nix-processmgmt}/examples/webapps-agnostic/processes-empty.nix'"
+        "su - unprivileged -c '${env} nixproc-sysvinit-switch --state-dir /home/unprivileged/var --force-disable-user-change --undeploy'"
     )
 
     check_system_unavailable()
@@ -211,7 +211,7 @@ makeTest {
 
     # Undeploy the entire system
     machine.succeed(
-        "${env} nixproc-sysvinit-switch ${nix-processmgmt}/examples/webapps-agnostic/processes-empty.nix"
+        "${env} nixproc-sysvinit-switch --undeploy"
     )
 
     check_system_unavailable()

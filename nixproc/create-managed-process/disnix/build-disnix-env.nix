@@ -8,7 +8,7 @@
 , clientInterface ? (if builtins.getEnv "DISNIX_CLIENT_INTERFACE" == "" then "disnix-run-activity" else builtins.getEnv "DISNIX_CLIENT_INTERFACE")
 , disnixDataDir ? (if builtins.getEnv "DISNIX_DATA_DIR" == "" then throw "Set DISNIX_DATA_DIR to the data directory of Disnix" else builtins.getEnv "DISNIX_DATA_DIR")
 , extraParams ? {}
-, exprFile
+, exprFile ? null
 }@args:
 
 let
@@ -20,7 +20,7 @@ let
     processManager = "disnix";
   } // extraParams);
 
-  processes = processesFun processesArgs;
+  processes = if exprFile == null then {} else processesFun processesArgs;
 
   localhostTarget = {
     properties.hostname = "localhost";

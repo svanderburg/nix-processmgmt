@@ -4,12 +4,14 @@ showUsage()
 {
     cat <<EOF
 Usage: $0 [OPTION] PATH
+  or: $0 --undeploy [OPTION]
 
 This command uses Disnix's deployment facilities to deploy a set of running
 processes taking the process dependencies into account for activating and
 deactivating them in the right order.
 
 Options:
+      --undeploy        Undeploys all previously deployed processes
   -p, --profile=NAME    Name of the Nix profile that stores the sysvinit scripts
                         (defaults to: processes)
   -o, --old-profile=PATH
@@ -44,7 +46,7 @@ EOF
 
 # Parse valid argument options
 
-PARAMS=`@getopt@ -n $0 -o p:o:h -l profile:,old-profile:,state-dir:,runtime-dir:,log-dir:,tmp-dir:,force-disable-user-change,show-trace,extra-params:,help -- "$@"`
+PARAMS=`@getopt@ -n $0 -o p:o:h -l undeploy,profile:,old-profile:,state-dir:,runtime-dir:,log-dir:,tmp-dir:,force-disable-user-change,show-trace,extra-params:,help -- "$@"`
 
 if [ $? != 0 ]
 then
@@ -59,6 +61,9 @@ eval set -- "$PARAMS"
 while [ "$1" != "--" ]
 do
     case "$1" in
+        --undeploy)
+            undeploy=1
+            ;;
         -p|--profile)
             profile="$2"
             ;;
