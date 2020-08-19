@@ -75,7 +75,13 @@ $ nix-env -f default.nix -iA sysvinit
 ```
 
 To work with a different process manager, you should replace `sysvinit` with
-any of the supported process managers listed above.
+any of the supported process managers listed in the previous section. For
+example, to use utilities to generate and deploy `systemd` configurations, you
+should run:
+
+```bash
+$ nix-env -f default.nix -iA systemd
+```
 
 Usage
 =====
@@ -652,6 +658,50 @@ This repository contains three example systems, that can be found in the
 * `service-containers-agnostic` extends the previous examples with configuration
   files so that these system services can be deployed as Disnix containers --
   services in which other services can be hosted.
+
+Troubleshooting
+===============
+This section contains a number of known problems and their resolutions.
+
+Inspecting log files
+--------------------
+When a service does not work as expected, then it is typically desired to check
+the logs of the corresponding service. Although many process management concepts
+are standardized by this framework, logging is not standardized at all.
+
+This section contains some pointers for some of the process management solution
+targets that are currently implemented.
+
+### systemd and docker
+
+Some process/service managers have their own logging facility. For example,
+`systemd` provides `journalctl`, and `docker` provides `docker logs`. They
+automatically capture the output (the `stdout` and `stderr`) of foreground
+processes.
+
+### sysvinit, bsdrc, disnix
+
+For process management solutions that rely on processes that deamonize on their
+own (`sysvinit`, `bsdrc` and `disnix`), you need to consult the logs that are
+managed by the services themselves (a daemon typically detaches itself from the
+`stdout` and `stderr`. As a result, a process manager cannot do it).
+
+Services that only provide foreground processes are automatically daemonized
+with the `daemon` command by these three backends. By default, the `daemon`
+command will capture their outputs in log files with a `nixproc-` prefix in
+the log directory. On a production system, such a log file could be:
+`/var/log/nixproc-myservice.log`.
+
+### supervisord
+
+`supervisord` will (if no settings have been configured) store log files
+(capturing the `stdout` and `stderr` of each process) in the temp directory
+(typically `/tmp` or the value of the `TMPDIR` environment variable).
+
+### cygrunsrv
+
+By default, the `stderr` of `cygrunsrv` managed services are captured in the log
+folder. An example could be: `/var/log/myservice.log`.
 
 License
 =======

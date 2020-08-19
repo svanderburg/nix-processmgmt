@@ -9,7 +9,7 @@
 let
   createSystemVInitScript = import ../../nixproc/create-managed-process/sysvinit/create-sysvinit-script.nix {
     inherit (pkgs) stdenv writeTextFile daemon;
-    inherit runtimeDir tmpDir forceDisableUserChange;
+    inherit runtimeDir logDir tmpDir forceDisableUserChange;
 
     createCredentials = import ../../nixproc/create-credentials {
       inherit (pkgs) stdenv;

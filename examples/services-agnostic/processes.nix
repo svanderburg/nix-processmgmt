@@ -32,7 +32,7 @@ rec {
     };
   };
 
-  postgresql = rec {
+  /*postgresql = rec {
     port = 6432;
 
     pkg = constructors.postgresql {
@@ -69,5 +69,5 @@ rec {
 
   docker = {
     pkg = constructors.docker;
-  };
+  };*/
 }

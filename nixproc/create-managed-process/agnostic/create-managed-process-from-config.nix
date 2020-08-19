@@ -4,6 +4,7 @@
 , pkgs ? import <nixpkgs> { inherit system; }
 , stateDir ? "/var"
 , runtimeDir ? "${stateDir}/run"
+, logDir ? "${stateDir}/log"
 , tmpDir ? (if stateDir == "/var" then "/tmp" else "${stateDir}/tmp")
 , forceDisableUserChange ? false
 }:
@@ -12,7 +13,7 @@ let
   createManagedProcessFromConfig = configFile:
     let
       createManagedProcess = import ./create-managed-process-universal.nix {
-        inherit pkgs stateDir runtimeDir tmpDir forceDisableUserChange processManager;
+        inherit pkgs stateDir runtimeDir logDir tmpDir forceDisableUserChange processManager;
       };
 
       properties = builtins.fromJSON (builtins.readFile configFile);

@@ -1,4 +1,4 @@
-{pkgs, runtimeDir, tmpDir, stateDir, forceDisableUserChange ? false, processManager ? null}:
+{pkgs, runtimeDir, logDir, tmpDir, stateDir, forceDisableUserChange ? false, processManager ? null}:
 
 let
   basePackages = [
@@ -14,7 +14,7 @@ let
 
   createSystemVInitScript = import ../sysvinit/create-sysvinit-script.nix {
     inherit (pkgs) stdenv writeTextFile daemon;
-    inherit createCredentials runtimeDir tmpDir forceDisableUserChange;
+    inherit createCredentials runtimeDir logDir tmpDir forceDisableUserChange;
 
     initFunctions = import ../sysvinit/init-functions.nix {
       inherit (pkgs) stdenv fetchurl;
@@ -90,7 +90,7 @@ let
 
   generateProcessScript = import ../agnostic/generate-process-script.nix {
     inherit (pkgs) stdenv writeTextFile daemon;
-    inherit createProcessScript runtimeDir tmpDir forceDisableUserChange basePackages;
+    inherit createProcessScript runtimeDir logDir tmpDir forceDisableUserChange basePackages;
   };
 
   createDockerContainer = import ../docker/create-docker-container.nix {
