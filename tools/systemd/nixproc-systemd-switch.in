@@ -7,6 +7,11 @@ showUsage()
     cat <<EOF
 Usage: $0 [OPTION] PATH
   or: $0 --undeploy [OPTION]
+  or: $0 --rollback [OPTION]
+  or: $0 --switch-generation NUM [OPTION]
+  or: $0 --list-generations [OPTION]
+  or: $0 --delete-generations NUM [OPTION]
+  or: $0 --delete-all-generations NUM [OPTION]
 
 This command repopulates a folder with systemd configuration files and updates
 the configuration so that obsolete services will be stoppped and new services
@@ -14,6 +19,18 @@ will be started.
 
 Options:
       --undeploy        Undeploys all previously deployed processes
+      --rollback        Rolls back to the previous deployment
+      --switch-generation=NUM
+                        Switches to a previous deployment generation
+      --list-generations
+                        Lists all profile generations of the current deployment
+      --delete-generations=NUM
+                        Deletes the specified generations. The number can
+                        correspond to generation numbers, days (d postfix) or
+                        'old'.
+      --delete-all-generations
+                        Deletes all profile generations. This is useful when a
+                        deployment has been discarded
   -p, --profile=NAME    Name of the Nix profile that stores the sysvinit scripts
                         (defaults to: processes)
   -o, --old-profile=PATH
@@ -52,7 +69,7 @@ EOF
 
 # Parse valid argument options
 
-PARAMS=`@getopt@ -n $0 -o p:o:h -l undeploy,profile:,old-profile:,state-dir:,runtime-dir:,log-dir:,tmp-dir:,force-disable-user-change,show-trace,extra-params:,user,help -- "$@"`
+PARAMS=`@getopt@ -n $0 -o p:o:h -l undeploy,rollback,switch-generation:,list-generations,delete-generations:,delete-all-generations,profile:,old-profile:,state-dir:,runtime-dir:,log-dir:,tmp-dir:,force-disable-user-change,show-trace,extra-params:,user,help -- "$@"`
 
 if [ $? != 0 ]
 then
@@ -70,11 +87,30 @@ do
         --undeploy)
             undeploy=1
             ;;
+        --rollback)
+            operation="switchGenerations"
+            ;;
+        --switch-to-generation)
+            operation="switchGenerations"
+            generationId=$2
+            ;;
+        --list-generations)
+            operation="listGenerations"
+            ;;
+        --delete-generations)
+            operation="deleteGenerations"
+            generations="$2"
+            ;;
+        --delete-all-generations)
+            operation="deleteAllGenerations"
+            ;;
         -p|--profile)
             profile="$2"
+            profileArg="-p $2"
             ;;
         -o|--old-profile)
             oldProfilePath="$2"
+            oldProfileArg="-o $2"
             ;;
         --state-dir)
             stateDirArg="--state-dir $2"
@@ -98,7 +134,6 @@ do
             extraParamsArg=("--extra-params" "$2")
             ;;
         --user)
-            systemdUserServices=1
             systemdUserArg="--user"
             ;;
         -h|--help)
@@ -116,106 +151,17 @@ path="$1"
 
 # Validate the given options
 
-if [ "$systemdUserServices" = "1" ]
-then
-    SYSTEMD_TARGET_DIR=${SYSTEMD_TARGET_DIR:-~/.config/systemd/user}
-    mkdir -p "$SYSTEMD_TARGET_DIR"
-else
-    SYSTEMD_TARGET_DIR=${SYSTEMD_TARGET_DIR:-/etc/systemd/system}
-fi
-
 source @commonchecks@
 
 checkNixStateDir
 checkProfile
-composeOldProfilePath
+composeProfileBaseDir
 
-# Build the environment with supervisord config files
-buildProfile systemd
+# Execute deployment operation
 
-# Determine paths of old units
+deploy()
+{
+    nixproc-systemd-deploy $systemdUserArg $profileArg $oldProfileArg $profilePath
+}
 
-oldunits=()
-
-if [ -d "$oldProfilePath" ]
-then
-    for i in $oldProfilePath/etc/systemd/system/*.service
-    do
-        currentPath=$(readlink -f "$i")
-        oldunits+=($currentPath)
-    done
-fi
-
-# Determine paths of new units
-
-newunits=()
-
-for i in $profilePath/etc/systemd/system/*.service
-do
-    currentPath=$(readlink -f "$i")
-    newunits+=($currentPath)
-done
-
-# Create new groups and users
-createNewGroups
-createNewUsers
-
-if [ "$oldProfilePath" != "" ]
-then
-    # Stop obsolete units
-
-    for i in $oldProfilePath/etc/systemd/system/*.service
-    do
-        if ! containsElement "$(readlink -f "$i")" "${newunits[@]}"
-        then
-            systemctl $systemdUserArg stop "$(basename "$i")"
-        fi
-    done
-
-    # Remove obsolete units
-
-    for i in $oldProfilePath/etc/systemd/system/*.service
-    do
-        if ! containsElement "$(readlink -f "$i")" "${newunits[@]}"
-        then
-            unitTargetPath="$SYSTEMD_TARGET_DIR/$(basename "$i")"
-            rm -f "$unitTargetPath"
-
-            if [ -d "$i.wants" ]
-            then
-                rm -f "$unitTargetPath.wants"
-            fi
-        fi
-    done
-fi
-
-# Add new units
-
-for i in $profilePath/etc/systemd/system/*.service
-do
-    if ! containsElement "$(readlink -f "$i")" "${oldunits[@]}"
-    then
-        if [ -d "$i.wants" ]
-        then
-            ln -sfn "$(readlink -f "$i.wants")" $SYSTEMD_TARGET_DIR
-        fi
-
-        ln -sfn "$(readlink -f "$i")" $SYSTEMD_TARGET_DIR/$(basename "$i")
-    fi
-done
-
-# Reload the systemd configuration
-systemctl $systemdUserArg daemon-reload
-
-# Start all units in the new configuration
-for i in $profilePath/etc/systemd/system/*.service
-do
-    systemctl $systemdUserArg start "$(basename "$i")"
-done
-
-# Delete obsolete users and groups
-deleteObsoleteUsers
-deleteObsoleteGroups
-
-# Set new profile
-setNixProfile
+executeDeploymentOperation systemd

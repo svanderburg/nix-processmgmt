@@ -7,6 +7,11 @@ showUsage()
     cat <<EOF
 Usage: $0 [OPTION] PATH
   or: $0 --undeploy [OPTION]
+  or: $0 --rollback [OPTION]
+  or: $0 --switch-generation NUM [OPTION]
+  or: $0 --list-generations [OPTION]
+  or: $0 --delete-generations NUM [OPTION]
+  or: $0 --delete-all-generations NUM [OPTION]
 
 This command repopulates a folder with launchd plist files and updates the
 configuration so that obsolete services will be stoppped and new services will
@@ -14,6 +19,18 @@ be started.
 
 Options:
       --undeploy        Undeploys all previously deployed processes
+      --rollback        Rolls back to the previous deployment
+      --switch-generation=NUM
+                        Switches to a previous deployment generation
+      --list-generations
+                        Lists all profile generations of the current deployment
+      --delete-generations=NUM
+                        Deletes the specified generations. The number can
+                        correspond to generation numbers, days (d postfix) or
+                        'old'.
+      --delete-all-generations
+                        Deletes all profile generations. This is useful when a
+                        deployment has been discarded
   -p, --profile=NAME    Name of the Nix profile that stores the sysvinit scripts
                         (defaults to: processes)
   -o, --old-profile=PATH
@@ -50,7 +67,7 @@ EOF
 
 # Parse valid argument options
 
-PARAMS=`@getopt@ -n $0 -o p:o:h -l undeploy,profile:,old-profile:,state-dir:,runtime-dir:,log-dir:,tmp-dir:,force-disable-user-change,show-trace,extra-params:,help -- "$@"`
+PARAMS=`@getopt@ -n $0 -o p:o:h -l undeploy,rollback,switch-generation:,list-generations,delete-generations:,delete-all-generations,profile:,old-profile:,state-dir:,runtime-dir:,log-dir:,tmp-dir:,force-disable-user-change,show-trace,extra-params:,help -- "$@"`
 
 if [ $? != 0 ]
 then
@@ -68,11 +85,30 @@ do
         --undeploy)
             undeploy=1
             ;;
+        --rollback)
+            operation="switchGenerations"
+            ;;
+        --switch-to-generation)
+            operation="switchGenerations"
+            generationId=$2
+            ;;
+        --list-generations)
+            operation="listGenerations"
+            ;;
+        --delete-generations)
+            operation="deleteGenerations"
+            generations="$2"
+            ;;
+        --delete-all-generations)
+            operation="deleteAllGenerations"
+            ;;
         -p|--profile)
             profile="$2"
+            profileArg="-p $2"
             ;;
         -o|--old-profile)
             oldProfilePath="$2"
+            oldProfileArg="-o $2"
             ;;
         --state-dir)
             stateDirArg="--state-dir $2"
@@ -110,75 +146,17 @@ path="$1"
 
 # Validate the given options
 
-LAUNCHD_TARGET_DIR=${LAUNCHD_TARGET_DIR:-/Library/LaunchDaemons}
-
 source @commonchecks@
 
 checkNixStateDir
 checkProfile
-composeOldProfilePath
+composeProfileBaseDir
 
-# Build the environment with supervisord config files
-buildProfile launchd
+# Execute deployment operation
 
-# Determine paths of old plists
+deploy()
+{
+    nixproc-launchd-deploy $profileArg $oldProfileArg $profilePath
+}
 
-oldplists=()
-
-if [ -d "$oldProfilePath" ]
-then
-    for i in $oldProfilePath/Library/LaunchDaemons/*.plist
-    do
-        currentPath=$(@readlink@ -f "$i")
-        oldplists+=($currentPath)
-    done
-fi
-
-# Determine paths of new plists
-
-newplists=()
-
-for i in $profilePath/Library/LaunchDaemons/*.plist
-do
-    currentPath=$(@readlink@ -f "$i")
-    newplists+=($currentPath)
-done
-
-# Create new groups and users
-createNewGroups
-createNewUsers
-
-if [ -d "$oldProfilePath" ]
-then
-    # Stop and remove obsolete plists
-
-    for i in $oldProfilePath/Library/LaunchDaemons/*.plist
-    do
-        if ! containsElement "$(@readlink@ -f "$i")" "${newplists[@]}"
-        then
-            launchctl stop "$(basename "$i" .plist)"
-            unitTargetPath="$LAUNCHD_TARGET_DIR/$(basename "$i")"
-            launchctl unload "$unitTargetPath"
-            rm -f "$unitTargetPath"
-        fi
-    done
-fi
-
-# Start all plists in the new configuration
-for i in $profilePath/Library/LaunchDaemons/*.plist
-do
-    if ! containsElement "$(@readlink@ -f "$i")" "${oldplists[@]}"
-    then
-        unitTargetPath="$LAUNCHD_TARGET_DIR/$(basename "$i")"
-        cp "$(@readlink@ -f "$i")" "$unitTargetPath"
-        launchctl load -w "$unitTargetPath"
-        launchctl start "$(basename "$i" .plist)"
-    fi
-done
-
-# Delete obsolete users and groups
-deleteObsoleteUsers
-deleteObsoleteGroups
-
-# Set new profile
-setNixProfile
+executeDeploymentOperation launchd

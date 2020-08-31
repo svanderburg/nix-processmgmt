@@ -1,0 +1,144 @@
+#!/bin/bash -e
+
+# Shows the usage of this command to the user
+
+showUsage()
+{
+    cat <<EOF
+Usage: $0 [OPTION] PATH
+
+Deploys a prebuilt sysvinit configuration profile.
+
+Options:
+  -p, --profile=NAME    Name of the Nix profile that stores the sysvinit scripts
+                        (defaults to: processes)
+  -o, --old-profile=PATH
+                        Path to the previously deployed Nix profile (by default,
+                        it gets auto detected)
+      --runlevel=LEVEL  Specifies which runlevel to activate (defaults to the
+                        runlevel of the system)
+  -h, --help            Shows the usage of this command
+
+Environment:
+  NIX_STATE_DIR        Overrides the location of the Nix state directory
+EOF
+}
+
+# Parse valid argument options
+
+PARAMS=`@getopt@ -n $0 -o p:o:h -l profile:,old-profile:,runlevel:,help -- "$@"`
+
+if [ $? != 0 ]
+then
+    showUsage
+    exit 1
+fi
+
+# Evaluate valid options
+
+eval set -- "$PARAMS"
+
+while [ "$1" != "--" ]
+do
+    case "$1" in
+        -p|--profile)
+            profile="$2"
+            ;;
+        -o|--old-profile)
+            oldProfilePath="$2"
+            ;;
+        --runlevel)
+            runlevel="$2"
+            ;;
+        -h|--help)
+            showUsage
+            exit 0
+            ;;
+    esac
+
+    shift
+done
+
+shift
+
+profilePath="$1"
+
+# Validate the given options
+
+source @commonchecks@
+
+checkNixStateDir
+checkProfile
+composeOldProfilePath
+
+source @sysvinitchecks@
+
+checkRunlevel
+
+rcnew="$profilePath/etc/rc.d/rc${runlevel}.d"
+rcold="$oldProfilePath/etc/rc.d/rc${runlevel}.d"
+
+if [ "$profilePath" = "" ]
+then
+    echo "No profile path was provided!" >&2
+    exit 1
+fi
+
+# Determine paths of old scripts
+
+oldscripts=()
+
+if [ -d "$rcold" ]
+then
+    echo "Using previous Nix profile: $rcold" >&2
+
+    for i in $(ls $rcold/S* | sort -r)
+    do
+        currentPath=$(readlink -f $i)
+        oldscripts+=($currentPath)
+    done
+fi
+
+# Determine paths of new scripts
+
+newscripts=()
+
+if [ -d "$rcnew" ]
+then
+    for i in $(ls $rcnew/S*)
+    do
+       currentPath=$(readlink -f $i)
+       newscripts+=($currentPath)
+    done
+fi
+
+# Create new groups and users
+createNewGroups
+createNewUsers
+
+# Stop obsolete scripts
+
+for i in ${oldscripts[@]}
+do
+    if ! containsElement "$i" "${newscripts[@]}"
+    then
+        $i stop
+    fi
+done
+
+# Start new scripts
+
+for i in ${newscripts[@]}
+do
+    if ! containsElement "$i" "${oldscripts[@]}"
+    then
+        $i start
+    fi
+done
+
+# Delete obsolete users and groups
+deleteObsoleteUsers
+deleteObsoleteGroups
+
+# Set new profile
+setNixProfile

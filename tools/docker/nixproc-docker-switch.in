@@ -7,6 +7,11 @@ showUsage()
     cat <<EOF
 Usage: $0 [OPTION] PATH
   or: $0 --undeploy [OPTION]
+  or: $0 --rollback [OPTION]
+  or: $0 --switch-generation NUM [OPTION]
+  or: $0 --list-generations [OPTION]
+  or: $0 --delete-generations NUM [OPTION]
+  or: $0 --delete-all-generations NUM [OPTION]
 
 This command repopulates a folder with systemd configuration files and updates
 the configuration so that obsolete services will be stoppped and new services
@@ -14,6 +19,18 @@ will be started.
 
 Options:
       --undeploy        Undeploys all previously deployed processes
+      --rollback        Rolls back to the previous deployment
+      --switch-generation=NUM
+                        Switches to a previous deployment generation
+      --list-generations
+                        Lists all profile generations of the current deployment
+      --delete-generations=NUM
+                        Deletes the specified generations. The number can
+                        correspond to generation numbers, days (d postfix) or
+                        'old'.
+      --delete-all-generations
+                        Deletes all profile generations. This is useful when a
+                        deployment has been discarded
   -p, --profile=NAME    Name of the Nix profile that stores the sysvinit scripts
                         (defaults to: processes)
   -o, --old-profile=PATH
@@ -50,7 +67,7 @@ EOF
 
 # Parse valid argument options
 
-PARAMS=`@getopt@ -n $0 -o p:o:h -l undeploy,profile:,old-profile:,state-dir:,runtime-dir:,log-dir:,tmp-dir:,force-disable-user-change,show-trace,extra-params:,help -- "$@"`
+PARAMS=`@getopt@ -n $0 -o p:o:h -l undeploy,rollback,switch-generation:,list-generations,delete-generations:,delete-all-generations,profile:,old-profile:,state-dir:,runtime-dir:,log-dir:,tmp-dir:,force-disable-user-change,show-trace,extra-params:,help -- "$@"`
 
 if [ $? != 0 ]
 then
@@ -68,11 +85,30 @@ do
         --undeploy)
             undeploy=1
             ;;
+        --rollback)
+            operation="switchGenerations"
+            ;;
+        --switch-to-generation)
+            operation="switchGenerations"
+            generationId=$2
+            ;;
+        --list-generations)
+            operation="listGenerations"
+            ;;
+        --delete-generations)
+            operation="deleteGenerations"
+            generations="$2"
+            ;;
+        --delete-all-generations)
+            operation="deleteAllGenerations"
+            ;;
         -p|--profile)
             profile="$2"
+            profileArg="-p $2"
             ;;
         -o|--old-profile)
             oldProfilePath="$2"
+            oldProfileArg="-o $2"
             ;;
         --state-dir)
             stateDirArg="--state-dir $2"
@@ -115,128 +151,13 @@ source @commonchecks@
 
 checkNixStateDir
 checkProfile
-composeOldProfilePath
+composeProfileBaseDir
 
-# Build the environment with docker container config files
-buildProfile docker
+# Execute the deployment operation
 
-deployContainer()
+deploy()
 {
-    local configDir="$1"
-    local containerName="$2"
-
-    (
-        source $configDir/$containerName-docker-settings
-        dockerContainerName="nixproc-$containerName"
-
-        # Load the Docker image if it does not exists
-        if [ "$(docker images -f "reference=$dockerImageTag" | wc -l)" = "1" ]
-        then
-            docker load -i $dockerImage
-        fi
-
-        # Create the container if it does not exists yet
-        if [ "$(docker ps -a -f "name=$dockerContainerName\$" | wc -l)" = "1" ]
-        then
-            (
-            cat $configDir/$containerName-docker-createparams
-            echo "--name"
-            echo "$dockerContainerName"
-
-            if [ "$forceDisableUserChange" = "1" ]
-            then
-                echo "--user"
-                id -u
-            fi
-
-            echo "$dockerImageTag"
-            ) | @xargs@ -d '\n' docker create
-        fi
-
-        if [ "$(docker ps -f "name=$dockerContainerName\$" | wc -l)" = "1" ]
-        then
-            docker start $dockerContainerName
-        fi
-    )
+    nixproc-docker-deploy $profileArg $oldProfileArg $profilePath
 }
 
-undeployContainer()
-{
-    local configDir="$1"
-    local containerName="$2"
-
-    (
-        source $configDir/$containerName-docker-settings
-        dockerContainerName="nixproc-$containerName"
-        dockerStopTimeout=${dockerStopTimeout:-1}
-
-        if [ "$(docker ps -f "name=$dockerContainerName\$" | wc -l)" = "2" ]
-        then
-            docker stop -t $dockerStopTimeout $dockerContainerName
-        fi
-
-        if [ "$(docker ps -a -f "name=$dockerContainerName\$" | wc -l)" = "2" ]
-        then
-            docker rm $dockerContainerName
-        fi
-
-        if [ "$(docker images -f "reference=$dockerImageTag" | wc -l)" = "2" ]
-        then
-            docker rmi $dockerImageTag
-        fi
-    )
-}
-
-# Determine paths of old containers
-
-oldunits=()
-
-if [ -d "$oldProfilePath" ]
-then
-    for i in $oldProfilePath/*-docker-priority
-    do
-        currentPath=$(readlink -f "$i")
-        oldunits+=($currentPath)
-    done
-fi
-
-# Determine paths of new containers
-
-newunits=()
-
-for i in $profilePath/*-docker-priority
-do
-    currentPath=$(readlink -f "$i")
-    newunits+=($currentPath)
-done
-
-if [ "$oldProfilePath" != "" ]
-then
-    # Undeploy obsolete containers
-
-    if [ "$(echo $oldProfilePath/*-docker-priority)" != "" ]
-    then
-        for i in $(ls $oldProfilePath/*-docker-priority | sort -r)
-        do
-            if ! containsElement "$(readlink -f "$i")" "${newunits[@]}"
-            then
-                priorityFile="$(basename "$i" -docker-priority)"
-                undeployContainer "$(dirname "$i")" "${priorityFile:3}"
-            fi
-        done
-    fi
-fi
-
-# Deploy new containers
-
-for i in $profilePath/*-docker-priority
-do
-    if ! containsElement "$(readlink -f "$i")" "${oldunits[@]}"
-    then
-        priorityFile="$(basename "$i" -docker-priority)"
-        deployContainer "$(dirname "$i")" "${priorityFile:3}"
-    fi
-done
-
-# Set new profile
-setNixProfile
+executeDeploymentOperation docker

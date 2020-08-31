@@ -1,0 +1,134 @@
+#!/bin/bash
+set -e
+shopt -s nullglob
+
+showUsage()
+{
+    cat <<EOF
+Usage: $0 [OPTION] PATH
+
+Deploys a prebuilt systemd configuration profile.
+
+Options:
+  -p, --profile=NAME    Name of the Nix profile that stores the sysvinit scripts
+                        (defaults to: processes)
+  -o, --old-profile=PATH
+                        Path to the previously deployed Nix profile (by default,
+                        it gets auto detected)
+  -h, --help            Shows the usage of this command
+
+Environment:
+  NIX_STATE_DIR         Overrides the location of the Nix state directory
+  SUPERVISORD_CONF_DIR  Directory if which the supervisord.conf resides
+EOF
+}
+
+# Parse valid argument options
+
+PARAMS=`@getopt@ -n $0 -o p:o:h -l undeploy,profile:,old-profile:,state-dir:,runtime-dir:,log-dir:,tmp-dir:,force-disable-user-change,show-trace,extra-params:,help -- "$@"`
+
+if [ $? != 0 ]
+then
+    showUsage
+    exit 1
+fi
+
+# Evaluate valid options
+
+eval set -- "$PARAMS"
+
+while [ "$1" != "--" ]
+do
+    case "$1" in
+        -p|--profile)
+            profile="$2"
+            ;;
+        -o|--old-profile)
+            oldProfilePath="$2"
+            ;;
+        -h|--help)
+            showUsage
+            exit 0
+            ;;
+    esac
+
+    shift
+done
+
+shift
+
+profilePath="$1"
+
+# Validate the given options
+
+source @commonchecks@
+
+checkNixStateDir
+checkProfile
+composeOldProfilePath
+
+source @supervisordchecks@
+
+checkSupervisordConfDir
+
+# Determine paths of old units
+
+oldunits=()
+
+if [ -d "$oldProfilePath" ]
+then
+    for i in $oldProfilePath/conf.d/*.conf
+    do
+        currentPath=$(@readlink@ -f "$i")
+        oldunits+=($currentPath)
+    done
+fi
+
+# Determine paths of new units
+
+newunits=()
+
+for i in $profilePath/conf.d/*.conf
+do
+    currentPath=$(@readlink@ -f "$i")
+    newunits+=($currentPath)
+done
+
+if [ -d "$oldProfilePath" ]
+then
+    # Remove obsolete units
+
+    for i in $oldProfilePath/conf.d/*.conf
+    do
+        if ! containsElement "$(@readlink@ -f "$i")" "${newunits[@]}"
+        then
+            unitTargetPath="$SUPERVISORD_CONF_DIR/conf.d/$(basename "$i")"
+            rm -f "$unitTargetPath"
+        fi
+    done
+fi
+
+# Add new units
+
+for i in $profilePath/conf.d/*.conf
+do
+    if ! containsElement "$(@readlink@ -f "$i")" "${oldunits[@]}"
+    then
+        ln -sfn "$(@readlink@ -f "$i")" $SUPERVISORD_CONF_DIR/conf.d/$(basename "$i")
+    fi
+done
+
+# Create new groups and users
+createNewGroups
+createNewUsers
+
+# Reload and update the supervisord configuration
+supervisorctl reread
+supervisorctl update
+
+# Delete obsolete users and groups
+deleteObsoleteUsers
+deleteObsoleteGroups
+
+# Set new profile
+setNixProfile

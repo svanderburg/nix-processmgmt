@@ -1,0 +1,128 @@
+#!/bin/bash
+set -e
+shopt -s nullglob
+
+showUsage()
+{
+    cat <<EOF
+Usage: $0 [OPTION] PATH
+
+Deploys a prebuilt cygrunsrv configuration profile.
+
+Options:
+  -p, --profile=NAME    Name of the Nix profile that stores the sysvinit scripts
+                        (defaults to: processes)
+  -o, --old-profile=PATH
+                        Path to the previously deployed Nix profile (by default,
+                        it gets auto detected)
+  -h, --help            Shows the usage of this command
+
+Environment:
+  NIX_STATE_DIR         Overrides the location of the Nix state directory
+EOF
+}
+
+# Parse valid argument options
+
+PARAMS=`@getopt@ -n $0 -o p:o:h -l profile:,old-profile:,help -- "$@"`
+
+if [ $? != 0 ]
+then
+    showUsage
+    exit 1
+fi
+
+# Evaluate valid options
+
+eval set -- "$PARAMS"
+
+while [ "$1" != "--" ]
+do
+    case "$1" in
+        -p|--profile)
+            profile="$2"
+            ;;
+        -o|--old-profile)
+            oldProfilePath="$2"
+            ;;
+        -h|--help)
+            showUsage
+            exit 0
+            ;;
+    esac
+
+    shift
+done
+
+shift
+
+profilePath="$1"
+
+# Validate the given options
+
+source @commonchecks@
+
+checkNixStateDir
+checkProfile
+composeOldProfilePath
+
+# Determine paths of old param files
+
+oldparams=()
+
+if [ -d "$oldProfilePath" ]
+then
+    for i in $oldProfilePath/*-cygrunsrvparams
+    do
+        currentPath=$(readlink -f "$i")
+        oldparams+=($currentPath)
+    done
+fi
+
+# Determine paths of new param files
+
+newparams=()
+
+for i in $profilePath/*-cygrunsrvparams
+do
+    currentPath=$(readlink -f "$i")
+    newparams+=($currentPath)
+done
+
+if [ -d "$oldProfilePath" ]
+then
+    # Stop and remove obsolete services
+
+    for i in $oldProfilePath/*-cygrunsrvparams
+    do
+        if ! containsElement "$(readlink -f "$i")" "${newparams[@]}"
+        then
+            serviceName="$(basename $i -cygrunsrvparams)"
+            cygrunsrv --stop $serviceName
+            cygrunsrv --remove $serviceName
+        fi
+    done
+fi
+
+# Set new profile
+setNixProfile
+
+# Install all services in the new configuration
+for i in $profilePath/*-cygrunsrvparams
+do
+    if ! containsElement "$(readlink -f "$i")" "${oldparams[@]}"
+    then
+        serviceName="$(basename $i -cygrunsrvparams)"
+        cat $i | xargs -d '\n' /bin/echo cygrunsrv --install $serviceName
+    fi
+done
+
+# Start all services in the new configuration
+for i in $profilePath/*-cygrunsrvparams
+do
+    if ! containsElement "$(readlink -f "$i")" "${oldparams[@]}"
+    then
+        serviceName="$(basename $i -cygrunsrvparams)"
+        cygrunsrv --start $serviceName
+    fi
+done

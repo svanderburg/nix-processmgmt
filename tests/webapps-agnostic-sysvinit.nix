@@ -209,11 +209,30 @@ makeTest {
 
     check_nginx_multi_instance_redirection()
 
+    # Roll back to the previous configuration
+    machine.succeed(
+        "${env} nixproc-sysvinit-switch --rollback"
+    )
+
+    check_nginx_redirection()
+
     # Undeploy the entire system
     machine.succeed(
         "${env} nixproc-sysvinit-switch --undeploy"
     )
 
     check_system_unavailable()
+
+    # Delete all generations and check if there are none left
+    machine.succeed(
+        "${env} nixproc-sysvinit-switch --delete-all-generations"
+    )
+
+    result = machine.succeed(
+        "${env} nixproc-sysvinit-switch --list-generations | wc -l"
+    )
+
+    if int(result) > 0:
+        raise Exception("We should have no profile generations")
   '';
 }

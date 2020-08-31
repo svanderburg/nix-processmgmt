@@ -9,6 +9,13 @@ stdenv.mkDerivation {
       -e "s|@getopt@|${getopt}/bin/getopt|" \
       -e "s|@commonchecks@|${../commonchecks}|" \
       -e "s|@sysvinitchecks@|${./sysvinitchecks}|" \
+      ${./nixproc-sysvinit-deploy.in} > $out/bin/nixproc-sysvinit-deploy
+    chmod +x $out/bin/nixproc-sysvinit-deploy
+
+    sed -e "s|/bin/bash|$SHELL|" \
+      -e "s|@getopt@|${getopt}/bin/getopt|" \
+      -e "s|@commonchecks@|${../commonchecks}|" \
+      -e "s|@sysvinitchecks@|${./sysvinitchecks}|" \
       ${./nixproc-sysvinit-switch.in} > $out/bin/nixproc-sysvinit-switch
     chmod +x $out/bin/nixproc-sysvinit-switch
 

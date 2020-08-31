@@ -7,12 +7,29 @@ showUsage()
     cat <<EOF
 Usage: $0 [OPTION] PATH
   or: $0 --undeploy [OPTION]
+  or: $0 --rollback [OPTION]
+  or: $0 --switch-generation NUM [OPTION]
+  or: $0 --list-generations [OPTION]
+  or: $0 --delete-generations NUM [OPTION]
+  or: $0 --delete-all-generations NUM [OPTION]
 
 This command updates the Windows services configuration so that obsolete
 services will be stoppped and new services will be started.
 
 Options:
       --undeploy        Undeploys all previously deployed processes
+      --rollback        Rolls back to the previous deployment
+      --switch-generation=NUM
+                        Switches to a previous deployment generation
+      --list-generations
+                        Lists all profile generations of the current deployment
+      --delete-generations=NUM
+                        Deletes the specified generations. The number can
+                        correspond to generation numbers, days (d postfix) or
+                        'old'.
+      --delete-all-generations
+                        Deletes all profile generations. This is useful when a
+                        deployment has been discarded
   -p, --profile=NAME    Name of the Nix profile that stores the sysvinit scripts
                         (defaults to: processes)
   -o, --old-profile=PATH
@@ -47,7 +64,7 @@ EOF
 
 # Parse valid argument options
 
-PARAMS=`@getopt@ -n $0 -o p:o:h -l undeploy,profile:,old-profile:,state-dir:,runtime-dir:,log-dir:,tmp-dir:,force-disable-user-change,show-trace,extra-params:,help -- "$@"`
+PARAMS=`@getopt@ -n $0 -o p:o:h -l undeploy,rollback,switch-generation:,list-generations,delete-generations:,delete-all-generations,profile:,old-profile:,state-dir:,runtime-dir:,log-dir:,tmp-dir:,force-disable-user-change,show-trace,extra-params:,help -- "$@"`
 
 if [ $? != 0 ]
 then
@@ -65,11 +82,30 @@ do
         --undeploy)
             undeploy=1
             ;;
+        --rollback)
+            operation="switchGenerations"
+            ;;
+        --switch-to-generation)
+            operation="switchGenerations"
+            generationId=$2
+            ;;
+        --list-generations)
+            operation="listGenerations"
+            ;;
+        --delete-generations)
+            operation="deleteGenerations"
+            generations="$2"
+            ;;
+        --delete-all-generations)
+            operation="deleteAllGenerations"
+            ;;
         -p|--profile)
             profile="$2"
+            profileArg="-p $2"
             ;;
         -o|--old-profile)
             oldProfilePath="$2"
+            oldProfileArg="-o $2"
             ;;
         --state-dir)
             stateDirArg="--state-dir $2"
@@ -111,68 +147,13 @@ source @commonchecks@
 
 checkNixStateDir
 checkProfile
-composeOldProfilePath
+composeProfileBaseDir
 
-# Build the environment with supervisord config files
-buildProfile cygrunsrv
+# Execute deployment operation
 
-# Determine paths of old param files
+deploy()
+{
+    nixproc-cygrunsrv-deploy $profileArg $oldProfileArg $profilePath
+}
 
-oldparams=()
-
-if [ -d "$oldProfilePath" ]
-then
-    for i in $oldProfilePath/*-cygrunsrvparams
-    do
-        currentPath=$(readlink -f "$i")
-        oldparams+=($currentPath)
-    done
-fi
-
-# Determine paths of new param files
-
-newparams=()
-
-for i in $profilePath/*-cygrunsrvparams
-do
-    currentPath=$(readlink -f "$i")
-    newparams+=($currentPath)
-done
-
-if [ -d "$oldProfilePath" ]
-then
-    # Stop and remove obsolete services
-
-    for i in $oldProfilePath/*-cygrunsrvparams
-    do
-        if ! containsElement "$(readlink -f "$i")" "${newparams[@]}"
-        then
-            serviceName="$(basename $i -cygrunsrvparams)"
-            cygrunsrv --stop $serviceName
-            cygrunsrv --remove $serviceName
-        fi
-    done
-fi
-
-# Set new profile
-setNixProfile
-
-# Install all services in the new configuration
-for i in $profilePath/*-cygrunsrvparams
-do
-    if ! containsElement "$(readlink -f "$i")" "${oldparams[@]}"
-    then
-        serviceName="$(basename $i -cygrunsrvparams)"
-        cat $i | xargs -d '\n' /bin/echo cygrunsrv --install $serviceName
-    fi
-done
-
-# Start all services in the new configuration
-for i in $profilePath/*-cygrunsrvparams
-do
-    if ! containsElement "$(readlink -f "$i")" "${oldparams[@]}"
-    then
-        serviceName="$(basename $i -cygrunsrvparams)"
-        cygrunsrv --start $serviceName
-    fi
-done
+executeDeploymentOperation cygrunsrv

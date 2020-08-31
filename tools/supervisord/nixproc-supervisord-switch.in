@@ -7,6 +7,11 @@ showUsage()
     cat <<EOF
 Usage: $0 [OPTION] PATH
   or: $0 --undeploy [OPTION]
+  or: $0 --rollback [OPTION]
+  or: $0 --switch-generation NUM [OPTION]
+  or: $0 --list-generations [OPTION]
+  or: $0 --delete-generations NUM [OPTION]
+  or: $0 --delete-all-generations NUM [OPTION]
 
 This command repopulates the conf.d sub directory of a supervisord configuration
 and updates the live configuration so that obsolete services will be stopped and
@@ -18,6 +23,18 @@ considered a pre-built Nix profile.
 
 Options:
       --undeploy        Undeploys all previously deployed processes
+      --rollback        Rolls back to the previous deployment
+      --switch-generation=NUM
+                        Switches to a previous deployment generation
+      --list-generations
+                        Lists all profile generations of the current deployment
+      --delete-generations=NUM
+                        Deletes the specified generations. The number can
+                        correspond to generation numbers, days (d postfix) or
+                        'old'.
+      --delete-all-generations
+                        Deletes all profile generations. This is useful when a
+                        deployment has been discarded
   -p, --profile=NAME    Name of the Nix profile that stores the sysvinit scripts
                         (defaults to: processes)
   -o, --old-profile=PATH
@@ -53,7 +70,7 @@ EOF
 
 # Parse valid argument options
 
-PARAMS=`@getopt@ -n $0 -o p:o:h -l undeploy,profile:,old-profile:,state-dir:,runtime-dir:,log-dir:,tmp-dir:,force-disable-user-change,show-trace,extra-params:,help -- "$@"`
+PARAMS=`@getopt@ -n $0 -o p:o:h -l undeploy,rollback,switch-generation:,list-generations,delete-generations:,delete-all-generations,profile:,old-profile:,state-dir:,runtime-dir:,log-dir:,tmp-dir:,force-disable-user-change,show-trace,extra-params:,help -- "$@"`
 
 if [ $? != 0 ]
 then
@@ -71,11 +88,30 @@ do
         --undeploy)
             undeploy=1
             ;;
+        --rollback)
+            operation="switchGenerations"
+            ;;
+        --switch-to-generation)
+            operation="switchGenerations"
+            generationId=$2
+            ;;
+        --list-generations)
+            operation="listGenerations"
+            ;;
+        --delete-generations)
+            operation="deleteGenerations"
+            generations="$2"
+            ;;
+        --delete-all-generations)
+            operation="deleteAllGenerations"
+            ;;
         -p|--profile)
             profile="$2"
+            profileArg="-p $2"
             ;;
         -o|--old-profile)
             oldProfilePath="$2"
+            oldProfileArg="-o $2"
             ;;
         --state-dir)
             stateDirArg="--state-dir $2"
@@ -113,77 +149,17 @@ path="$1"
 
 # Validate the given options
 
-source @supervisordchecks@
-
-checkSupervisordConfDir
-
 source @commonchecks@
 
 checkNixStateDir
 checkProfile
-composeOldProfilePath
+composeProfileBaseDir
 
-# Build the environment with supervisord config files
-buildProfile supervisord
+# Execute deployment operation
 
-# Determine paths of old units
+deploy()
+{
+    nixproc-supervisord-deploy $profileArg $oldProfileArg $profilePath
+}
 
-oldunits=()
-
-if [ -d "$oldProfilePath" ]
-then
-    for i in $oldProfilePath/conf.d/*.conf
-    do
-        currentPath=$(@readlink@ -f "$i")
-        oldunits+=($currentPath)
-    done
-fi
-
-# Determine paths of new units
-
-newunits=()
-
-for i in $profilePath/conf.d/*.conf
-do
-    currentPath=$(@readlink@ -f "$i")
-    newunits+=($currentPath)
-done
-
-if [ -d "$oldProfilePath" ]
-then
-    # Remove obsolete units
-
-    for i in $oldProfilePath/conf.d/*.conf
-    do
-        if ! containsElement "$(@readlink@ -f "$i")" "${newunits[@]}"
-        then
-            unitTargetPath="$SUPERVISORD_CONF_DIR/conf.d/$(basename "$i")"
-            rm -f "$unitTargetPath"
-        fi
-    done
-fi
-
-# Add new units
-
-for i in $profilePath/conf.d/*.conf
-do
-    if ! containsElement "$(@readlink@ -f "$i")" "${oldunits[@]}"
-    then
-        ln -sfn "$(@readlink@ -f "$i")" $SUPERVISORD_CONF_DIR/conf.d/$(basename "$i")
-    fi
-done
-
-# Create new groups and users
-createNewGroups
-createNewUsers
-
-# Reload and update the supervisord configuration
-supervisorctl reread
-supervisorctl update
-
-# Delete obsolete users and groups
-deleteObsoleteUsers
-deleteObsoleteGroups
-
-# Set new profile
-setNixProfile
+executeDeploymentOperation supervisord

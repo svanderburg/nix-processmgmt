@@ -38,6 +38,16 @@ buildProfile()
     profilePath=$(nixproc-build --process-manager $processManager $stateDirArg $runtimeDirArg $logDirArg $tmpDirArg $forceDisableUserChangeArg $showTraceArg "${extraParamsArg[@]}" --no-out-link $deployArg)
 }
 
+composeProfileBaseDir()
+{
+    if [ "$NIX_USER_PROFILE_DIR" = "" ]
+    then
+        profileDir="$NIX_STATE_DIR/profiles"
+    else
+        profileDir="$NIX_USER_PROFILE_DIR"
+    fi
+}
+
 composeProfileDir()
 {
     if [ "$NIX_USER_PROFILE_DIR" = "" ]
@@ -112,4 +122,76 @@ deleteObsoleteGroups()
             dysnomia-delgroups "$oldProfilePath/dysnomia-support/groups/$groupname"
         fi
     done
+}
+
+determineLastProfileGenerationId()
+{
+    if [ -d "$profileDir" ] && [ "$(echo $profileDir/$profile-*-link)" != "" ] && [ "$(ls -d $profileDir/$profile-*-link | wc -l)" -gt 1 ]
+    then
+        generation="$(basename $(ls -d $profileDir/$profile-*-link | sort -V | tail -2 | head -1))"
+    else
+        echo "Unable to roll back as there are no known previous deployments!" >&2
+        exit 1
+    fi
+}
+
+switchGenerations()
+{
+    # If no generation link has been requested, figure out what the previous one is
+    if [ "$generationId" = "" ]
+    then
+        determineLastProfileGenerationId
+    else
+        generation="$profile-$generationId-link"
+    fi
+
+    if [ -e "$profileDir/$generation" ]
+    then
+        # Retrieve the manifest of the requested profile generation
+        profilePath=`readlink -f $profileDir/$generation`
+    else
+        echo "Cannot switch profile generations, because the requested profile: $profileDir/$generation does not exist!" >&2
+        exit 1
+    fi
+}
+
+listGenerations()
+{
+    nix-env -p $profileDir/$profile --list-generations
+}
+
+deleteGenerations()
+{
+    nix-env -p $profileDir/$profile --delete-generations "$generations"
+}
+
+deleteAllGenerations()
+{
+    rm -f $profileDir/$profile
+    rm -f $profileDir/$profile-*-link
+}
+
+executeDeploymentOperation()
+{
+    local processManager="$1"
+
+    case "$operation" in
+        switchGenerations)
+            switchGenerations
+            deploy
+            ;;
+        listGenerations)
+            listGenerations
+            ;;
+        deleteGenerations)
+            deleteGenerations
+            ;;
+        deleteAllGenerations)
+            deleteAllGenerations
+            ;;
+        *)
+            buildProfile "$processManager"
+            deploy
+            ;;
+    esac
 }

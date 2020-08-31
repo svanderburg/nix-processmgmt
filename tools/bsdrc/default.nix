@@ -7,10 +7,16 @@ stdenv.mkDerivation {
 
     sed -e "s|/bin/bash|$SHELL|" \
         -e "s|@getopt@|${getopt}/bin/getopt|" \
-        -e "s|@sed@|$(type -p sed)|" \
       -e "s|@commonchecks@|${../commonchecks}|" \
       ${./nixproc-bsdrc-switch.in} > $out/bin/nixproc-bsdrc-switch
     chmod +x $out/bin/nixproc-bsdrc-switch
+
+    sed -e "s|/bin/bash|$SHELL|" \
+        -e "s|@getopt@|${getopt}/bin/getopt|" \
+        -e "s|@sed@|$(type -p sed)|" \
+      -e "s|@commonchecks@|${../commonchecks}|" \
+      ${./nixproc-bsdrc-deploy.in} > $out/bin/nixproc-bsdrc-deploy
+    chmod +x $out/bin/nixproc-bsdrc-deploy
 
     sed -e "s|/bin/bash|$SHELL|" \
       -e "s|@getopt@|${getopt}/bin/getopt|" \
