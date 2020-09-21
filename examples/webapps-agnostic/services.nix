@@ -9,33 +9,37 @@
 }:
 
 let
+  ids = if builtins.pathExists ./ids.nix then (import ./ids.nix).ids else {};
+
   sharedConstructors = import ../services-agnostic/constructors.nix {
-    inherit pkgs stateDir runtimeDir logDir cacheDir tmpDir forceDisableUserChange processManager;
+    inherit pkgs stateDir runtimeDir logDir cacheDir tmpDir forceDisableUserChange processManager ids;
   };
 
   constructors = import ./constructors.nix {
-    inherit pkgs stateDir runtimeDir logDir tmpDir forceDisableUserChange processManager;
+    inherit pkgs stateDir runtimeDir logDir tmpDir forceDisableUserChange processManager ids;
     webappMode = null;
   };
 
-  processType = ../../nixproc/derive-dysnomia-process-type.nix {
+  processType = import ../../nixproc/derive-dysnomia-process-type.nix {
     inherit processManager;
   };
 in
 rec {
   webapp = rec {
     name = "webapp";
-    port = 5000;
+    port = ids.webappPorts.webapp or 0;
     dnsName = "webapp.local";
     pkg = constructors.webapp {
       inherit port;
     };
     type = processType;
+
+    requiresUniqueIdsFor = [ "webappPorts" "uids" "gids" ];
   };
 
-  nginxReverseProxy = rec {
-    name = "nginxReverseProxy";
-    port = 8080;
+  nginx = rec {
+    name = "nginx";
+    port = ids.nginxPorts.nginx or 0;
     pkg = sharedConstructors.nginxReverseProxyHostBased {
       inherit port;
     };
@@ -43,5 +47,7 @@ rec {
       inherit webapp;
     };
     type = processType;
+
+    requiresUniqueIdsFor = [ "nginxPorts" "uids" "gids" ];
   };
 }

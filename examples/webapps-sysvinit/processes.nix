@@ -8,26 +8,32 @@
 }:
 
 let
+  ids = if builtins.pathExists ./ids.nix then (import ./ids.nix).ids else {};
+
   constructors = import ./constructors.nix {
-    inherit pkgs stateDir runtimeDir logDir tmpDir forceDisableUserChange;
+    inherit pkgs stateDir runtimeDir logDir tmpDir forceDisableUserChange ids;
   };
 in
 rec {
   webapp = rec {
-    port = 5000;
+    port = ids.webappPorts.webapp or 0;
     dnsName = "webapp.local";
 
     pkg = constructors.webapp {
       inherit port;
     };
+
+    requiresUniqueIdsFor = [ "webappPorts" "uids" "gids" ];
   };
 
-  nginxReverseProxy = rec {
-    port = 8080;
+  nginx = rec {
+    port = ids.nginxPorts.nginx or 0;
 
     pkg = constructors.nginxReverseProxy {
       webapps = [ webapp ];
       inherit port;
     } {};
+
+    requiresUniqueIdsFor = [ "nginxPorts" "uids" "gids" ];
   };
 }

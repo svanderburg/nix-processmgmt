@@ -53,6 +53,9 @@ To use this framework, you first need to install:
 * [The Nix package manager](http://nixos.org/nix)
 * [The Nixpkgs collection](http://nixos.org/nixpkgs)
 * [Dysnomia](http://github.com/svanderburg/dysnomia), if you want to manage users and groups
+* To use the ID assigner tool: `nixproc-id-assign` (for port numbers, UIDs and
+  GIDs), you need a recent development version of
+  [Dynamic Disnix](https://github.com/svanderburg/dydisnix)
 
 Installation
 ============
@@ -297,7 +300,7 @@ in
     inherit createManagedProcess tmpDir;
   };
 
-  nginxReverseProxy = import ./nginx-reverse-proxy.nix {
+  nginx = import ./nginx-reverse-proxy.nix {
     inherit createManagedProcess stateDir logDir runtimeDir forceDisableUserChange;
     inherit (pkgs) stdenv writeTextFile nginx;
   };
@@ -369,7 +372,7 @@ rec {
     };
   };
 
-  nginxReverseProxy = rec {
+  nginx = rec {
     port = 8080;
 
     pkg = constructors.nginxReverseProxy {
@@ -471,6 +474,184 @@ processes:
 $ nixproc-sysvinit-switch --undeploy
 ```
 
+Assigning unique IDs to services
+--------------------------------
+As explained earlier, to ensure that multiple process instances have no
+conflicts, they require unique process instance parameters.
+
+One catagory of process parameters are unique numeric IDs, such as port
+numbers, UIDs and GIDs. It is possible to manually assign them, but this process
+can also be automated.
+
+The following configuration file is an ID resources configuration file
+(`idresources.nix`) that defines pools of numeric ID resources:
+
+```nix
+rec {
+  webappPorts = {
+    min = 5000;
+    max = 6000;
+  };
+
+  nginxPorts = {
+    min = 8080;
+    max = 9000;
+  };
+
+  uids = {
+    min = 2000;
+    max = 3000;
+  };
+
+  gids = uids;
+}
+```
+
+The above ID resources configuration defines the following resources:
+
+* The `webappPorts` is a pool of unique TCP port number assigned to the `webapp`
+  processes shown in the previous examples. These are unique numbers between
+  5000 and 6000.
+* The `nginxPorts` is a pool of unique TCP port numbers assigned to `nginx`
+  instances. These are unique numbers between 8080 and 9000.
+* `uids` specifies the range of unique user IDs (UIDs) between 2000 and 3000.
+* `gids` specifies the range of unique group IDs (GIDs). They are identical to
+  the `uids`.
+
+To use automatic ID assignments, the processes model (`processes.nix`) can be
+augmented as follows:
+
+```nix
+{ pkgs ? import <nixpkgs> { inherit system; }
+, system ? builtins.currentSystem
+, stateDir ? "/var"
+, runtimeDir ? "${stateDir}/run"
+, logDir ? "${stateDir}/log"
+, tmpDir ? (if stateDir == "/var" then "/tmp" else "${stateDir}/tmp")
+, forceDisableUserChange ? false
+, processManager
+}:
+
+let
+  ids = if builtins.pathExists ./ids.nix then (import ./ids.nix).ids else {};
+
+  constructors = import ./constructors.nix {
+    inherit pkgs stateDir runtimeDir logDir tmpDir forceDisableUserChange processManager ids;
+  };
+in
+rec {
+  webapp1 = rec {
+    port = ids.webappPorts.webapp1 or 0;
+    dnsName = "webapp1.local";
+
+    pkg = constructors.webapp {
+      inherit port;
+    };
+
+    requiresUniqueIdsFor = [ "uids" "gids" "webappPorts" ];
+  };
+}
+```
+
+The above process model has the following changes:
+
+* Every process instance is annotated with a `requiresUniqueIdsFor` attribute
+  that specifies for which resources the process instances requires unique IDs
+* In the beginning of the expression we have imported the generated `ids.nix`
+  expression that contains all generated unique ID assignments. If the file
+  does not exists, an empty attribute set is returned.
+* Every process instance consumes the unique IDs from the `ids` attribute set,
+  as opposed to using hardcoded values. The `webapp1` service uses a auto
+  generated port assignment. If no such assignment exists, it defaults to 0
+  to allow the processes model evaluation not to fail, for the initial IDs
+  assignment.
+
+To automatically generate the ID assignments from an ID resources configuration
+and processes model, you can run:
+
+```bash
+$ nixproc-id-assign --id-resources idresources.nix --output-file ids.nix processes.nix
+```
+
+The above command automatically assigns IDs to all processes that require them and writes
+the output result to the `ids.nix` file. This file may look as follows:
+
+```nix
+{
+  "ids" = {
+    "gids" = {
+      "webapp" = 2001;
+    };
+    "nginxPorts" = {
+    };
+    "uids" = {
+      "webapp" = 2001;
+    };
+    "webappPorts" = {
+      "webapp" = 5000;
+    };
+  };
+  "lastAssignments" = {
+    "gids" = 2001;
+    "uids" = 2001;
+    "webappPorts" = 5000;
+  };
+}
+```
+
+The above expression defines two attributes:
+* The `ids` attribute contains for each resource a mapping between process
+  instance and a unique ID.
+* The `lastAssignments` attribute memorizes the last assigned ID for each
+  resource to prevent reassigning the same IDs, until the maximum ID limit has
+  been reached.
+
+When updating the processes model, you can run the following command to update
+the ID assignments:
+
+```bash
+$ nixproc-id-assign --id-resources idresources.nix --ids ids.nix --output-file ids.nix processes.nix
+```
+
+The difference between the above command invocation and the previous is that we
+take our existing ID assignment in account -- for processes that were already
+deployed previously we retain their ID assignments to prevent unnecessary
+redeployments.
+
+In addition to port numbers, we can also assign and retain unique UIDs and GIDs
+per process instance. We can use a similar strategy to port numbers to propagate 
+these values as parameters, but a more convenient way is to instrument the
+`createCredentials` function -- the above `processes.nix` expression propagates
+the entire `ids` attribute set as a parameter to the constructors.
+
+The constructors expression indirectly composes the `createCredentials` as
+follows:
+
+```nix
+{pkgs, ids ? {}, ...}:
+
+{
+  createCredentials = import ../../create-credentials {
+    inherit (pkgs) stdenv;
+    inherit ids;
+  };
+
+  ...
+}
+```
+
+It propagates the `ids` to the function that composes the `createCredentials`
+function. As a result, it will automatically assign the UIDs and GIDs in the
+`ids.nix` expression when the user configures a user or group with a name that
+exists in the `uids` and `gids` resource pools.
+
+To make these UIDs and GIDs assignments go smoothly, it is recommended to give
+a process the same process name, instance name, user and group names.
+
+The `nixproc-id-assign` tool is basically just a wrapper around the
+`dydisnix-id-assign` tool and internally converts a processes model to a Disnix
+services model.
+
 Integration with Disnix
 -----------------------
 In addition to the fact that this toolset provides a `disnix` backend that
@@ -523,8 +704,8 @@ rec {
     type = "sysvinit-script";
   };
 
-  nginxReverseProxy = rec {
-    name = "nginxReverseProxy";
+  nginx = rec {
+    name = "nginx";
     port = 8080;
 
     pkg = constructors.nginxReverseProxy {
@@ -597,8 +778,8 @@ rec {
     type = processType;
   };
 
-  nginxReverseProxy = rec {
-    name = "nginxReverseProxy";
+  nginx = rec {
+    name = "nginx";
     port = 8080;
 
     pkg = constructors.nginxReverseProxy {

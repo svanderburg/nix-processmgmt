@@ -2,5 +2,6 @@
 
 {
   webapp = [ infrastructure.test1 ];
-  nginxReverseProxy = [ infrastructure.test2 ];
+  webapp2 = [ infrastructure.test2 ];
+  nginx = [ infrastructure.test2 ];
 }

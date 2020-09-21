@@ -6,68 +6,105 @@
 , cacheDir ? "${stateDir}/cache"
 , tmpDir ? (if stateDir == "/var" then "/tmp" else "${stateDir}/tmp")
 , forceDisableUserChange ? false
-, processManager ? "sysvinit"
+, processManager
 }:
 
 let
+  ids = if builtins.pathExists ./ids.nix then (import ./ids.nix).ids else {};
+
   constructors = import ./constructors.nix {
-    inherit pkgs stateDir runtimeDir logDir tmpDir cacheDir forceDisableUserChange processManager;
+    inherit pkgs stateDir runtimeDir logDir tmpDir cacheDir forceDisableUserChange processManager ids;
   };
 in
 rec {
-  simpleWebappApache = rec {
-    port = 8080;
+  apache = rec {
+    port = ids.httpPorts.apache or 0;
 
     pkg = constructors.simpleWebappApache {
       inherit port;
       serverAdmin = "root@localhost";
     };
+
+    requiresUniqueIdsFor = [ "httpPorts" "uids" "gids" ];
   };
 
   mysql = rec {
-    port = 3307;
+    port = ids.mysqlPorts.mysql or 0;
 
     pkg = constructors.mysql {
       inherit port;
     };
+
+    requiresUniqueIdsFor = [ "mysqlPorts" "uids" "gids" ];
   };
 
-  /*postgresql = rec {
-    port = 6432;
+  postgresql = rec {
+    port = ids.postgresqlPorts.postgresql or 0;
 
     pkg = constructors.postgresql {
       inherit port;
     };
+
+    requiresUniqueIdsFor = [ "postgresqlPorts" "uids" "gids" ];
   };
 
-  simple-appserving-tomcat = rec {
-    httpPort = 8081;
+  tomcat = rec {
+    httpPort = ids.httpPorts.tomcat or 0;
+    httpsPort = ids.httpsPorts.tomcat or 0;
+    serverPort = ids.tomcatServerPorts.tomcat or 0;
+    ajpPort = ids.tomcatAJPPorts.tomcat or 0;
 
     pkg = constructors.simpleAppservingTomcat {
-      inherit httpPort;
+      inherit httpPort httpsPort serverPort ajpPort;
     };
+
+    requiresUniqueIdsFor = [ "httpPorts" "httpsPorts" "tomcatServerPorts" "tomcatAJPPorts" "uids" "gids" ];
   };
 
-  simpleMongodb = rec {
-    pkg = constructors.simpleMongodb {};
+  mongodb = rec {
+    port = ids.mongodbPorts.mongodb or 0;
+
+    pkg = constructors.simpleMongodb {
+      inherit port;
+    };
+
+    requiresUniqueIdsFor = [ "mongodbPorts" "uids" "gids" ];
   };
 
-  extendableSupervisord = {
-    pkg = constructors.extendableSupervisord {};
+  supervisord = rec {
+    inetHTTPServerPort = ids.inetHTTPPorts.supervisord or 0;
+
+    pkg = constructors.extendableSupervisord {
+      inherit inetHTTPServerPort;
+    };
+
+    requiresUniqueIdsFor = [ "inetHTTPPorts" ];
   };
 
-  svnserve = {
+  svnserve = rec {
+    port = ids.svnPorts.svnserve or 0;
+
     pkg = constructors.svnserve {
+      inherit port;
       svnBaseDir = "/repos";
       svnGroup = "root";
     };
+
+    requiresUniqueIdsFor = [ "svnPorts" ];
   };
 
-  simpleInfluxdb = {
-    pkg = constructors.simpleInfluxdb {};
+  influxdb = rec {
+    httpPort = ids.influxdbPorts.influxdb or 0;
+    rpcPort = httpPort + 2;
+
+    pkg = constructors.simpleInfluxdb {
+      inherit httpPort rpcPort;
+    };
+
+    requiresUniqueIdsFor = [ "influxdbPorts" "uids" "gids" ];
   };
 
   docker = {
     pkg = constructors.docker;
-  };*/
+  };
 }

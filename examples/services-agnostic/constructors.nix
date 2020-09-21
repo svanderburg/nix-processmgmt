@@ -6,11 +6,12 @@
 , tmpDir
 , forceDisableUserChange
 , processManager
+, ids ? {}
 }:
 
 let
   createManagedProcess = import ../../nixproc/create-managed-process/agnostic/create-managed-process-universal.nix {
-    inherit pkgs runtimeDir stateDir logDir tmpDir forceDisableUserChange processManager;
+    inherit pkgs runtimeDir stateDir logDir tmpDir forceDisableUserChange processManager ids;
   };
 in
 {

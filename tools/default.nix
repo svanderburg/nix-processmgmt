@@ -27,6 +27,10 @@ rec {
     inherit (pkgs) stdenv getopt;
   };
 
+  idassign = import ./idassign {
+    inherit (pkgs) stdenv getopt;
+  };
+
   launchd = import ./launchd {
     inherit (pkgs) stdenv getopt;
   };

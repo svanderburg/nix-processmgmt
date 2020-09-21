@@ -99,10 +99,10 @@ makeTest {
 
     def check_nginx_multi_instance_redirection():
         machine.succeed(
-            "curl --fail -H 'Host: webapp1.local' http://localhost:8080 | grep 'listening on port: 5000'"
+            "curl --fail -H 'Host: webapp1.local' http://localhost:8080 | grep 'listening on port: 5001'"
         )
         machine.succeed(
-            "curl --fail -H 'Host: webapp5.local' http://localhost:8081 | grep 'listening on port: 6002'"
+            "curl --fail -H 'Host: webapp5.local' http://localhost:8081 | grep 'listening on port: 5005'"
         )
 
 

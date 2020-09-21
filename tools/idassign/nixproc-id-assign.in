@@ -1,0 +1,120 @@
+#!/bin/bash -e
+
+# Shows the usage of this command to the user
+
+showUsage()
+{
+    cat <<EOF
+Assigns unique IDs to process instances based on their ID requirements and ID
+resources configuration.
+
+Usage: $0 [OPTION] --id-resources id_resources_nix PATH
+
+      --id-resources=id_resources_nix
+                               ID resources Nix expression defining numeric ID
+                               resources
+      --ids=ids_nix            IDs Nix expression mapping services to unique
+                               IDs per resource
+      --service-property=serviceProperty
+                               Property in the processes model that specifies
+                               which numeric ID resources a service needs
+                               (Defaults to: requireUniqueIdsFor)
+      --output-file            Specifies the file where to write the IDS to.
+                               If no file was provided, it writes to the
+                               standard output
+      --output-xml             Specifies that the output should be in XML not the
+                               Nix expression language
+  -h, --help                   Shows the usage of this command to the user
+
+Environment:
+  NIXPROC_STATE_DIR    Changes the directory in which the state of the
+                       processes is stored
+  NIXPROC_RUNTIME_DIR  Changes the directory in which the PID files are stored
+  NIXPROC_LOG_DIR      Changes the directory in which log files are stored
+  NIXPROC_TMP_DIR      Changes the directory in which temp files are stored
+  NIXPROC_FORCE_DISABLE_USER_CHANGE
+                       Forces to not create users, groups or change user
+                       permissions
+EOF
+}
+
+# Parse valid argument options
+
+PARAMS=`@getopt@ -n $0 -o h -l id-resources:,ids:,service-property:,,state-dir:,runtime-dir:,log-dir:,tmp-dir:,force-disable-user-change,output-file:,output-xml,help -- "$@"`
+
+if [ $? != 0 ]
+then
+    showUsage
+    exit 1
+fi
+
+# Evaluate valid options
+
+eval set -- "$PARAMS"
+
+while [ "$1" != "--" ]
+do
+    case "$1" in
+        --id-resources)
+            idResourcesFile="$2"
+            ;;
+        --ids)
+            idsParam="--ids $2"
+            ;;
+        --service-property)
+            servicePropertyArg="--service-property $2"
+            ;;
+        --output-file)
+            outputFileArg="--output-file $2"
+            ;;
+        --output-xml)
+            outputXmlArg="--output-xml"
+            ;;
+        --state-dir)
+            NIXPROC_STATE_DIR="$2"
+            ;;
+        --runtime-dir)
+            NIXPROC_RUNTIME_DIR="$2"
+            ;;
+        --log-dir)
+            NIXPROC_LOG_DIR="$2"
+            ;;
+        --tmp-dir)
+            NIXPROC_TMP_DIR="$2"
+            ;;
+        --force-disable-user-change)
+            NIXPROC_FORCE_DISABLE_USER_CHANGE=1
+            ;;
+        -h|--help)
+            showUsage
+            exit 0
+            ;;
+    esac
+
+    shift
+done
+
+shift
+
+processesFile="$1"
+
+# Validate the given options
+
+if [ "$idResourcesFile" = "" ]
+then
+    echo "An ID resources configuration must be provided!" >&2
+    exit 1
+fi
+
+
+if [ "$processesFile" = "" ]
+then
+    echo "A processes Nix expression must be provided!" >&2
+    exit 1
+fi
+
+NIXPROC=${NIXPROC:-@NIXPROC@}
+export PROCESSES_EXPR="$(@readlink@ -f "$processesFile")"
+
+# Assign IDs
+dydisnix-id-assign -s $NIXPROC/create-managed-process/disnix/services-adapter.nix --id-resources $idResourcesFile $idsParam $servicePropertyArg $outputFileArg $outputXmlArg $stateDirArg $runtimeDirArg $logDirArg $tmpDirArg $forceDisableUserChangeArg

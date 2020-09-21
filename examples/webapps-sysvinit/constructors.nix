@@ -4,6 +4,7 @@
 , runtimeDir
 , tmpDir
 , forceDisableUserChange
+, ids ? {}
 }:
 
 let
@@ -13,6 +14,7 @@ let
 
     createCredentials = import ../../nixproc/create-credentials {
       inherit (pkgs) stdenv;
+      inherit ids;
     };
 
     initFunctions = import ../../nixproc/create-managed-process/sysvinit/init-functions.nix {

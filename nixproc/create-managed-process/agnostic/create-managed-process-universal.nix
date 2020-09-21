@@ -1,4 +1,4 @@
-{pkgs, runtimeDir, logDir, tmpDir, stateDir, forceDisableUserChange ? false, processManager ? null}:
+{pkgs, runtimeDir, logDir, tmpDir, stateDir, forceDisableUserChange ? false, processManager ? null, ids ? {}}:
 
 let
   basePackages = [
@@ -10,6 +10,7 @@ let
 
   createCredentials = import ../../create-credentials {
     inherit (pkgs) stdenv;
+    inherit ids;
   };
 
   createSystemVInitScript = import ../sysvinit/create-sysvinit-script.nix {
