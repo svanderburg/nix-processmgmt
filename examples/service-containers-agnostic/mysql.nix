@@ -2,12 +2,22 @@
 {port ? 3306, instanceSuffix ? "", instanceName ? "mysql${instanceSuffix}", containerName ? "mysql-database${instanceSuffix}", type}:
 
 let
-  mysqlSocket = "${runtimeDir}/${instanceName}/${instanceName}.sock";
+  # By default, the socket file resides in $runtimeDir/mysqld/mysqld.sock.
+  # We only change the path component: 'mysqld' into the instance name if no
+  # instanceSuffix parameter is specified. Otherwise, we append the
+  # instanceSuffix to 'mysqld'.
+  #
+  # This construction is used to allow the mysql client executable to work
+  # without a socket parameter for the default configuration.
+
+  mysqlSocket =
+    if instanceName != "mysql" && instanceSuffix == "" then "${runtimeDir}/${instanceName}/mysqld.sock"
+    else "${runtimeDir}/mysqld${instanceSuffix}/mysqld.sock";
 
   mysqlUsername = "root";
 
   pkg = mysqlConstructorFun {
-    inherit port instanceName;
+    inherit port instanceName instanceSuffix;
     postInstall = ''
       # Add Dysnomia container configuration file for MySQL database
       mkdir -p $out/etc/dysnomia/containers

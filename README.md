@@ -624,8 +624,8 @@ these values as parameters, but a more convenient way is to instrument the
 `createCredentials` function -- the above `processes.nix` expression propagates
 the entire `ids` attribute set as a parameter to the constructors.
 
-The constructors expression indirectly composes the `createCredentials` as
-follows:
+The constructors expression indirectly composes the `createCredentials` function
+as follows:
 
 ```nix
 {pkgs, ids ? {}, ...}:
@@ -640,10 +640,10 @@ follows:
 }
 ```
 
-It propagates the `ids` to the function that composes the `createCredentials`
-function. As a result, it will automatically assign the UIDs and GIDs in the
-`ids.nix` expression when the user configures a user or group with a name that
-exists in the `uids` and `gids` resource pools.
+The `ids` attribute set is propagated to the function that composes the
+`createCredentials` function. As a result, it will automatically assign the UIDs
+and GIDs in the `ids.nix` expression when the user configures a user or group
+with a name that exists in the `uids` and `gids` resource pools.
 
 To make these UIDs and GIDs assignments go smoothly, it is recommended to give
 a process the same process name, instance name, user and group names.
