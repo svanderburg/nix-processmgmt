@@ -54,7 +54,7 @@ makeTest {
       environment.systemPackages = [
         pkgs.stdenv
         pkgs.dysnomia
-        tools.build
+        tools.common
         tools.systemd
       ];
     };

@@ -41,6 +41,7 @@ Options:
       --runtime-dir     Changes the directory in which the PID files are stored
       --log-dir         Changes the directory in which the log files are stored
       --tmp-dir         Changes the directory in which temp files are stored
+      --cache-dir       Changes the directory in which cache files are stored
       --force-disable-user-change
                         Forces to not create users, groups or change user
                         permissions
@@ -61,6 +62,7 @@ Environment:
   NIXPROC_RUNTIME_DIR   Changes the directory in which the PID files are stored
   NIXPROC_LOG_DIR       Changes the directory in which log files are stored
   NIXPROC_TMP_DIR       Changes the directory in which temp files are stored
+  NIXPROC_CACHE_DIR     Changes the directory in which cache files are stored
   NIXPROC_FORCE_DISABLE_USER_CHANGE
                         Forces to not create users, groups or change user
                         permissions
@@ -69,7 +71,7 @@ EOF
 
 # Parse valid argument options
 
-PARAMS=`@getopt@ -n $0 -o p:o:h -l undeploy,rollback,switch-generation:,list-generations,delete-generations:,delete-all-generations,profile:,old-profile:,state-dir:,runtime-dir:,log-dir:,tmp-dir:,force-disable-user-change,show-trace,extra-params:,user,help -- "$@"`
+PARAMS=`@getopt@ -n $0 -o p:o:h -l undeploy,rollback,switch-generation:,list-generations,delete-generations:,delete-all-generations,profile:,old-profile:,state-dir:,runtime-dir:,log-dir:,tmp-dir:,cache-dir:,force-disable-user-change,show-trace,extra-params:,user,help -- "$@"`
 
 if [ $? != 0 ]
 then
@@ -124,6 +126,9 @@ do
         --tmp-dir)
             tmpDirArg="--tmp-dir $2"
             ;;
+        --cache-dir)
+            cacheDirArg="--cache-dir $2"
+            ;;
         --force-disable-user-change)
             forceDisableUserChangeArg="--force-disable-user-change"
             ;;
@@ -161,7 +166,7 @@ composeProfileBaseDir
 
 deploy()
 {
-    nixproc-systemd-deploy $systemdUserArg $profileArg $oldProfileArg $profilePath
+    nixproc-systemd-deploy $systemdUserArg $profileArg $oldProfileArg $profilePath $stateDirArg $runtimeDirArg $logDirArg $tmpDirArg $cacheDirArg $forceDisableUserChange
 }
 
 executeDeploymentOperation systemd

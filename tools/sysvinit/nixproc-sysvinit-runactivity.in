@@ -82,9 +82,14 @@ source @sysvinitchecks@
 
 checkRunlevel
 
-# Execute the activities
+if [ "$2" = "" ]
+then
+    rcpath="$oldProfilePath/etc/rc.d/rc${runlevel}.d"
+else
+    rcpath="$2"
+fi
 
-rcpath="$oldProfilePath/etc/rc.d/rc${runlevel}.d"
+# Execute the activities
 
 if [ "$reverse" = "1" ]
 then

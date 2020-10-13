@@ -82,7 +82,7 @@ makeTest {
       environment.systemPackages = [
         pkgs.stdenv
         pkgs.dysnomia
-        tools.build
+        tools.common
         tools.sysvinit
       ];
     };
@@ -125,8 +125,10 @@ makeTest {
 
     start_all()
 
-    # Make sure the unprivileged user can deploy
-    machine.succeed('su - unprivileged -c "mkdir -p var/run var/tmp"')
+    # Make sure the unprivileged user can deploy (this implicitly creates all required state folders)
+    machine.succeed(
+        "su - unprivileged -c '${env} nixproc-sysvinit-switch --state-dir /home/unprivileged/var --force-disable-user-change --undeploy'"
+    )
 
     # Test webapp deployed by an unprivileged user
     check_webapp_daemon("${webappUnprivileged}")

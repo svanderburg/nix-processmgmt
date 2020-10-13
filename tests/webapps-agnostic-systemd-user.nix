@@ -83,7 +83,7 @@ makeTest {
       environment.systemPackages = [
         pkgs.stdenv
         pkgs.dysnomia
-        tools.build
+        tools.common
         tools.systemd
       ];
     };
@@ -103,7 +103,10 @@ makeTest {
     start_all()
     machine.wait_for_unit("display-manager.service")
 
-    machine.succeed('su - unprivileged -c "mkdir -p /home/unprivileged/var"')
+    # Do an undeploy to force the state to get initialized
+    machine.succeed(
+        'su - unprivileged -c "${env} nixproc-systemd-switch --user --state-dir /home/unprivileged/var --force-disable-user-change --undeploy"'
+    )
 
     # Deploy the entire system in auto mode. Should result in foreground webapp processes
 

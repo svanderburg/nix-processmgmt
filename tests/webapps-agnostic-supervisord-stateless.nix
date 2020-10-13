@@ -33,7 +33,7 @@ makeTest {
         pkgs.stdenv
         pkgs.pythonPackages.supervisor
         pkgs.dysnomia
-        tools.build
+        tools.common
         tools.systemd
         tools.supervisord
       ];

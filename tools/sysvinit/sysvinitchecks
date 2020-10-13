@@ -4,7 +4,7 @@ checkRunlevel()
 {
     if [ "$runlevel" = "" ]
     then
-        if command -v runlevel
+        if command -v runlevel 2> /dev/null
         then
             runlevel=$(runlevel | cut -d ' ' -f2)
 

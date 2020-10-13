@@ -61,11 +61,11 @@ Installation
 ============
 First, make a Git clone of this repository.
 
-The next step is installing the build tool:
+The next step is installing the common tools:
 
 ```bash
 $ cd tools
-$ nix-env -f default.nix -iA build
+$ nix-env -f default.nix -iA common
 ```
 
 Then, at least one tool that deploys a configuration for a supported process

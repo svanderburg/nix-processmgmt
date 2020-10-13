@@ -35,7 +35,7 @@ buildProfile()
         local deployArg="$path"
     fi
 
-    profilePath=$(nixproc-build --process-manager $processManager $stateDirArg $runtimeDirArg $logDirArg $tmpDirArg $forceDisableUserChangeArg $showTraceArg "${extraParamsArg[@]}" --no-out-link $deployArg)
+    profilePath=$(nixproc-build --process-manager $processManager $stateDirArg $runtimeDirArg $logDirArg $tmpDirArg $cacheDirArg $forceDisableUserChangeArg $showTraceArg "${extraParamsArg[@]}" --no-out-link $deployArg)
 }
 
 composeProfileBaseDir()

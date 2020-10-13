@@ -29,6 +29,8 @@ let
     inherit (stdenv) lib;
   };
 
+  commonTools = (import ../../../tools {}).common;
+
   generateForegroundProxy = import ./generate-foreground-proxy.nix {
     inherit stdenv writeTextFile;
   };
@@ -87,11 +89,10 @@ let
     runAsRoot = ''
       ${dockerTools.shadowSetup}
 
-      # Create a temp dir, because many apps rely on it
-      mkdir -p /tmp
-      chmod 1777 /tmp
+      # Initialize common state directories
+      ${commonTools}/bin/nixproc-init-state --state-dir ${stateDir} --runtime-dir ${runtimeDir}
 
-      ${stdenv.lib.optionalString (credentialsSpec != null) ''
+      ${stdenv.lib.optionalString (!forceDisableUserChange && credentialsSpec != null) ''
         export PATH=$PATH:${findutils}/bin:${glibc.bin}/bin
         ${dysnomia}/bin/dysnomia-addgroups ${credentialsSpec}
         ${dysnomia}/bin/dysnomia-addusers ${credentialsSpec}

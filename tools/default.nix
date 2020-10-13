@@ -3,7 +3,7 @@
 }:
 
 rec {
-  build = import ./build {
+  common = import ./common {
     inherit (pkgs) stdenv getopt;
   };
 

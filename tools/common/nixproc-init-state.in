@@ -1,0 +1,144 @@
+#!/bin/bash -e
+
+# Shows the usage of this command to the user
+
+showUsage()
+{
+    cat <<EOF
+Usage: $0 [OPTION]
+
+Initializes the common state directories so that processes can be managed
+properly.
+
+Options:
+      --state-dir       Changes the directory in which the state of the
+                        processes are stored
+      --runtime-dir     Changes the directory in which the PID files are stored
+      --log-dir         Changes the directory in which the log files are stored
+      --tmp-dir         Changes the directory in which temp files are stored
+      --cache-dir       Changes the directory in which cache files are stored
+      --force-disable-user-change
+                        Forces to not create users, groups or change user
+                        permissions
+  -h, --help            Shows the usage of this command
+
+Environment:
+  NIXPROC_STATE_DIR    Changes the directory in which the state of the
+                       processes is stored
+  NIXPROC_RUNTIME_DIR  Changes the directory in which the PID files are stored
+  NIXPROC_LOG_DIR      Changes the directory in which log files are stored
+  NIXPROC_TMP_DIR      Changes the directory in which temp files are stored
+  NIXPROC_CACHE_DIR    Changes the directory in which cache files are stored
+  NIXPROC_FORCE_DISABLE_USER_CHANGE
+                       Forces to not create users, groups or change user
+                       permissions
+EOF
+}
+
+# Parse valid argument options
+
+PARAMS=`@getopt@ -n $0 -o h -l state-dir:,runtime-dir:,log-dir:,tmp-dir:,cache-dir:,force-disable-user-change,help -- "$@"`
+
+if [ $? != 0 ]
+then
+    showUsage
+    exit 1
+fi
+
+# Evaluate valid options
+
+eval set -- "$PARAMS"
+
+while [ "$1" != "--" ]
+do
+    case "$1" in
+        --state-dir)
+            NIXPROC_STATE_DIR="$2"
+            ;;
+        --runtime-dir)
+            NIXPROC_RUNTIME_DIR="$2"
+            ;;
+        --log-dir)
+            NIXPROC_LOG_DIR="$2"
+            ;;
+        --tmp-dir)
+            NIXPROC_TMP_DIR="$2"
+            ;;
+        --cache-dir)
+            NIXPROC_CACHE_DIR="$2"
+            ;;
+        --force-disable-user-change)
+            forceDisableUserChange=1
+            ;;
+        -h|--help)
+            showUsage
+            exit 0
+            ;;
+    esac
+
+    shift
+done
+
+shift
+
+# Some default values
+defaultStateDir="/var"
+defaultRuntimeDir="@DEFAULT_RUNTIME_DIR@"
+
+# Determine and create state directory
+NIXPROC_STATE_DIR="${NIXPROC_STATE_DIR:-$defaultStateDir}"
+mkdir -p "$NIXPROC_STATE_DIR"
+
+# Determine and create temp directory
+if [ "$NIXPROC_TMP_DIR" = "" ]
+then
+    if [ "$NIXPROC_STATE_DIR" = "$defaultStateDir" ]
+    then
+        NIXPROC_TMP_DIR="/tmp"
+    else
+        NIXPROC_TMP_DIR="$NIXPROC_STATE_DIR/tmp"
+    fi
+fi
+
+if [ ! -d "$NIXPROC_TMP_DIR" ]
+then
+    mkdir -p "$NIXPROC_TMP_DIR"
+    if [ "$forceDisableUserChange" != "1" ]
+    then
+        chmod 1777 "$NIXPROC_TMP_DIR"
+    fi
+fi
+
+if [ "$NIXPROC_TMP_DIR" = "/tmp" ] && [ ! -e "$NIXPROC_STATE_DIR/tmp" ]
+then
+    ln -sfn /tmp "$NIXPROC_STATE_DIR/tmp" # When the temp directory is /tmp: also create a tmp symlink in the state folder, for compatibility
+fi
+
+# Determine and create runtime directory
+
+if [ "$NIXPROC_RUNTIME_DIR" = "" ]
+then
+    if [ "$NIXPROC_STATE_DIR" = "$defaultStateDir" ]
+    then
+        NIXPROC_RUNTIME_DIR="$defaultRuntimeDir"
+    else
+        NIXPROC_RUNTIME_DIR="$NIXPROC_STATE_DIR/run"
+    fi
+fi
+
+mkdir -p "$NIXPROC_RUNTIME_DIR"
+
+if [ "$NIXPROC_RUNTIME_DIR" = "/run" ] && [ ! -e "$NIXPROC_STATE_DIR/run" ]
+then
+    ln -sfn /run "$NIXPROC_STATE_DIR/run" # When the runtime directory is /run: also create a run symlink in the state folder, for compatibility
+fi
+
+# Determine and create log directory
+
+NIXPROC_LOG_DIR="${NIXPROC_LOG_DIR:-$NIXPROC_STATE_DIR/log}"
+mkdir -p "$NIXPROC_LOG_DIR"
+
+# Determine and create cache directory
+
+NIXPROC_CACHE_DIR="${NIXPROC_CACHE_DIR:-$NIXPROC_STATE_DIR/cache}"
+mkdir -p "$NIXPROC_CACHE_DIR"

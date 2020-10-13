@@ -20,6 +20,7 @@ Options:
       --runtime-dir   Changes the directory in which the PID files are stored
       --log-dir       Changes the directory in which the log files are stored
       --tmp-dir       Changes the directory in which temp files are stored
+      --cache-dir     Changes the directory in which cache files are stored
       --force-disable-user-change
                       Forces to not create users, groups or change user
                       permissions
@@ -36,6 +37,7 @@ Environment:
   NIXPROC_RUNTIME_DIR  Changes the directory in which the PID files are stored
   NIXPROC_LOG_DIR      Changes the directory in which log files are stored
   NIXPROC_TMP_DIR      Changes the directory in which temp files are stored
+  NIXPROC_CACHE_DIR    Changes the directory in which cache files are stored
   NIXPROC_FORCE_DISABLE_USER_CHANGE
                        Forces to not create users, groups or change user
                        permissions
@@ -44,7 +46,7 @@ EOF
 
 # Parse valid argument options
 
-PARAMS=`@getopt@ -n $0 -o P:h -l undeploy,process-manager:,state-dir:,runtime-dir:,log-dir:,tmp-dir:,force-disable-user-change,no-out-link,show-trace,extra-params:,help -- "$@"`
+PARAMS=`@getopt@ -n $0 -o P:h -l undeploy,process-manager:,state-dir:,runtime-dir:,log-dir:,tmp-dir:,cache-dir:,force-disable-user-change,no-out-link,show-trace,extra-params:,help -- "$@"`
 
 if [ $? != 0 ]
 then
@@ -76,6 +78,9 @@ do
             ;;
         --tmp-dir)
             tmpDir="--argstr tmpDir $2"
+            ;;
+        --cache-dir)
+            cacheDir="--argstr cacheDir $2"
             ;;
         --force-disable-user-change)
             forceDisableUserChangeArg="--arg forceDisableUserChange true"
@@ -144,6 +149,11 @@ then
     tmpDirArg="--argstr tmpDir $NIXPROC_TMP_DIR"
 fi
 
+if [ "$NIXPROC_CACHE_DIR" != "" ]
+then
+    cacheDirArg="--argstr cacheDir $NIXPROC_CACHE_DIR"
+fi
+
 if [ "$NIXPROC_FORCE_DISABLE_USER_CHANGE" = "1" ]
 then
     forceDisableUserChangeArg="--arg forceDisableUserChange true"
@@ -152,4 +162,4 @@ fi
 NIXPROC=${NIXPROC:-@NIXPROC@}
 
 # Build the profile
-nix-build $stateDirArg $runtimeDirArg $logDirArg $tmpDirArg $forceDisableUserChangeArg $noOutLinkArg $showTraceArg $processManagerArg "${extraParamsArg[@]}" $exprFileArg $NIXPROC/create-managed-process/$processManager/build-$processManager-env.nix
+nix-build $stateDirArg $runtimeDirArg $logDirArg $tmpDirArg $cacheDirArg $forceDisableUserChangeArg $noOutLinkArg $showTraceArg $processManagerArg "${extraParamsArg[@]}" $exprFileArg $NIXPROC/create-managed-process/$processManager/build-$processManager-env.nix

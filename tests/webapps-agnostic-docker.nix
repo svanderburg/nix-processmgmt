@@ -67,7 +67,7 @@ makeTest {
         pkgs.stdenv
         pkgs.docker
         pkgs.dysnomia
-        tools.build
+        tools.common
         tools.systemd
         tools.docker
       ];

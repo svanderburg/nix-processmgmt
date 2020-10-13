@@ -11,20 +11,27 @@ resources configuration.
 Usage: $0 [OPTION] --id-resources id_resources_nix PATH
 
       --id-resources=id_resources_nix
-                               ID resources Nix expression defining numeric ID
-                               resources
-      --ids=ids_nix            IDs Nix expression mapping services to unique
-                               IDs per resource
+                      ID resources Nix expression defining numeric ID resources
+      --ids=ids_nix   IDs Nix expression mapping services to unique IDs per
+                      resource
       --service-property=serviceProperty
-                               Property in the processes model that specifies
-                               which numeric ID resources a service needs
-                               (Defaults to: requireUniqueIdsFor)
-      --output-file            Specifies the file where to write the IDS to.
-                               If no file was provided, it writes to the
-                               standard output
-      --output-xml             Specifies that the output should be in XML not the
-                               Nix expression language
-  -h, --help                   Shows the usage of this command to the user
+                      Property in the processes model that specifies
+                      which numeric ID resources a service needs
+                      (Defaults to: requireUniqueIdsFor)
+      --state-dir     Changes the directory in which the state of the processes
+                      are stored
+      --runtime-dir   Changes the directory in which the PID files are stored
+      --log-dir       Changes the directory in which the log files are stored
+      --tmp-dir       Changes the directory in which temp files are stored
+      --cache-dir     Changes the directory in which cache files are stored
+      --force-disable-user-change
+                      Forces to not create users, groups or change user
+                      permissions
+      --output-file   Specifies the file where to write the IDS to. If no file
+                      was provided, it writes to the standard output
+      --output-xml    Specifies that the output should be in XML not the Nix
+                      expression language
+  -h, --help          Shows the usage of this command to the user
 
 Environment:
   NIXPROC_STATE_DIR    Changes the directory in which the state of the
@@ -32,6 +39,7 @@ Environment:
   NIXPROC_RUNTIME_DIR  Changes the directory in which the PID files are stored
   NIXPROC_LOG_DIR      Changes the directory in which log files are stored
   NIXPROC_TMP_DIR      Changes the directory in which temp files are stored
+  NIXPROC_CACHE_DIR    Changes the directory in which cache files are stored
   NIXPROC_FORCE_DISABLE_USER_CHANGE
                        Forces to not create users, groups or change user
                        permissions
@@ -40,7 +48,7 @@ EOF
 
 # Parse valid argument options
 
-PARAMS=`@getopt@ -n $0 -o h -l id-resources:,ids:,service-property:,,state-dir:,runtime-dir:,log-dir:,tmp-dir:,force-disable-user-change,output-file:,output-xml,help -- "$@"`
+PARAMS=`@getopt@ -n $0 -o h -l id-resources:,ids:,service-property:,state-dir:,runtime-dir:,log-dir:,tmp-dir:,cache-dir:,force-disable-user-change,output-file:,output-xml,help -- "$@"`
 
 if [ $? != 0 ]
 then
@@ -82,6 +90,9 @@ do
         --tmp-dir)
             NIXPROC_TMP_DIR="$2"
             ;;
+        --cache-dir)
+            NIXPROC_CACHE_DIR="$2"
+            ;;
         --force-disable-user-change)
             NIXPROC_FORCE_DISABLE_USER_CHANGE=1
             ;;
@@ -117,4 +128,4 @@ NIXPROC=${NIXPROC:-@NIXPROC@}
 export PROCESSES_EXPR="$(@readlink@ -f "$processesFile")"
 
 # Assign IDs
-dydisnix-id-assign -s $NIXPROC/create-managed-process/disnix/services-adapter.nix --id-resources $idResourcesFile $idsParam $servicePropertyArg $outputFileArg $outputXmlArg $stateDirArg $runtimeDirArg $logDirArg $tmpDirArg $forceDisableUserChangeArg
+dydisnix-id-assign -s $NIXPROC/create-managed-process/disnix/services-adapter.nix --id-resources $idResourcesFile $idsParam $servicePropertyArg $outputFileArg $outputXmlArg $stateDirArg $runtimeDirArg $logDirArg $tmpDirArg $cacheDirArg $forceDisableUserChangeArg

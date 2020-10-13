@@ -17,18 +17,36 @@ Options:
   -o, --old-profile=PATH
                         Path to the previously deployed Nix profile (by default,
                         it gets auto detected)
+      --state-dir       Changes the directory in which the state of the
+                        processes are stored
+      --runtime-dir     Changes the directory in which the PID files are stored
+      --log-dir         Changes the directory in which the log files are stored
+      --tmp-dir         Changes the directory in which temp files are stored
+      --cache-dir       Changes the directory in which cache files are stored
+      --force-disable-user-change
+                        Forces to not create users, groups or change user
+                        permissions
   -h, --help            Shows the usage of this command
 
 Environment:
   NIX_STATE_DIR        Overrides the location of the Nix state directory
   BSDRC_TARGET_DIR     Directory in which the BSD rc scripts reside (defaults to:
                        /usr/local/etc/rc.d)
+  NIXPROC_STATE_DIR    Changes the directory in which the state of the
+                       processes is stored
+  NIXPROC_RUNTIME_DIR  Changes the directory in which the PID files are stored
+  NIXPROC_LOG_DIR      Changes the directory in which log files are stored
+  NIXPROC_TMP_DIR      Changes the directory in which temp files are stored
+  NIXPROC_CACHE_DIR    Changes the directory in which cache files are stored
+  NIXPROC_FORCE_DISABLE_USER_CHANGE
+                       Forces to not create users, groups or change user
+                       permissions
 EOF
 }
 
 # Parse valid argument options
 
-PARAMS=`@getopt@ -n $0 -o p:o:h -l profile:,old-profile:,help -- "$@"`
+PARAMS=`@getopt@ -n $0 -o p:o:h -l profile:,old-profile:,state-dir:,runtime-dir:,log-dir:,tmp-dir:,cache-dir:,force-disable-user-change,help -- "$@"`
 
 if [ $? != 0 ]
 then
@@ -48,6 +66,24 @@ do
             ;;
         -o|--old-profile)
             oldProfilePath="$2"
+            ;;
+        --state-dir)
+            stateDirArg="--state-dir $2"
+            ;;
+        --runtime-dir)
+            runtimeDirArg="--runtime-dir $2"
+            ;;
+        --log-dir)
+            logDirArg="--log-dir $2"
+            ;;
+        --tmp-dir)
+            tmpDirArg="--tmp-dir $2"
+            ;;
+        --cache-dir)
+            cacheDirArg="--cache-dir $2"
+            ;;
+        --force-disable-user-change)
+            forceDisableUserChangeArg="--force-disable-user-change"
             ;;
         -h|--help)
             showUsage
@@ -74,6 +110,10 @@ BSDRC_TARGET_DIR=${BSDRC_TARGET_DIR:-/usr/local/etc/rc.d}
 
 rcnew="$profilePath/etc/rc.d"
 rcold="$oldProfilePath/etc/rc.d"
+
+# Initialize all state
+
+nixproc-init-state $stateDirArg $runtimeDirArg $logDirArg $tmpDirArg $cacheDirArg $forceDisableUserChangeArg
 
 # Determine paths of old scripts
 

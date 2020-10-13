@@ -17,6 +17,8 @@ let
     logDir = builtins.getEnv "NIXPROC_LOG_DIR";
   } // pkgs.lib.optionalAttrs (builtins.getEnv "NIXPROC_TMP_DIR" != "") {
     tmpDir = builtins.getEnv "NIXPROC_TMP_DIR";
+  } // pkgs.lib.optionalAttrs (builtins.getEnv "NIXPROC_CACHE_DIR" != "") {
+    tmpDir = builtins.getEnv "NIXPROC_CACHE_DIR";
   } // pkgs.lib.optionalAttrs (builtins.getEnv "NIXPROC_FORCE_DISABLE_USER_CHANGE" != "") {
     forceDisableUserChange = true;
   };

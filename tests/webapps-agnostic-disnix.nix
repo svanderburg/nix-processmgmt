@@ -79,7 +79,7 @@ makeTest {
         pkgs.stdenv
         pkgs.dysnomia
         pkgs.disnix
-        tools.build
+        tools.common
         tools.systemd
         tools.disnix
       ];
