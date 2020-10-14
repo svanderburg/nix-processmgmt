@@ -3,6 +3,7 @@
 , stateDir ? "/var"
 , runtimeDir ? "${stateDir}/run"
 , logDir ? "${stateDir}/log"
+, cacheDir ? "${cacheDir}/cache"
 , tmpDir ? (if stateDir == "/var" then "/tmp" else "${stateDir}/tmp")
 , forceDisableUserChange ? false
 , exprFile ? null

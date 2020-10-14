@@ -86,7 +86,7 @@ if [ "$2" = "" ]
 then
     rcpath="$oldProfilePath/etc/rc.d/rc${runlevel}.d"
 else
-    rcpath="$2"
+    rcpath="$2/etc/rc.d/rc${runlevel}.d"
 fi
 
 # Execute the activities

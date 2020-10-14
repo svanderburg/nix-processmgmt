@@ -147,7 +147,10 @@ let
               inherit process args pidFilesDir;
             };
         in
-        initialize + invocationCommand;
+        ''
+          ${initialize}
+          ${invocationCommand}
+        '';
     };
     stop = {
       activity = "Stopping";

@@ -75,7 +75,12 @@ composeOldProfilePath
 
 # Execute the activities
 
-rcpath="$oldProfilePath/etc/rc.d"
+if [ "$2" = "" ]
+then
+    rcpath="$oldProfilePath/etc/rc.d"
+else
+    rcpath="$2/etc/rc.d"
+fi
 
 if [ "$reverse" = "1" ]
 then
