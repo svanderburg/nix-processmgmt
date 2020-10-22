@@ -822,6 +822,73 @@ the following command allows us to pick a different process manager, such as
 $ disnix-env -s services.nix -i infrastructure.nix -d distribution.nix --extra-params '{ processManager = "systemd"; }'
 ```
 
+Building a multi-process Docker container
+-----------------------------------------
+Another useful integration solution is generating multi-process Docker images.
+We can build a Docker image that launches multiple processes managed by a
+process manager that is both compatible with Linux and Docker.
+
+To construct such as an image, we can evaluate a Nix expression (e.g.
+`default.nix`) that looks as follows:
+
+```nix
+{ pkgs ? import <nixpkgs> { inherit system; }
+, system ? builtins.currentSystem
+}:
+
+let
+  createMultiProcessImage = import ../../nixproc/create-multi-process-image/create-multi-process-image.nix {
+    inherit pkgs system;
+    inherit (pkgs) dockerTools stdenv;
+  };
+in
+createMultiProcessImage {
+  name = "multiprocess";
+  tag = "test";
+  exprFile = ../webapps-agnostic/processes.nix;
+  processManager = "supervisord"; # sysvinit, disnix are also valid options
+  forceDisableUserChange = false; # the default option
+}
+```
+
+In the above expression, we evaluate the `createMultiProcessImage` function
+with the following parameters:
+
+* The `name` refers to the name of the image, whereas `tag` refers to a Docker
+  image version tag.
+* The `exprFile` refers to a processes expression file that declares running
+  process instances (as shown earlier)
+* The `processManager` parameter allows you to pick a process manager.
+  Currently, all the options shown above are supported.
+* It is also possible to adjust the state settings in the processes model.
+  With `forceDisableUserChange` we can disable user creation and user
+  switching. It is also possible to control the other state variables, such
+  as `stateDir`.
+
+The function shown above is basically a thin wrapper around the
+`dockerTools.buildImage` function in Nixpkgs and accepts the same parameters,
+with a number of process management parameters added to it.
+
+The corresponding deployment procedure of an image is also similar to ordinary
+single root process images. For example, to build the image you can run:
+
+```bash
+$ nix-build
+```
+
+and load it into Docker as follows:
+
+```bash
+$ docker load -i result
+```
+
+We can deploy a container instance from the image in interactive mode as
+follows:
+
+```bash
+$ docker run --rm --network host -it multiprocess:test
+```
+
 Examples
 ========
 This repository contains three example systems, that can be found in the
@@ -839,6 +906,9 @@ This repository contains three example systems, that can be found in the
 * `service-containers-agnostic` extends the previous examples with configuration
   files so that these system services can be deployed as Disnix containers --
   services in which other services can be hosted.
+* `multi-process-image` is an example demonstrating how to construct a Docker
+  image that concurrently runs all processes described in the `webapps-agnostic`
+  example managed by a process management solution of choice.
 
 Troubleshooting
 ===============

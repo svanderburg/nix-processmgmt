@@ -86,23 +86,11 @@ let
   dockerImage = dockerTools.buildImage (stdenv.lib.recursiveUpdate {
     inherit name;
     tag = "latest";
-    runAsRoot = ''
-      ${dockerTools.shadowSetup}
 
-      # Initialize common state directories
-      ${commonTools}/bin/nixproc-init-state --state-dir ${stateDir} --runtime-dir ${runtimeDir}
+    runAsRoot = import ../docker/setup.nix {
+      inherit dockerTools commonTools stdenv dysnomia findutils glibc stateDir runtimeDir forceDisableUserChange credentialsSpec;
+    };
 
-      ${stdenv.lib.optionalString (!forceDisableUserChange && credentialsSpec != null) ''
-        export PATH=$PATH:${findutils}/bin:${glibc.bin}/bin
-        ${dysnomia}/bin/dysnomia-addgroups ${credentialsSpec}
-        ${dysnomia}/bin/dysnomia-addusers ${credentialsSpec}
-      ''}
-
-      ${stdenv.lib.optionalString forceDisableUserChange ''
-        groupadd -r nogroup
-        useradd -r nobody -g nogroup -d /dev/null
-      ''}
-    '';
     config = {
       Cmd = cmdWithoutContext;
     } // stdenv.lib.optionalAttrs (_environment != {}) {
