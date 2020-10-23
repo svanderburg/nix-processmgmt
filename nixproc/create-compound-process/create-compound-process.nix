@@ -29,13 +29,15 @@ let
     else if processManager == "disnix" then import ./generate-disnix-args.nix {
       inherit pkgs system exprFile stateDir runtimeDir logDir cacheDir tmpDir forceDisableUserChange extraParams;
     }
-    # TODO: bsdrc -> similar to above
+    else if processManager == "bsdrc" then import ./generate-bsdrc-args.nix {
+      inherit pkgs system exprFile stateDir runtimeDir logDir cacheDir tmpDir forceDisableUserChange extraParams;
+    }
     else if processManager == "supervisord" then import ./generate-supervisord-args.nix {
       inherit pkgs system name compoundLogDir compoundRuntimeDir exprFile stateDir runtimeDir cacheDir logDir tmpDir forceDisableUserChange extraParams;
     }
 
-    # TODO: docker?
-    # We can't embed launchd, cygrunsrv, because these cannot be managed by anything else
+    # We can't embed launchd, cygrunsrv, because these supervisor processes cannot be managed by anything else
+    # Managing docker containers does not make sense
     # In theory, systemd could work in containers, but workarounds need to be applied, e.g. cgroup permissions
 
     else throw "Unsupported process manager: ${processManager}";

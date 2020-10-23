@@ -847,6 +847,7 @@ createMultiProcessImage {
   tag = "test";
   exprFile = ../webapps-agnostic/processes.nix;
   processManager = "supervisord"; # sysvinit, disnix are also valid options
+  interactive = true; # the default option
   forceDisableUserChange = false; # the default option
 }
 ```
@@ -860,6 +861,11 @@ with the following parameters:
   process instances (as shown earlier)
 * The `processManager` parameter allows you to pick a process manager.
   Currently, all the options shown above are supported.
+* We can also specify whether we want to use the container interactively
+  with the `interactive` parameter (which defaults to: `true`). When
+  this setting has been enabled, a `.bashrc` will be configured to make
+  the bash shell usable, and a number of additional packages will be installed
+  for file and process management operations.
 * It is also possible to adjust the state settings in the processes model.
   With `forceDisableUserChange` we can disable user creation and user
   switching. It is also possible to control the other state variables, such
@@ -886,7 +892,16 @@ We can deploy a container instance from the image in interactive mode as
 follows:
 
 ```bash
-$ docker run --rm --network host -it multiprocess:test
+$ docker run --name mycontainer --rm --network host -it multiprocess:test
+```
+
+When interactive mode has been enabled, you should be able to "connect" to
+a container in which you can execute shell commands, for example to control
+the life-cycle of the sub processes:
+
+```
+$ docker exec -it mycontainer /bin/bash
+$ ps aux
 ```
 
 Examples
