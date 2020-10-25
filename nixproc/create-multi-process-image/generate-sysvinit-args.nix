@@ -5,7 +5,7 @@ let
     inherit pkgs system;
   }).sysvinit;
 
-  generateCompoundProxy = import ../create-compound-process/generate-compound-proxy.nix {
+  generateCompoundProxy = import ./generate-compound-proxy.nix {
     inherit (pkgs) stdenv writeTextFile;
   };
 
