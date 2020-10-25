@@ -271,6 +271,102 @@ with process manager-specific parameters.
 In the above example, we define an override to specify the `runlevels`. Runlevels
 is a concept only supported by sysvinit scripts.
 
+Defining process manager-specific overrides
+-------------------------------------------
+As described in the previous section, the `createManagedProcess` abstraction only
+works with high-level concepts that are easily generalizable to all kinds of
+process managers.
+
+The attribute set of parameters passed to the `createManagedProcess` function
+gets translated to an attribute set of parameters for the corresponding
+process manager-specific abstraction functions, e.g. `createSystemVInitScript`,
+`createSupervisordProgram`, `createSystemdService` etc.
+
+We can change the content of the generated attribute set, allowing you to get
+access to any property of a process manager backend including properties for
+which the `createManagedProcess` function does provide any high-level concepts.
+
+An override can be be an attribute set that simply overrides or augments the
+process manager-specific parameter attribute set:
+
+```nix
+{createManagedProcess, tmpDir}:
+{port, instanceSuffix ? "", instanceName ? "webapp${instanceSuffix}"}:
+
+let
+  webapp = import ../../webapp;
+in
+createManagedProcess {
+  name = instanceName;
+  description = "Simple web application";
+  inherit instanceName;
+
+  # This expression can both run in foreground or daemon mode.
+  # The process manager can pick which mode it prefers.
+  process = "${webapp}/bin/webapp";
+  daemonArgs = [ "-D" ];
+
+  environment = {
+    PORT = port;
+    PID_FILE = "${tmpDir}/${instanceName}.pid";
+  };
+
+  overrides = {
+    sysvinit.runlevels = [ 3 4 5 ];
+    systemd = {
+      Service.Restart = "always";
+    };
+  };
+}
+```
+
+In the above example case, we use an override to define in which runlevels the
+service should start (a sysvinit specific concept), and when systemd is used,
+the service gets restarted automatically when it stops (which is not a universal
+property all process managers support, but systemd does).
+
+It is also possible to write an override as a function which is more powerful --
+you can also delete and augment existing parameters with additional information,
+if desired:
+
+```nix
+{createManagedProcess, tmpDir}:
+{port, instanceSuffix ? "", instanceName ? "webapp${instanceSuffix}"}:
+
+let
+  webapp = import ../../webapp;
+in
+createManagedProcess {
+  name = instanceName;
+  description = "Simple web application";
+  inherit instanceName;
+
+  # This expression can both run in foreground or daemon mode.
+  # The process manager can pick which mode it prefers.
+  process = "${webapp}/bin/webapp";
+  daemonArgs = [ "-D" ];
+
+  environment = {
+    PORT = port;
+    PID_FILE = "${tmpDir}/${instanceName}.pid";
+  };
+
+  overrides = {
+    sysvinit.runlevels = [ 3 4 5 ];
+    systemd = systemdArgs: systemdArgs // {
+      Service = systemdArgs.Service // {
+        ExecStart = "${systemdArgs.Service.ExecStart} -D";
+        Type = "forking";
+      };
+    };
+  };
+}
+```
+
+In the above example, I modify the generated systemd arguments in such a way
+that the service runs in daemon mode and it is managed as a daemon (by default,
+the systemd generator prefers to work with foreground processes).
+
 Writing a constructors expression
 ---------------------------------
 As shown in the previous sections, a process configuration is a nested function.

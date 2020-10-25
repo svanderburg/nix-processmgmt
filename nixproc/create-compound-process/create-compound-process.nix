@@ -17,6 +17,7 @@ in
 , cacheDir ? "${stateDir}/cache"
 , tmpDir ? (if stateDir == "/var" then "/tmp" else "${stateDir}/tmp")
 , forceDisableUserChange ? false
+, path ? []
 , extraParams ? {}
 , overrides ? {}
 }:
@@ -45,7 +46,7 @@ let
   commonTools = (import ../../tools { inherit pkgs system; }).common;
 in
 createManagedProcess (pkgs.lib.recursiveUpdate {
-  inherit name overrides;
+  inherit name path overrides;
   initialize = ''
     ${commonTools}/bin/nixproc-init-state --state-dir "${stateDir}" --log-dir "${logDir}" --runtime-dir "${runtimeDir}" --cache-dir "${cacheDir}" --tmp-dir "${tmpDir}" ${pkgs.lib.optionalString forceDisableUserChange "--force-disable-user-change"}
   '';

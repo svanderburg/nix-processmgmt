@@ -24,8 +24,7 @@ let
 in
 {
   process = "${pkgs.pythonPackages.supervisor}/bin/supervisord";
-  args = [ "--configuration" "${profile}/supervisord.conf" "--logfile" logFile ];
-  daemonExtraArgs = [ "--pidfile" pidFile ];
+  args = [ "--configuration" "${profile}/supervisord.conf" "--logfile" logFile "--pidfile" pidFile ];
   foregroundProcessExtraArgs = [ "--nodaemon" ];
   inherit pidFile;
 }

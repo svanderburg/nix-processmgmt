@@ -21,13 +21,20 @@
 , postInstall
 }:
 
-createSystemVInitScript (stdenv.lib.recursiveUpdate ({
-  inherit name description path environment directory umask nice dependencies credentials;
-  inherit instanceName initialize user postInstall;
+let
+  generatedTargetSpecificArgs = {
+    inherit name description path environment directory umask nice dependencies credentials;
+    inherit instanceName initialize user postInstall;
 
-  process = if daemon != null then daemon else foregroundProcess;
-  processIsDaemon = daemon != null;
-  args = if daemon != null then daemonArgs else foregroundProcessArgs;
-} // stdenv.lib.optionalAttrs (pidFile != null) {
-  inherit pidFile;
-}) overrides)
+    process = if daemon != null then daemon else foregroundProcess;
+    processIsDaemon = daemon != null;
+    args = if daemon != null then daemonArgs else foregroundProcessArgs;
+  } // stdenv.lib.optionalAttrs (pidFile != null) {
+    inherit pidFile;
+  };
+
+  targetSpecificArgs =
+    if builtins.isFunction overrides then overrides generatedTargetSpecificArgs
+    else stdenv.lib.recursiveUpdate generatedTargetSpecificArgs overrides;
+in
+createSystemVInitScript targetSpecificArgs

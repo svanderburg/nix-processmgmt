@@ -69,34 +69,40 @@ let
       inherit pidFilesDir;
     }
     else throw "I don't know how to start this process!";
-in
-createProcessScript (stdenv.lib.recursiveUpdate ({
-  inherit name dependencies credentials postInstall;
 
-  process = writeTextFile {
-    name = "${name}-process-wrapper";
-    executable = true;
-    text = ''
-      #! ${stdenv.shell} -e
-    ''
-    + util.printShellEnvironmentVariables {
-      environment = _environment;
-      allowSystemPath = true;
-    }
-    + stdenv.lib.optionalString (umask != null) ''
-      umask ${umask}
-    ''
-    + stdenv.lib.optionalString (directory != null) ''
-      cd ${directory}
-    ''
-    + stdenv.lib.optionalString (nice != null) ''
-      nice -n ${toString nice}
-    ''
-    + stdenv.lib.optionalString (initialize != null) ''
-      ${initialize}
-    ''
-    + "exec ${invocationCommand}";
+  generatedTargetSpecificArgs = {
+    inherit name dependencies credentials postInstall;
+
+    process = writeTextFile {
+      name = "${name}-process-wrapper";
+      executable = true;
+      text = ''
+        #! ${stdenv.shell} -e
+      ''
+      + util.printShellEnvironmentVariables {
+        environment = _environment;
+        allowSystemPath = true;
+      }
+      + stdenv.lib.optionalString (umask != null) ''
+        umask ${umask}
+      ''
+      + stdenv.lib.optionalString (directory != null) ''
+        cd ${directory}
+      ''
+      + stdenv.lib.optionalString (nice != null) ''
+        nice -n ${toString nice}
+      ''
+      + stdenv.lib.optionalString (initialize != null) ''
+        ${initialize}
+      ''
+      + "exec ${invocationCommand}";
+    };
+  } // stdenv.lib.optionalAttrs (_pidFile != null) {
+    pidFile = _pidFile;
   };
-} // stdenv.lib.optionalAttrs (_pidFile != null) {
-  pidFile = _pidFile;
-}) overrides)
+
+  targetSpecificArgs =
+    if builtins.isFunction overrides then overrides generatedTargetSpecificArgs
+    else stdenv.lib.recursiveUpdate generatedTargetSpecificArgs overrides;
+in
+createProcessScript targetSpecificArgs

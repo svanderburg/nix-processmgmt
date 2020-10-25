@@ -12,6 +12,10 @@ rec {
   };
 
   tests = {
+    multi-process-images = import ./tests/multi-process-images.nix {
+      inherit nixpkgs;
+    };
+
     webapps-agnostic = {
       config = import ./tests/webapps-agnostic-config.nix {
         inherit nixpkgs;
@@ -55,7 +59,10 @@ rec {
     name = "nix-processmgmt";
     constituents = builtins.attrValues tools
       ++ builtins.attrValues tests.webapps-agnostic
-      ++ [ tests.webapps-sysvinit ];
+      ++ [
+        tests.webapps-sysvinit
+        tests.multi-process-images
+      ];
     meta.description = "Release-critical builds";
   };
 }

@@ -47,15 +47,21 @@ let
     } // stdenv.lib.optionalAttrs (pidFile != null) {
       inherit pidFile;
     })) + " ${stdenv.lib.escapeShellArgs daemonArgs}";
+
+  generatedTargetSpecificArgs = {
+    inherit name command path environment dependencies credentials postInstall;
+  } // stdenv.lib.optionalAttrs (umask != null) {
+    inherit umask;
+  } // stdenv.lib.optionalAttrs (nice != null) {
+    inherit nice;
+  } // stdenv.lib.optionalAttrs (pidFile != null) {
+    inherit pidFile;
+  } // stdenv.lib.optionalAttrs (user != null) {
+    inherit user;
+  };
+
+  targetSpecificArgs =
+    if builtins.isFunction overrides then overrides generatedTargetSpecificArgs
+    else stdenv.lib.recursiveUpdate generatedTargetSpecificArgs overrides;
 in
-createSupervisordProgram (stdenv.lib.recursiveUpdate ({
-  inherit name command path environment dependencies credentials postInstall;
-} // stdenv.lib.optionalAttrs (umask != null) {
-  inherit umask;
-} // stdenv.lib.optionalAttrs (nice != null) {
-  inherit nice;
-} // stdenv.lib.optionalAttrs (pidFile != null) {
-  inherit pidFile;
-} // stdenv.lib.optionalAttrs (user != null) {
-  inherit user;
-}) overrides)
+createSupervisordProgram targetSpecificArgs

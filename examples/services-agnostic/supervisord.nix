@@ -13,9 +13,8 @@ createManagedProcess {
     ${initialize}
   '';
   process = "${supervisor}/bin/supervisord";
-  args = [ "--configuration" configFile "--logfile" logFile ];
+  args = [ "--configuration" configFile "--logfile" logFile "--pidfile" pidFile ];
   foregroundProcessExtraArgs = [ "--nodaemon" ];
-  daemonExtraArgs = [ "--pidfile" pidFile ];
 
   overrides = {
     sysvinit = {

@@ -72,7 +72,7 @@ let
 
   _environment = util.appendPathToEnvironment {
     inherit environment;
-    path = basePackages ++ path;
+    path = basePackages ++ path ++ [ "/" ]; # Also give permission to /bin to allow any package added to contents can be used
   };
 
   credentialsSpec = util.createCredentialsOrNull {
@@ -83,7 +83,7 @@ let
     inherit user forceDisableUserChange;
   };
 
-  dockerImage = dockerTools.buildImage (stdenv.lib.recursiveUpdate {
+  generatedDockerImageArgs = {
     inherit name;
     tag = "latest";
 
@@ -100,12 +100,30 @@ let
     } // stdenv.lib.optionalAttrs (_user != null) {
       User = _user;
     };
-  } overrides.image or {});
+  };
+
+  dockerImageArgs =
+    if overrides ? image
+    then
+      if builtins.isFunction overrides.image then overrides.image generatedDockerImageArgs
+      else stdenv.lib.recursiveUpdate generatedDockerImageArgs overrides.image
+    else generatedDockerImageArgs;
+
+  dockerImage = dockerTools.buildImage dockerImageArgs;
+
+  generatedDockerContainerArgs = {
+    inherit name dockerImage postInstall cmd dependencies;
+    dockerImageTag = "${name}:latest";
+    useHostNixStore = true;
+    useHostNetwork = true;
+    mapStateDirVolume = stateDir;
+  };
+
+  dockerContainerArgs =
+    if overrides ? container
+    then
+      if builtins.isFunction overrides.container then overrides.container generatedDockerContainerArgs
+      else stdenv.lib.recursiveUpdate generatedDockerContainerArgs overrides.container
+    else generatedDockerContainerArgs;
 in
-createDockerContainer (stdenv.lib.recursiveUpdate {
-  inherit name dockerImage postInstall cmd dependencies;
-  dockerImageTag = "${name}:latest";
-  useHostNixStore = true;
-  useHostNetwork = true;
-  mapStateDirVolume = stateDir;
-} overrides.container or {})
+createDockerContainer dockerContainerArgs
