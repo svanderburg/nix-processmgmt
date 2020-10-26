@@ -100,6 +100,11 @@ in
     inherit (pkgs) influxdb;
   };
 
+  sshd = import ./sshd.nix {
+    inherit createManagedProcess stateDir runtimeDir tmpDir forceDisableUserChange;
+    inherit (pkgs) writeTextFile openssh;
+  };
+
   docker = import ./docker.nix {
     inherit createManagedProcess;
     inherit (pkgs) docker kmod;

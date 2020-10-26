@@ -104,6 +104,16 @@ rec {
     requiresUniqueIdsFor = [ "influxdbPorts" "uids" "gids" ];
   };
 
+  sshd = rec {
+    port = ids.sshPorts.sshd or 0;
+
+    pkg = constructors.sshd {
+      inherit port;
+    };
+
+    requiresUniqueIdsFor = [ "sshPorts" "uids" "gids" ];
+  };
+
   docker = {
     pkg = constructors.docker;
   };

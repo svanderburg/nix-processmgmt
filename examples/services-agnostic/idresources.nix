@@ -56,4 +56,9 @@ rec {
     max = 8096;
     step = 3;
   };
+
+  sshPorts = {
+    min = 1222;
+    max = 1422;
+  };
 }

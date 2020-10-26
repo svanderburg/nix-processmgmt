@@ -16,7 +16,7 @@
 let
   # Determine which parameters can be propagated to buildImage and which are customizations
   buildImageFormalArgs = builtins.functionArgs dockerTools.buildImage;
-  buildImageArgs = builtins.intersectAttrs buildImageFormalArgs args;
+  buildImageArgs = removeAttrs (builtins.intersectAttrs buildImageFormalArgs args) [ "contents" "runAsRoot" "config" ];
 
   commonTools = (import ../../tools { inherit pkgs; }).common;
 
