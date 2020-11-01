@@ -1,5 +1,5 @@
 {createManagedProcess, apacheHttpd, cacheDir}:
-{instanceSuffix ? "", instanceName ? "httpd${instanceSuffix}", configFile, initialize ? "", postInstall ? ""}:
+{instanceSuffix ? "", instanceName ? "httpd${instanceSuffix}", configFile, initialize ? "", environment ? {}, postInstall ? ""}:
 
 let
   user = instanceName;
@@ -7,7 +7,7 @@ let
 in
 createManagedProcess {
   name = instanceName;
-  inherit instanceName initialize postInstall;
+  inherit instanceName initialize environment postInstall;
 
   process = "${apacheHttpd}/bin/httpd";
   args = [ "-f" configFile ];

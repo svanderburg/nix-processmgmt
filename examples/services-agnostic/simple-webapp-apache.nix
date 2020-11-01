@@ -1,4 +1,4 @@
-{createManagedProcess, stdenv, apacheHttpd, php, writeTextFile, logDir, runtimeDir, cacheDir, forceDisableUserChange}:
+{createManagedProcess, stdenv, runCommand, apacheHttpd, php, writeTextFile, logDir, runtimeDir, cacheDir, forceDisableUserChange}:
 {instanceSuffix ? "", instanceName ? "httpd${instanceSuffix}", port ? 80, modules ? [], serverName ? "localhost", serverAdmin, documentRoot ? ./webapp, enablePHP ? false, enableCGI ? false, extraConfig ? "", postInstall ? ""}:
 
 let
@@ -32,11 +32,23 @@ let
   ++ stdenv.lib.optional enableCGI "cgi";
 
   apacheLogDir = "${logDir}/${instanceName}";
+
+  phpIni = runCommand "php.ini"
+    {
+      preferLocalBuild = true;
+    }
+    ''
+      cat ${php}/etc/php.ini > $out
+      cat ${php.phpIni} > $out
+    '';
 in
 import ./apache.nix {
   inherit createManagedProcess apacheHttpd cacheDir;
 } {
   inherit instanceName postInstall;
+  environment = stdenv.lib.optionalAttrs enablePHP {
+    PHPRC = phpIni;
+  };
 
   initialize = ''
     mkdir -m0700 -p ${apacheLogDir}

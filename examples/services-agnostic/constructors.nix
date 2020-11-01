@@ -22,7 +22,7 @@ in
 
   simpleWebappApache = import ./simple-webapp-apache.nix {
     inherit createManagedProcess logDir cacheDir runtimeDir forceDisableUserChange;
-    inherit (pkgs) stdenv apacheHttpd php writeTextFile;
+    inherit (pkgs) stdenv runCommand apacheHttpd php writeTextFile;
   };
 
   mysql = import ./mysql.nix {
