@@ -23,7 +23,6 @@ createManagedProcess {
   process = "${nginx}/bin/nginx";
   args = [ "-p" "${nginxStateDir}" "-c" configFile ];
   foregroundProcessExtraArgs = [ "-g" "daemon off;" ];
-  daemonExtraArgs = [ "-g" "pid ${runtimeDir}/${instanceName}.pid;" ];
 
   inherit dependencies instanceName;
 

@@ -1,4 +1,4 @@
-{createSystemVInitScript, stdenv, writeTextFile, nginx, runtimeDir, stateDir, logDir, forceDisableUserChange}:
+{createSystemVInitScript, stdenv, writeTextFile, nginx, runtimeDir, stateDir, cacheDir, logDir, forceDisableUserChange}:
 {port ? 80, webapps ? [], instanceSuffix ? "", instanceName ? "nginx${instanceSuffix}"}:
 interDependencies:
 
@@ -8,9 +8,10 @@ let
 
   nginxStateDir = "${stateDir}/${instanceName}";
   nginxLogDir = "${nginxStateDir}/logs";
+  nginxCacheDir = "${cacheDir}/${instanceName}";
 in
 import ./nginx.nix {
-  inherit createSystemVInitScript stdenv nginx forceDisableUserChange;
+  inherit createSystemVInitScript stdenv nginx runtimeDir cacheDir forceDisableUserChange;
   stateDir = nginxStateDir;
 } {
   inherit instanceName;
@@ -21,6 +22,7 @@ import ./nginx.nix {
   configFile = writeTextFile {
     name = "nginx.conf";
     text = ''
+      pid ${runtimeDir}/${instanceName}.pid;
       error_log ${nginxLogDir}/error.log;
 
       ${stdenv.lib.optionalString (!forceDisableUserChange) ''
@@ -32,6 +34,15 @@ import ./nginx.nix {
       }
 
       http {
+        access_log ${nginxLogDir}/access.log;
+        error_log ${nginxLogDir}/error.log;
+
+        proxy_temp_path ${nginxCacheDir}/proxy;
+        client_body_temp_path ${nginxCacheDir}/client_body;
+        fastcgi_temp_path ${nginxCacheDir}/fastcgi;
+        uwsgi_temp_path ${nginxCacheDir}/uwsgi;
+        scgi_temp_path ${nginxCacheDir}/scgi;
+
         ${stdenv.lib.concatMapStrings (dependency: ''
           upstream webapp${toString dependency.port} {
             server localhost:${toString dependency.port};
@@ -54,6 +65,7 @@ import ./nginx.nix {
         # unpredictable results. This could happen while an upgrade is in progress.
 
         server {
+          client_body_temp_path ${nginxCacheDir}/client_body;
           listen ${toString port};
           server_name aaaa;
           root ${./errorpage};
@@ -61,6 +73,7 @@ import ./nginx.nix {
 
         ${stdenv.lib.concatMapStrings (dependency: ''
           server {
+            client_body_temp_path ${nginxCacheDir}/client_body;
             listen ${toString port};
             server_name ${dependency.dnsName};
 

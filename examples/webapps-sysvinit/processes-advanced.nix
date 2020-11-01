@@ -2,6 +2,7 @@
 , system ? builtins.currentSystem
 , stateDir ? "/var"
 , runtimeDir ? "${stateDir}/run"
+, cacheDir ? "${stateDir}/cache"
 , logDir ? "${stateDir}/log"
 , tmpDir ? (if stateDir == "/var" then "/tmp" else "${stateDir}/tmp")
 , forceDisableUserChange ? false
@@ -11,7 +12,7 @@ let
   ids = if builtins.pathExists ./ids-advanced.nix then (import ./ids-advanced.nix).ids else {};
 
   constructors = import ./constructors.nix {
-    inherit pkgs stateDir runtimeDir logDir tmpDir forceDisableUserChange ids;
+    inherit pkgs stateDir runtimeDir logDir cacheDir tmpDir forceDisableUserChange ids;
   };
 in
 rec {

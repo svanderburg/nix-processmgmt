@@ -116,7 +116,7 @@ let
     dockerImageTag = "${name}:latest";
     useHostNixStore = true;
     useHostNetwork = true;
-    mapStateDirVolume = stateDir;
+    mapStateDirVolumes = [ stateDir ];
   };
 
   dockerContainerArgs =

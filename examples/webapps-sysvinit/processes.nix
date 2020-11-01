@@ -3,6 +3,7 @@
 , stateDir ? "/var"
 , runtimeDir ? "${stateDir}/run"
 , logDir ? "${stateDir}/log"
+, cacheDir ? "${stateDir}/cache"
 , tmpDir ? (if stateDir == "/var" then "/tmp" else "${stateDir}/tmp")
 , forceDisableUserChange ? false
 }:
@@ -11,7 +12,7 @@ let
   ids = if builtins.pathExists ./ids.nix then (import ./ids.nix).ids else {};
 
   constructors = import ./constructors.nix {
-    inherit pkgs stateDir runtimeDir logDir tmpDir forceDisableUserChange ids;
+    inherit pkgs stateDir runtimeDir logDir cacheDir tmpDir forceDisableUserChange ids;
   };
 in
 rec {

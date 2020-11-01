@@ -1,5 +1,6 @@
 { pkgs
 , stateDir
+, cacheDir
 , logDir
 , runtimeDir
 , tmpDir
@@ -30,7 +31,7 @@ in
   };
 
   nginxReverseProxy = import ./nginx-reverse-proxy.nix {
-    inherit createSystemVInitScript stateDir logDir runtimeDir forceDisableUserChange;
+    inherit createSystemVInitScript stateDir logDir cacheDir runtimeDir forceDisableUserChange;
     inherit (pkgs) stdenv writeTextFile nginx;
   };
 }

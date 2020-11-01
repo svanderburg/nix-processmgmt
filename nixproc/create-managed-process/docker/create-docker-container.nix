@@ -6,7 +6,7 @@
 , dockerCreateParameters ? []
 , useHostNixStore ? false
 , useHostNetwork ? false
-, mapStateDirVolume ? null
+, mapStateDirVolumes ? []
 , cmd ? ""
 , storePaths ? []
 , dependencies ? []
@@ -22,7 +22,7 @@ let
   _dockerCreateParameters = dockerCreateParametersList
     ++ stdenv.lib.optional useHostNixStore { name = "volume"; value = "/nix/store:/nix/store"; }
     ++ stdenv.lib.optional useHostNetwork { name = "network"; value = "host"; }
-    ++ stdenv.lib.optional (mapStateDirVolume != null) { name = "volume"; value = "${mapStateDirVolume}:${mapStateDirVolume}"; };
+    ++ map (mapStateDirVolume: { name = "volume"; value = "${mapStateDirVolume}:${mapStateDirVolume}"; }) mapStateDirVolumes;
 
   priority = if dependencies == [] then 1
     else builtins.head (builtins.sort (a: b: a > b) (map (dependency: dependency.priority) dependencies)) + 1;
