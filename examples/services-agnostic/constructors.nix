@@ -32,7 +32,7 @@ in
 
   postgresql = import ./postgresql.nix {
     inherit createManagedProcess stateDir runtimeDir forceDisableUserChange;
-    inherit (pkgs) stdenv postgresql;
+    inherit (pkgs) stdenv postgresql su;
   };
 
   tomcat = import ./tomcat.nix {

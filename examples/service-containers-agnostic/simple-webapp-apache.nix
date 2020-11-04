@@ -1,5 +1,18 @@
 {apacheConstructorFun, dysnomia, forceDisableUserChange}:
-{instanceSuffix ? "", instanceName ? "apache${instanceSuffix}", containerName ? "apache-webapplication${instanceSuffix}", port ? 80, modules ? [], serverName ? "localhost", serverAdmin, documentRoot ? ./webapp, extraConfig ? "", enableCGI ? false, enablePHP ? false, filesetOwner ? null, type}:
+
+{ instanceSuffix ? "", instanceName ? "apache${instanceSuffix}"
+, containerName ? "apache-webapplication${instanceSuffix}"
+, port ? 80
+, modules ? [], serverName ? "localhost"
+, serverAdmin
+, documentRoot ? ./webapp
+, extraConfig ? ""
+, enableCGI ? false
+, enablePHP ? false
+, filesetOwner ? null
+, type
+, properties ? {}
+}:
 
 let
   pkg = apacheConstructorFun {
@@ -24,4 +37,4 @@ in
   providesContainer = containerName;
 } // (if forceDisableUserChange || filesetOwner == null then {} else {
   inherit filesetOwner;
-})
+}) // properties

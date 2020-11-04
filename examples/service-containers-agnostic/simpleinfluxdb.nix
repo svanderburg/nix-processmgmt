@@ -1,5 +1,5 @@
 {influxdbConstructorFun, dysnomia}:
-{instanceSuffix ? "", instanceName ? "influxdb${instanceSuffix}", containerName ? "influx-database${instanceSuffix}", rpcBindIP ? "127.0.0.1", rpcPort ? 8088, httpBindIP ? "", httpPort ? 8086, extraConfig ? "", type}:
+{instanceSuffix ? "", instanceName ? "influxdb${instanceSuffix}", containerName ? "influx-database${instanceSuffix}", rpcBindIP ? "127.0.0.1", rpcPort ? 8088, httpBindIP ? "", httpPort ? 8086, extraConfig ? "", type, properties ? {}}:
 
 let
   pkg = influxdbConstructorFun {
@@ -21,4 +21,4 @@ rec {
   name = instanceName;
   inherit pkg type httpPort;
   providesContainer = containerName;
-}
+} // properties

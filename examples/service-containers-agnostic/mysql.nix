@@ -1,5 +1,11 @@
 {mysqlConstructorFun, dysnomia, runtimeDir}:
-{port ? 3306, instanceSuffix ? "", instanceName ? "mysql${instanceSuffix}", containerName ? "mysql-database${instanceSuffix}", type}:
+
+{ instanceSuffix ? "", instanceName ? "mysql${instanceSuffix}"
+, port ? 3306
+, containerName ? "mysql-database${instanceSuffix}"
+, type
+, properties ? {}
+}:
 
 let
   # By default, the socket file resides in $runtimeDir/mysqld/mysqld.sock.
@@ -41,4 +47,4 @@ rec {
   inherit pkg type mysqlSocket mysqlUsername;
 
   providesContainer = containerName;
-}
+} // properties

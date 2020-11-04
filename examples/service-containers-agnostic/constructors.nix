@@ -6,11 +6,12 @@
 , tmpDir
 , forceDisableUserChange
 , processManager
+, ids ? {}
 }:
 
 let
   constructors = import ../services-agnostic/constructors.nix {
-    inherit pkgs stateDir logDir runtimeDir cacheDir tmpDir forceDisableUserChange processManager;
+    inherit pkgs stateDir logDir runtimeDir cacheDir tmpDir forceDisableUserChange processManager ids;
   };
 in
 {
@@ -35,6 +36,14 @@ in
     mysqlConstructorFun = constructors.mysql;
     dysnomia = pkgs.dysnomia.override (origArgs: {
       enableMySQLDatabase = true;
+    });
+  };
+
+  postgresql = import ./postgresql.nix {
+    inherit runtimeDir;
+    postgresqlConstructorFun = constructors.postgresql;
+    dysnomia = pkgs.dysnomia.override (origArgs: {
+      enablePostgreSQLDatabase = true;
     });
   };
 

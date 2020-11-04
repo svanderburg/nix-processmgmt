@@ -1,5 +1,13 @@
 {svnserveConstructorFun, dysnomia}:
-{instanceSuffix ? "", instanceName ? "svnserve${instanceSuffix}", containerName ? "subversion-repository${instanceSuffix}", port ? 3690, svnBaseDir, svnGroup ? "root", type}:
+
+{ instanceSuffix ? "", instanceName ? "svnserve${instanceSuffix}"
+, containerName ? "subversion-repository${instanceSuffix}"
+, port ? 3690
+, svnBaseDir
+, svnGroup ? "root"
+, type
+, properties ? {}
+}:
 
 let
   pkg = svnserveConstructorFun {
@@ -22,4 +30,4 @@ in
   name = instanceName;
   inherit pkg type svnGroup svnBaseDir;
   providesContainer = containerName;
-}
+} // properties

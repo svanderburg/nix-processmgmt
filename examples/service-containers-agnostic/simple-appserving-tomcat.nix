@@ -1,5 +1,14 @@
 {tomcatConstructorFun, dysnomia, stateDir}:
-{instanceSuffix ? "", instanceName ? "tomcat${instanceSuffix}", containerName ? "tomcat-webapplication${instanceSuffix}", serverPort ? 8005, httpPort ? 8080, httpsPort ? 8443, ajpPort ? 8009, commonLibs ? [], type}:
+
+{ instanceSuffix ? ""
+, instanceName ? "tomcat${instanceSuffix}"
+, containerName ? "tomcat-webapplication${instanceSuffix}"
+, serverPort ? 8005
+, httpPort ? 8080, httpsPort ? 8443, ajpPort ? 8009
+, commonLibs ? []
+, type
+, properties ? {}
+}:
 
 let
   catalinaBaseDir = "${stateDir}/${instanceName}";
@@ -28,4 +37,4 @@ rec {
   tomcatPort = httpPort;
 
   providesContainer = containerName;
-}
+} // properties

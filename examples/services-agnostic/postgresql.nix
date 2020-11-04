@@ -1,15 +1,18 @@
-{createManagedProcess, stdenv, postgresql, stateDir, runtimeDir, forceDisableUserChange}:
-{port ? 5432, instanceSuffix ? "", instanceName ? "postgresql${instanceSuffix}"}:
+{createManagedProcess, stdenv, postgresql, su, stateDir, runtimeDir, forceDisableUserChange}:
+{port ? 5432, instanceSuffix ? "", instanceName ? "postgresql${instanceSuffix}", postInstall ? ""}:
 
 let
-  dataDir = "${stateDir}/db/${instanceName}/data";
+  postgresqlStateDir = "${stateDir}/db/${instanceName}";
+  dataDir = "${postgresqlStateDir}/data";
   socketDir = "${runtimeDir}/${instanceName}";
+
   user = instanceName;
   group = instanceName;
 in
 createManagedProcess rec {
   name = instanceName;
-  inherit instanceName user;
+  inherit instanceName user postInstall;
+  path = [ postgresql su ];
   initialize = ''
     mkdir -m0700 -p ${socketDir}
     mkdir -m0700 -p ${dataDir}
@@ -21,7 +24,7 @@ createManagedProcess rec {
 
     if [ ! -e "${dataDir}/PG_VERSION" ]
     then
-        ${postgresql}/bin/initdb -D ${dataDir} --no-locale
+        ${stdenv.lib.optionalString (!forceDisableUserChange) "su ${user} -c '"}${postgresql}/bin/initdb -D ${dataDir} --no-locale${stdenv.lib.optionalString (!forceDisableUserChange) "'"}
     fi
   '';
 
@@ -34,6 +37,8 @@ createManagedProcess rec {
     };
     users = {
       "${user}" = {
+        homeDir = postgresqlStateDir;
+        createHomeDir = true;
         inherit group;
         description = "PostgreSQL user";
       };
@@ -48,6 +53,7 @@ createManagedProcess rec {
         activity = "Starting";
         instruction = ''
           ${initialize}
+
           ${postgresql}/bin/pg_ctl -D ${dataDir} -o "-p ${toString port} -k ${socketDir}" start
         '';
       };

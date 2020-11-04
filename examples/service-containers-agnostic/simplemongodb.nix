@@ -1,5 +1,14 @@
 {mongodbConstructorFun, stdenv, dysnomia}:
-{instanceSuffix ? "", instanceName ? "mongodb${instanceSuffix}", containerName ? "mongo-database${instanceSuffix}", bindIP ? "127.0.0.1", port ? 27017, mongoDumpArgs ? null, mongoRestoreArgs ? null, type}:
+
+{ instanceSuffix ? "", instanceName ? "mongodb${instanceSuffix}"
+, containerName ? "mongo-database${instanceSuffix}"
+, bindIP ? "127.0.0.1"
+, port ? 27017
+, mongoDumpArgs ? null
+, mongoRestoreArgs ? null
+, type
+, properties ? {}
+}:
 
 let
   pkg = mongodbConstructorFun {
@@ -8,8 +17,9 @@ let
       # Add Dysnomia container configuration file for MongoDB
       mkdir -p $out/etc/dysnomia/containers
       cat > $out/etc/dysnomia/containers/${containerName} <<EOF
-      ${stdenv.lib.optionalString (mongoDumpArgs != null) (toString mongoDumpArgs)}"}
-      ${stdenv.lib.optionalString (mongoRestoreArgs != null) (toString mongoRestoreArgs)}"}
+      mongoPort=${toString port}
+      ${stdenv.lib.optionalString (mongoDumpArgs != null) (toString mongoDumpArgs)}
+      ${stdenv.lib.optionalString (mongoRestoreArgs != null) (toString mongoRestoreArgs)}
       EOF
 
       # Copy the Dysnomia module that manages a Mongo database
@@ -21,10 +31,10 @@ in
 {
   name = instanceName;
   inherit pkg type bindIP port;
-
+  mongoPort = port;
   providesContainer = containerName;
 } // (if mongoDumpArgs == null then {} else {
   inherit mongoDumpArgs;
 }) // (if mongoRestoreArgs == null then {} else {
   inherit mongoRestoreArgs;
-})
+}) // properties

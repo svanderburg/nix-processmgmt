@@ -1,5 +1,12 @@
 {supervisordConstructorFun, stdenv, dysnomia, stateDir}:
-{instanceSuffix ? "", instanceName ? "supervisord${instanceSuffix}", containerName ? "supervisord-program${instanceSuffix}", inetHTTPServerPort ? 9001, postInstall ? "", type}:
+
+{ instanceSuffix ? "", instanceName ? "supervisord${instanceSuffix}"
+, containerName ? "supervisord-program${instanceSuffix}"
+, inetHTTPServerPort ? 9001
+, postInstall ? ""
+, type
+, properties ? {}
+}:
 
 let
   supervisordTargetDir = "${stateDir}/lib/${instanceName}/conf.d";
@@ -23,4 +30,4 @@ in
   name = instanceName;
   inherit pkg type supervisordTargetDir;
   providesContainer = containerName;
-}
+} // properties
