@@ -96,7 +96,7 @@ in
   };
 
   influxdb = import ./influxdb.nix {
-    inherit createManagedProcess;
+    inherit createManagedProcess stateDir;
     inherit (pkgs) influxdb;
   };
 
