@@ -91,11 +91,4 @@ rec {
     in
     if user == null then invocation
     else "${su} ${user} -c ${lib.escapeShellArgs [ invocation ]}";
-
-  /*
-   * Creates credential configuration files for users and groups, or returns
-   * null if user changing was disabled.
-   */
-  createCredentialsOrNull = {createCredentials, credentials, forceDisableUserChange}:
-    if credentials == {} || forceDisableUserChange then null else createCredentials credentials;
 }

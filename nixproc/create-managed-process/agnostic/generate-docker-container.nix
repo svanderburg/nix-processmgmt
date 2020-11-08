@@ -75,9 +75,7 @@ let
     path = basePackages ++ path ++ [ "/" ]; # Also give permission to /bin to allow any package added to contents can be used
   };
 
-  credentialsSpec = util.createCredentialsOrNull {
-    inherit createCredentials credentials forceDisableUserChange;
-  };
+  credentialsSpec = createCredentials credentials;
 
   _user = util.determineUser {
     inherit user forceDisableUserChange;

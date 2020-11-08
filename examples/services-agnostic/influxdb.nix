@@ -12,9 +12,6 @@ createManagedProcess {
   inherit instanceName user postInstall;
   foregroundProcess = "${influxdb}/bin/influxd";
   args = [ "-config" configFile ];
-  initialize = ''
-    mkdir -p ${influxdbStateDir}
-  '';
 
   credentials = {
     groups = {

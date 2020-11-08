@@ -254,9 +254,7 @@ let
     if number < 10 then "0${toString number}"
     else toString number;
 
-  credentialsSpec = util.createCredentialsOrNull {
-    inherit createCredentials credentials forceDisableUserChange;
-  };
+  credentialsSpec = createCredentials credentials;
 in
 stdenv.mkDerivation {
   inherit name;
@@ -280,9 +278,7 @@ stdenv.mkDerivation {
       ln -s ../init.d/${name} rc${toString runlevel}.d/K${sequenceNumberToString stopSequenceNumber}${name}
     '') _defaultStop}
 
-    ${stdenv.lib.optionalString (credentialsSpec != null) ''
-      ln -s ${credentialsSpec}/dysnomia-support $out/dysnomia-support
-    ''}
+    ln -s ${credentialsSpec}/dysnomia-support $out/dysnomia-support
 
     cd $TMPDIR
     ${postInstall}

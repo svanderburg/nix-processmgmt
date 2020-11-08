@@ -100,9 +100,7 @@ let
     '';
   };
 
-  credentialsSpec = util.createCredentialsOrNull {
-    inherit createCredentials credentials forceDisableUserChange;
-  };
+  credentialsSpec = createCredentials credentials;
 in
 stdenv.mkDerivation {
   name = "${prefix}${name}";
@@ -119,9 +117,7 @@ stdenv.mkDerivation {
       '') dependencies}
     ''}
 
-    ${stdenv.lib.optionalString (credentialsSpec != null) ''
-      ln -s ${credentialsSpec}/dysnomia-support $out/dysnomia-support
-    ''}
+    ln -s ${credentialsSpec}/dysnomia-support $out/dysnomia-support
 
     ${postInstall}
   '';

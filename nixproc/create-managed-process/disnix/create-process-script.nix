@@ -9,13 +9,7 @@
 }:
 
 let
-  util = import ../util {
-    inherit (stdenv) lib;
-  };
-
-  credentialsSpec = util.createCredentialsOrNull {
-    inherit createCredentials credentials forceDisableUserChange;
-  };
+  credentialsSpec = createCredentials credentials;
 in
 stdenv.mkDerivation {
   inherit name;
@@ -26,9 +20,7 @@ stdenv.mkDerivation {
     ${stdenv.lib.optionalString (pidFile != null) "pidFile=${pidFile}"}
     EOF
 
-    ${stdenv.lib.optionalString (credentialsSpec != null) ''
-      ln -s ${credentialsSpec}/dysnomia-support $out/dysnomia-support
-    ''}
+    ln -s ${credentialsSpec}/dysnomia-support $out/dysnomia-support
 
     ${postInstall}
   '';

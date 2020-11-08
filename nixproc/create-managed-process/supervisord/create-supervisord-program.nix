@@ -63,19 +63,14 @@ let
       ) (builtins.attrNames properties);
   };
 
-  credentialsSpec = util.createCredentialsOrNull {
-    inherit createCredentials credentials forceDisableUserChange;
-  };
+  credentialsSpec = createCredentials credentials;
 in
 stdenv.mkDerivation {
   inherit name priority;
   buildCommand = ''
     mkdir -p $out/conf.d
     ln -s ${confFile} $out/conf.d/${name}.conf
-
-    ${stdenv.lib.optionalString (credentialsSpec != null) ''
-      ln -s ${credentialsSpec}/dysnomia-support $out/dysnomia-support
-    ''}
+    ln -s ${credentialsSpec}/dysnomia-support $out/dysnomia-support
 
     ${postInstall}
   '';

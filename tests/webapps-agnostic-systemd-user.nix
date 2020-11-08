@@ -52,12 +52,9 @@ makeTest {
       services.xserver = {
         enable = true;
 
-        displayManager.lightdm = {
+        displayManager.autoLogin = {
           enable = true;
-          autoLogin = {
-            enable = true;
-            user = "unprivileged";
-          };
+          user = "unprivileged";
         };
 
         # Use IceWM as the window manager.

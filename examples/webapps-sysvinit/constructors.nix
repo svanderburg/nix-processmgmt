@@ -15,7 +15,7 @@ let
 
     createCredentials = import ../../nixproc/create-credentials {
       inherit (pkgs) stdenv;
-      inherit ids;
+      inherit ids forceDisableUserChange;
     };
 
     initFunctions = import ../../nixproc/create-managed-process/sysvinit/init-functions.nix {

@@ -247,9 +247,7 @@ let
     '';
   };
 
-  credentialsSpec = util.createCredentialsOrNull {
-    inherit createCredentials credentials forceDisableUserChange;
-  };
+  credentialsSpec = createCredentials credentials;
 in
 stdenv.mkDerivation {
   inherit name;
@@ -258,10 +256,7 @@ stdenv.mkDerivation {
     mkdir -p $out/etc/rc.d
     cd $out/etc/rc.d
     ln -s ${rcScript} ${name}
-
-    ${stdenv.lib.optionalString (credentialsSpec != null) ''
-      ln -s ${credentialsSpec}/dysnomia-support $out/dysnomia-support
-    ''}
+    ln -s ${credentialsSpec}/dysnomia-support $out/dysnomia-support
 
     cd $TMPDIR
     ${postInstall}

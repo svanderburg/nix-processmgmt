@@ -10,7 +10,7 @@ let
 
   createCredentials = import ../../create-credentials {
     inherit (pkgs) stdenv;
-    inherit ids;
+    inherit ids forceDisableUserChange;
   };
 
   createSystemVInitScript = import ../sysvinit/create-sysvinit-script.nix {
