@@ -8,6 +8,7 @@ let
       # Add Dysnomia container configuration file for InfluxDB
       mkdir -p $out/etc/dysnomia/containers
       cat > $out/etc/dysnomia/containers/${containerName} <<EOF
+      influxdbUsername=${instanceName}
       influxdbHttpPort=${toString httpPort}
       EOF
 
@@ -20,6 +21,7 @@ in
 rec {
   name = instanceName;
   inherit pkg type;
+  influxdbUsername = instanceName;
   influxdbHttpPort = httpPort;
   providesContainer = containerName;
 } // properties
