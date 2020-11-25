@@ -43,8 +43,8 @@ stdenv.mkDerivation {
 
     cat > $out/${name}-docker-createparams <<EOF
     ${stdenv.lib.concatMapStringsSep "\n" (nameValuePair:
-      "${if builtins.stringLength nameValuePair.name > 1 then "--" else "-"}${nameValuePair.name}\n"
-      + "${toString nameValuePair.value}"
+      "${if builtins.stringLength nameValuePair.name > 1 then "--" else "-"}${nameValuePair.name}"
+      + (if nameValuePair ? value then "\n${toString nameValuePair.value}" else "")
     ) _dockerCreateParameters}
     EOF
 
