@@ -75,9 +75,13 @@ makeTest {
         substitute = false
       '';
 
+      dysnomia = {
+        enable = true;
+        enableLegacyModules = false;
+      };
+
       environment.systemPackages = [
         pkgs.stdenv
-        pkgs.dysnomia
         pkgs.disnix
         tools.common
         tools.systemd

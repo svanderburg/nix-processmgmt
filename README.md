@@ -1052,7 +1052,9 @@ Services that only provide foreground processes are automatically daemonized
 with the `daemon` command by these three backends. By default, the `daemon`
 command will capture their outputs in log files with a `nixproc-` prefix in
 the log directory. On a production system, such a log file could be:
-`/var/log/nixproc-myservice.log`.
+`/var/log/nixproc-myservice.log` for services that are started as root users
+and `/tmp/nixproc-myservice.log` for services that are started as unprivileged
+users.
 
 ### supervisord
 

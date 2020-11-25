@@ -37,10 +37,14 @@ makeTest {
       virtualisation.diskSize = 4096;
       virtualisation.memorySize = 8192;
 
+      dysnomia = {
+        enable = true;
+        enableLegacyModules = false;
+      };
+
       environment.systemPackages = [
         tools.common
         tools.systemd
-        pkgs.dysnomia
         pkgs.docker
       ];
     };
