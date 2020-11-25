@@ -28,7 +28,7 @@ createManagedProcess rec {
     fi
   '';
 
-  process = "${postgresql}/bin/postgres";
+  foregroundProcess = "${postgresql}/bin/postgres";
   args = [ "-D" dataDir "-p" port "-k" socketDir ];
 
   credentials = {
@@ -48,15 +48,6 @@ createManagedProcess rec {
   overrides = {
     sysvinit = {
       runlevels = [ 3 4 5 ];
-
-      instructions.start = {
-        activity = "Starting";
-        instruction = ''
-          ${initialize}
-
-          ${postgresql}/bin/pg_ctl -D ${dataDir} -o "-p ${toString port} -k ${socketDir}" start
-        '';
-      };
     };
   };
 }
