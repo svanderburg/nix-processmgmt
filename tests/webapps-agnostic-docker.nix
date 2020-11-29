@@ -108,11 +108,6 @@ makeTest {
 
     machine.wait_for_unit("nix-process-docker")
 
-    machine.succeed("mkdir -p /home/sbu")
-    machine.succeed(
-        "cp ${/home/sbu/dysnomia-0.10pre1234.tar.gz} /home/sbu/dysnomia-0.10pre1234.tar.gz"
-    )
-
     # Deploy the system with foreground webapp processes
 
     machine.succeed(
