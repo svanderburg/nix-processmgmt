@@ -22,7 +22,7 @@
 }:
 
 let
-  generatePreStartScript = import ./generate-prestart-script.nix {
+  generatePreStartScript = import ../util/generate-prestart-script.nix {
     inherit stdenv writeTextFile;
   };
 

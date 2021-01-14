@@ -1,4 +1,4 @@
-{ generateProcessFun, processManager, stdenv }:
+{ processManager, generators ? {}, stdenv }:
 
 {
 # A name that identifies the process instance
@@ -53,6 +53,10 @@ let
   createAgnosticConfig = import ./create-agnostic-config.nix {
     inherit stdenv;
   };
+
+  generateProcessFun = if builtins.hasAttr processManager generators
+    then builtins.getAttr processManager generators
+    else throw "Unknown process manager: ${processManager}";
 in
 if processManager == null then createAgnosticConfig properties
 else generateProcessFun {

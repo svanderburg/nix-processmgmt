@@ -5,7 +5,7 @@
 showUsage()
 {
     cat <<EOF
-Usage: $0 [OPTION] PATH
+Usage: $0 [OPTION] -P MANAGER PATH
 
 Takes a JSON representation of a managed process configuration and translates
 it to a process manager specific configuration.
@@ -13,6 +13,12 @@ it to a process manager specific configuration.
 Options:
   -P, --process-manager=MANAGER
                         Process manager to build for
+      --create-managed-process-expr
+                        Nix expression that composes a function that accepts the
+                        parameters in the JSON configuration and translates it
+                        to a process manager-specific configuration.
+                        If no expression is provided, it will use the universal
+                        translation function in the framework
       --state-dir       Changes the directory in which the state of the
                         processes are stored
       --runtime-dir     Changes the directory in which the PID files are stored
@@ -41,7 +47,7 @@ EOF
 
 # Parse valid argument options
 
-PARAMS=`@getopt@ -n $0 -o P:h -l process-manager:,state-dir:,runtime-dir:,log-dir:,tmp-dir:,cache-dir:,force-disable-user-change,no-out-link,show-trace,help -- "$@"`
+PARAMS=`@getopt@ -n $0 -o P:h -l process-manager:,create-managed-process-expr:,state-dir:,runtime-dir:,log-dir:,tmp-dir:,cache-dir:,force-disable-user-change,no-out-link,show-trace,help -- "$@"`
 
 if [ $? != 0 ]
 then
@@ -58,6 +64,9 @@ do
     case "$1" in
         -P|--process-manager)
             processManager="$2"
+            ;;
+        create-managed-process-expr)
+            createManagedProcessExpr="$2"
             ;;
         --state-dir)
             stateDirArg="--state-dir $2"
@@ -112,5 +121,7 @@ fi
 
 NIXPROC=${NIXPROC:-@NIXPROC@}
 
+createManagedProcessExpr="${createManagedProcessExpr:-$NIXPROC/create-managed-process/universal/create-managed-process-universal.nix}"
+
 # Build the configuration
-nix-build $NIXPROC/create-managed-process/agnostic/create-managed-process-from-config.nix --arg configFile $configFile --argstr processManager $processManager $stateDirArg $runtimeDirArg $logDirArg $tmpDirArg $cacheDirArg $forceDisableUserChangeArg $noOutLinkArg $showTraceArg
+nix-build $NIXPROC/create-managed-process/agnostic/create-managed-process-from-config.nix --arg configFile $configFile --arg createManagedProcessExpr "$createManagedProcessExpr" --argstr processManager $processManager $stateDirArg $runtimeDirArg $logDirArg $tmpDirArg $cacheDirArg $forceDisableUserChangeArg $noOutLinkArg $showTraceArg

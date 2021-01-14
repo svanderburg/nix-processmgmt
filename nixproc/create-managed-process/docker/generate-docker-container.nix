@@ -31,7 +31,7 @@ let
 
   commonTools = (import ../../../tools {}).common;
 
-  generateForegroundProxy = import ./generate-foreground-proxy.nix {
+  generateForegroundProxy = import ../util/generate-foreground-proxy.nix {
     inherit stdenv writeTextFile;
   };
 

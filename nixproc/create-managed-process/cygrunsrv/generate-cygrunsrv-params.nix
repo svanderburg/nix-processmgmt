@@ -32,7 +32,7 @@
 # TODO: user unused
 
 let
-  generateForegroundProxy = import ./generate-foreground-proxy.nix {
+  generateForegroundProxy = import ../util/generate-foreground-proxy.nix {
     inherit stdenv writeTextFile;
   };
 

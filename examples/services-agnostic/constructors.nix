@@ -10,7 +10,7 @@
 }:
 
 let
-  createManagedProcess = import ../../nixproc/create-managed-process/agnostic/create-managed-process-universal.nix {
+  createManagedProcess = import ../../nixproc/create-managed-process/universal/create-managed-process-universal.nix {
     inherit pkgs runtimeDir stateDir logDir tmpDir forceDisableUserChange processManager ids;
   };
 in

@@ -1,5 +1,6 @@
 { configFile
 , processManager
+, createManagedProcessExpr
 , system ? builtins.currentSystem
 , pkgs ? import <nixpkgs> { inherit system; }
 , stateDir ? "/var"
@@ -12,7 +13,7 @@
 let
   createManagedProcessFromConfig = configFile:
     let
-      createManagedProcess = import ./create-managed-process-universal.nix {
+      createManagedProcess = import createManagedProcessExpr {
         inherit pkgs stateDir runtimeDir logDir tmpDir forceDisableUserChange processManager;
       };
 

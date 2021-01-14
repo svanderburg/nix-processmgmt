@@ -24,7 +24,7 @@ let
     };
   };
 
-  generateSystemVInitScript = import ./generate-sysvinit-script.nix {
+  generateSystemVInitScript = import ../sysvinit/generate-sysvinit-script.nix {
     inherit createSystemVInitScript;
     inherit (pkgs) stdenv;
   };
@@ -34,7 +34,7 @@ let
     inherit createCredentials basePackages forceDisableUserChange;
   };
 
-  generateSystemdService = import ./generate-systemd-service.nix {
+  generateSystemdService = import ../systemd/generate-systemd-service.nix {
     inherit createSystemdService;
     inherit (pkgs) stdenv writeTextFile;
   };
@@ -45,7 +45,7 @@ let
     inherit createCredentials basePackages forceDisableUserChange runtimeDir;
   };
 
-  generateSupervisordProgram = import ./generate-supervisord-program.nix {
+  generateSupervisordProgram = import ../supervisord/generate-supervisord-program.nix {
     inherit createSupervisordProgram runtimeDir;
     inherit (pkgs) stdenv writeTextFile;
   };
@@ -60,7 +60,7 @@ let
     };
   };
 
-  generateBSDRCScript = import ../agnostic/generate-bsdrc-script.nix {
+  generateBSDRCScript = import ../bsdrc/generate-bsdrc-script.nix {
     inherit createBSDRCScript;
     inherit (pkgs) stdenv;
   };
@@ -70,7 +70,7 @@ let
     inherit createCredentials forceDisableUserChange;
   };
 
-  generateLaunchdDaemon = import ../agnostic/generate-launchd-daemon.nix {
+  generateLaunchdDaemon = import ../launchd/generate-launchd-daemon.nix {
     inherit (pkgs) stdenv writeTextFile;
     inherit createLaunchdDaemon runtimeDir;
   };
@@ -79,7 +79,7 @@ let
     inherit (pkgs) writeTextFile stdenv;
   };
 
-  generateCygrunsrvParams = import ../agnostic/generate-cygrunsrv-params.nix {
+  generateCygrunsrvParams = import ../cygrunsrv/generate-cygrunsrv-params.nix {
     inherit (pkgs) stdenv writeTextFile;
     inherit createCygrunsrvParams runtimeDir;
   };
@@ -89,7 +89,7 @@ let
     inherit createCredentials forceDisableUserChange;
   };
 
-  generateProcessScript = import ../agnostic/generate-process-script.nix {
+  generateProcessScript = import ../disnix/generate-process-script.nix {
     inherit (pkgs) stdenv writeTextFile daemon;
     inherit createProcessScript runtimeDir logDir tmpDir forceDisableUserChange basePackages;
   };
@@ -98,23 +98,23 @@ let
     inherit (pkgs) stdenv;
   };
 
-  generateDockerContainer = import ../agnostic/generate-docker-container.nix {
+  generateDockerContainer = import ../docker/generate-docker-container.nix {
     inherit (pkgs) stdenv writeTextFile dockerTools findutils glibc dysnomia;
     inherit createDockerContainer basePackages runtimeDir stateDir forceDisableUserChange createCredentials;
   };
 in
-import ./create-managed-process.nix {
+import ../agnostic/create-managed-process.nix {
   inherit processManager;
   inherit (pkgs) stdenv;
 
-  generateProcessFun =
-    if processManager == "sysvinit" then generateSystemVInitScript
-    else if processManager == "systemd" then generateSystemdService
-    else if processManager == "supervisord" then generateSupervisordProgram
-    else if processManager == "bsdrc" then generateBSDRCScript
-    else if processManager == "launchd" then generateLaunchdDaemon
-    else if processManager == "cygrunsrv" then generateCygrunsrvParams
-    else if processManager == "disnix" then generateProcessScript
-    else if processManager == "docker" then generateDockerContainer
-    else throw "Unknown process manager: ${processManager}";
+  generators = {
+    sysvinit = generateSystemVInitScript;
+    systemd = generateSystemdService;
+    supervisord = generateSupervisordProgram;
+    bsdrc = generateBSDRCScript;
+    launchd = generateLaunchdDaemon;
+    cygrunsrv = generateCygrunsrvParams;
+    disnix = generateProcessScript;
+    docker = generateDockerContainer;
+  };
 }
