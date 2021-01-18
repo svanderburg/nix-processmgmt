@@ -102,6 +102,16 @@ let
     inherit (pkgs) stdenv writeTextFile dockerTools findutils glibc dysnomia;
     inherit createDockerContainer basePackages runtimeDir stateDir forceDisableUserChange createCredentials;
   };
+
+  s6-rc = import ../s6-rc {
+    inherit (pkgs) stdenv;
+    inherit createCredentials;
+  };
+
+  generateS6Service = import ../s6-rc/generate-s6-service.nix {
+    inherit (pkgs) stdenv writeTextFile execline;
+    inherit s6-rc tmpDir runtimeDir forceDisableUserChange;
+  };
 in
 import ../agnostic/create-managed-process.nix {
   inherit processManager;
@@ -116,5 +126,6 @@ import ../agnostic/create-managed-process.nix {
     cygrunsrv = generateCygrunsrvParams;
     disnix = generateProcessScript;
     docker = generateDockerContainer;
+    s6-rc = generateS6Service;
   };
 }
