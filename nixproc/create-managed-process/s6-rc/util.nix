@@ -33,7 +33,7 @@ rec {
 
   generateServiceNameList = {services, filename}:
     lib.optionalString (services != [])
-      (lib.concatMapStrings (service: generateServiceName {
-        inherit service filename;
-      }) services);
+      (lib.concatMapStrings (service: ''
+        echo "${service.name}" >> ${filename}
+      '') services);
 }

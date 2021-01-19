@@ -8,6 +8,7 @@
 , forceDisableUserChange ? false
 , extraParams ? {}
 , exprFile ? null
+, defaultBundleName ? "default"
 }@args:
 
 let
@@ -20,13 +21,24 @@ let
   } // extraParams);
 
   processes = if exprFile == null then {} else processesFun processesArgs;
-in
-pkgs.buildEnv {
-  name = "s6-rc";
-  paths = map (processName:
+
+  createServiceBundle = import ./create-service-bundle.nix {
+    inherit (pkgs) stdenv;
+  };
+
+  processesList = map (processName:
     let
       process = builtins.getAttr processName processes;
     in
     process.pkg
   ) (builtins.attrNames processes);
+
+  defaultBundle = createServiceBundle {
+    name = defaultBundleName;
+    contents = processesList;
+  };
+in
+pkgs.buildEnv {
+  name = "s6-rc";
+  paths = [ defaultBundle ] ++ processesList;
 }

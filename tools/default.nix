@@ -35,6 +35,10 @@ rec {
     inherit (pkgs) stdenv getopt;
   };
 
+  s6-rc = import ./s6-rc {
+    inherit (pkgs) stdenv getopt;
+  };
+
   supervisord = import ./supervisord {
     inherit (pkgs) stdenv getopt;
   };

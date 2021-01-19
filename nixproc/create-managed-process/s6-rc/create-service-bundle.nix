@@ -22,6 +22,8 @@ stdenv.mkDerivation {
   ''
   + util.generateStringProperty { value = "bundle"; filename = "type"; }
   + util.generateBooleanProperty { value = flagEssential; filename = "flag-essential"; }
-  + util.generateServiceNameList { services = contents; filename = "contents"; }
+  + (if contents == [] then util.generateBooleanProperty { value = true; filename = "contents"; }
+    else util.generateServiceNameList { services = contents; filename = "contents"; }
+    )
   + postInstall;
 }

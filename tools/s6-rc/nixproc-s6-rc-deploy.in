@@ -1,0 +1,143 @@
+#!/bin/bash
+set -e
+shopt -s nullglob
+
+showUsage()
+{
+    cat <<EOF
+Usage: $0 [OPTION] PATH
+
+Deploys a prebuilt s6-rc configuration profile. It requires an already running
+s6-svscan service.
+
+Options:
+  -p, --profile=NAME    Name of the Nix profile that stores the sysvinit scripts
+                        (defaults to: processes)
+      --state-dir       Changes the directory in which the state of the
+                        processes are stored
+      --runtime-dir     Changes the directory in which the PID files are stored
+      --log-dir         Changes the directory in which the log files are stored
+      --tmp-dir         Changes the directory in which temp files are stored
+      --cache-dir       Changes the directory in which cache files are stored
+      --force-disable-user-change
+                        Forces to not create users, groups or change user
+                        permissions
+  -h, --help            Shows the usage of this command
+
+Environment:
+  NIX_STATE_DIR         Overrides the location of the Nix state directory
+  NIXPROC_STATE_DIR     Changes the directory in which the state of the
+                        processes is stored
+  NIXPROC_RUNTIME_DIR   Changes the directory in which the PID files are stored
+  NIXPROC_LOG_DIR       Changes the directory in which log files are stored
+  NIXPROC_TMP_DIR       Changes the directory in which temp files are stored
+  NIXPROC_CACHE_DIR     Changes the directory in which cache files are stored
+  NIXPROC_FORCE_DISABLE_USER_CHANGE
+                        Forces to not create users, groups or change user
+                        permissions
+EOF
+}
+
+# Parse valid argument options
+
+PARAMS=`@getopt@ -n $0 -o p:h -l profile:,state-dir:,runtime-dir:,log-dir:,tmp-dir:,cache-dir:,force-disable-user-change,help -- "$@"`
+
+if [ $? != 0 ]
+then
+    showUsage
+    exit 1
+fi
+
+# Evaluate valid options
+
+eval set -- "$PARAMS"
+
+while [ "$1" != "--" ]
+do
+    case "$1" in
+        -p|--profile)
+            profile="$2"
+            ;;
+        --state-dir)
+            stateDir="$2"
+            stateDirArg="--state-dir $2"
+            ;;
+        --runtime-dir)
+            runtimeDir="$2"
+            runtimeDirArg="--runtime-dir $2"
+            ;;
+        --log-dir)
+            logDirArg="--log-dir $2"
+            ;;
+        --tmp-dir)
+            tmpDirArg="--tmp-dir $2"
+            ;;
+        --cache-dir)
+            cacheDirArg="--cache-dir $2"
+            ;;
+        --force-disable-user-change)
+            forceDisableUserChangeArg="--force-disable-user-change"
+            ;;
+        -h|--help)
+            showUsage
+            exit 0
+            ;;
+    esac
+
+    shift
+done
+
+shift
+
+profilePath="$1"
+
+# Validate the given options
+
+source @commonchecks@
+
+checkNixStateDir
+checkProfile
+
+stateDir="${stateDir:-/var}"
+runtimeDir="${runtimeDir:-$stateDir/run}"
+compileDir="$stateDir/etc/s6/rc"
+liveDir="$runtimeDir/s6-rc"
+scanDir="$runtimeDir/service"
+
+# Initialize all state
+
+nixproc-init-state $stateDirArg $runtimeDirArg $logDirArg $tmpDirArg $cacheDirArg $forceDisableUserChangeArg
+
+# Create new groups and users
+createNewGroups
+createNewUsers
+
+# Undeploy all obsolete services, deploy new services
+
+# Derive the compiled database name from the hash code of the profile
+profileName="$(basename "$profilePath")"
+compiledDatabaseName="compiled-${profileName:0:32}"
+
+mkdir -p "$compileDir"
+if [ ! -e "$compileDir/$compiledDatabaseName" ]
+then
+    s6-rc-compile $compileDir/$compiledDatabaseName $profilePath/etc/s6/sv
+fi
+
+if [ -d "$liveDir" ]
+then
+    s6-rc-update -l $liveDir $compileDir/$compiledDatabaseName
+    rm -rf $(@readlink@ -f $compileDir/compiled)
+else
+    s6-rc-init -c $compileDir/$compiledDatabaseName -l $liveDir $scanDir
+fi
+
+s6-rc -l $liveDir -u change default
+ln -sfn $compileDir/$compiledDatabaseName $compileDir/compiled
+
+# Delete obsolete users and groups
+deleteObsoleteUsers
+deleteObsoleteGroups
+
+# Set new profile
+setNixProfile
