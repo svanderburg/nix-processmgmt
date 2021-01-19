@@ -109,4 +109,9 @@ in
     inherit createManagedProcess;
     inherit (pkgs) docker kmod;
   };
+
+  s6-svscan = import ./s6-svscan.nix {
+    inherit createManagedProcess runtimeDir;
+    inherit (pkgs) s6;
+  };
 }

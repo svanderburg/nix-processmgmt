@@ -127,8 +127,9 @@ else if daemon != null then
         text = ''
           #!${execline}/bin/execlineb -P
 
-          backtick pid { cat ${pidFile} }
-          kill $pid
+          backtick PID { cat ${pidFile} }
+          importas -i PID PID
+          kill $PID
         '';
       };
     };
