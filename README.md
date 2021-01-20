@@ -1069,6 +1069,20 @@ users.
 By default, the `stderr` of `cygrunsrv` managed services are captured in the log
 folder. An example could be: `/var/log/myservice.log`.
 
+### s6-rc
+
+If there is no logging configured, any output produced by supervised processes
+is redirected to the `s6-svscan` process that supervises the entire service
+dependency tree.
+
+In this framework, by default, `longrun` services are automatically configured
+in such a way that there is also logging companion service that captures its
+output.
+
+The output captured by the logging companion services are stored in the `s6-log`
+sub folder in the log directory (which is typically
+`/var/log/s6-log/<service name>` on most systems).
+
 License
 =======
 The contents of this package is available under the same license as Nixpkgs --
