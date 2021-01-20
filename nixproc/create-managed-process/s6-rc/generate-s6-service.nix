@@ -88,6 +88,10 @@ let
   ''
   + stdenv.lib.optionalString (nice != null) ''
     nice -n ${toString nice}
+  ''
+  # Always forward standard error so that it can be captured by the s6-log service
+  + ''
+    fdmove -c 2 1
   '';
 
   escapeArgs = args:

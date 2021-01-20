@@ -104,8 +104,8 @@ let
   };
 
   s6-rc = import ../s6-rc {
-    inherit (pkgs) stdenv;
-    inherit createCredentials;
+    inherit (pkgs) stdenv execline;
+    inherit createCredentials logDir forceDisableUserChange;
   };
 
   generateS6Service = import ../s6-rc/generate-s6-service.nix {

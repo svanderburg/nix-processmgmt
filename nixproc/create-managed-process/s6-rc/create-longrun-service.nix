@@ -1,4 +1,4 @@
-{stdenv, createCredentials}:
+{stdenv, createCredentials, createLogServiceForLongRunService}:
 
 { name
 # When a service is flagged as essential it will not stop with the command: s6-rc -d change foo, but only: s6-rc -D change foo
@@ -33,6 +33,8 @@
 # named with the content of the pipeline-name file, and containing all the services in the pipeline that ends at service.
 # The pipeline-name file is ignored if service is not a last consumer.
 , pipelineName ? null
+# Automatically generates a logging longrun service that writes the output to a log file
+, autoGenerateLogService ? true
 # Specifies which groups and users that need to be created.
 , credentials ? {}
 # Arbitrary commands executed after generating the configuration files
@@ -45,12 +47,21 @@ let
   util = import ./util.nix {
     inherit (stdenv) lib;
   };
+
+  logService = createLogServiceForLongRunService {
+    inherit name;
+  };
+
+  _producerFor = if autoGenerateLogService then logService else producerFor;
+
+  # The service name gets a -srv suffix so that it can be paired with a -log service and put in a bundle that corresponds to: name
+  serviceName = if autoGenerateLogService then "${name}-srv" else name;
 in
 stdenv.mkDerivation {
-  inherit name;
+  name = serviceName;
   buildCommand = ''
-    mkdir -p $out/etc/s6/sv/${name}
-    cd $out/etc/s6/sv/${name}
+    mkdir -p $out/etc/s6/sv/${serviceName}
+    cd $out/etc/s6/sv/${serviceName}
   ''
   + util.generateStringProperty { value = "longrun"; filename = "type"; }
   + util.generateBooleanProperty { value = flagEssential; filename = "flag-essential"; }
@@ -65,9 +76,13 @@ stdenv.mkDerivation {
   + util.generateStringProperty { value = downSignal; filename = "down-signal"; }
   + util.copyDir { path = data; filename = "data"; }
   + util.copyDir { path = env; filename = "env"; }
-  + util.generateServiceName { service = producerFor; filename = "producer-for"; }
+  + util.generateServiceName { service = _producerFor; filename = "producer-for"; }
   + util.generateServiceNameList { services = consumerFor; filename = "consumer-for"; }
   + util.generateStringProperty { value = pipelineName; filename = "pipeline-name"; }
+  + stdenv.lib.optionalString autoGenerateLogService ''
+    cd ..
+    ln -sfn ${logService}/etc/s6/sv/${name}-log
+  ''
   + ''
     ln -s ${credentialsSpec}/dysnomia-support $out/dysnomia-support
 
