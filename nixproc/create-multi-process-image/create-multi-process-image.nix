@@ -21,13 +21,16 @@ let
   commonTools = (import ../../tools { inherit pkgs; }).common;
 
   processManagerArgs =
-    if processManager == "sysvinit" then import ./generate-sysvinit-args.nix {
+    if processManager == "disnix" then import ./generate-disnix-args.nix {
+      inherit exprFile stateDir runtimeDir forceDisableUserChange extraParams pkgs system;
+    }
+    else if processManager == "s6-rc" then import ./generate-s6-rc-args.nix {
       inherit exprFile stateDir runtimeDir forceDisableUserChange extraParams pkgs system;
     }
     else if processManager == "supervisord" then import ./generate-supervisord-args.nix {
       inherit exprFile stateDir runtimeDir forceDisableUserChange extraParams pkgs system;
     }
-    else if processManager == "disnix" then import ./generate-disnix-args.nix {
+    else if processManager == "sysvinit" then import ./generate-sysvinit-args.nix {
       inherit exprFile stateDir runtimeDir forceDisableUserChange extraParams pkgs system;
     }
     else throw "Unsupported process manager: ${processManager}";

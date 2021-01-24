@@ -9,7 +9,7 @@ let
     exprFile = ./processes-docker.nix;
   };
 
-  processManagers = [ "supervisord" "sysvinit" "disnix" ];
+  processManagers = [ "supervisord" "sysvinit" "disnix" "s6-rc" ];
   userManagementPolicies = [ "privileged" "unprivileged" ];
 
   images = pkgs.lib.genAttrs processManagers (processManager:
