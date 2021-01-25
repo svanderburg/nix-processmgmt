@@ -3,38 +3,38 @@
 with import "${nixpkgs}/nixos/lib/testing-python.nix" { system = builtins.currentSystem; };
 
 let
-  dockerProcessEnv = import ../nixproc/create-managed-process/systemd/build-systemd-env.nix {
+  dockerProcessEnv = import ../nixproc/backends/systemd/build-systemd-env.nix {
     exprFile = ./processes-docker.nix;
   };
 
-  processesEnvForeground = import ../nixproc/create-managed-process/docker/build-docker-env.nix {
+  processesEnvForeground = import ../nixproc/backends/docker/build-docker-env.nix {
     exprFile = ../examples/webapps-agnostic/processes.nix;
     extraParams = {
       webappMode = "foreground";
     };
   };
 
-  processesEnvDaemon = import ../nixproc/create-managed-process/docker/build-docker-env.nix {
+  processesEnvDaemon = import ../nixproc/backends/docker/build-docker-env.nix {
     exprFile = ../examples/webapps-agnostic/processes.nix;
     extraParams = {
       webappMode = "daemon";
     };
   };
 
-  processesEnvAuto = import ../nixproc/create-managed-process/docker/build-docker-env.nix {
+  processesEnvAuto = import ../nixproc/backends/docker/build-docker-env.nix {
     exprFile = ../examples/webapps-agnostic/processes.nix;
   };
 
-  processesEnvAdvanced = import ../nixproc/create-managed-process/docker/build-docker-env.nix {
+  processesEnvAdvanced = import ../nixproc/backends/docker/build-docker-env.nix {
     exprFile = ../examples/webapps-agnostic/processes-advanced.nix;
   };
 
-  processesEnvUnprivileged = import ../nixproc/create-managed-process/docker/build-docker-env.nix {
+  processesEnvUnprivileged = import ../nixproc/backends/docker/build-docker-env.nix {
     exprFile = ../examples/webapps-agnostic/processes.nix;
     forceDisableUserChange = true;
   };
 
-  processesEnvEmpty = import ../nixproc/create-managed-process/docker/build-docker-env.nix {
+  processesEnvEmpty = import ../nixproc/backends/docker/build-docker-env.nix {
     exprFile = null;
   };
 

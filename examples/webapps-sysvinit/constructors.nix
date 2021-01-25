@@ -9,7 +9,7 @@
 }:
 
 let
-  createSystemVInitScript = import ../../nixproc/create-managed-process/sysvinit/create-sysvinit-script.nix {
+  createSystemVInitScript = import ../../nixproc/backends/sysvinit/create-sysvinit-script.nix {
     inherit (pkgs) stdenv writeTextFile daemon;
     inherit runtimeDir logDir tmpDir forceDisableUserChange;
 
@@ -18,7 +18,7 @@ let
       inherit ids forceDisableUserChange;
     };
 
-    initFunctions = import ../../nixproc/create-managed-process/sysvinit/init-functions.nix {
+    initFunctions = import ../../nixproc/backends/sysvinit/init-functions.nix {
       basePackages = [ pkgs.coreutils pkgs.gnused pkgs.inetutils pkgs.gnugrep pkgs.sysvinit ];
       inherit (pkgs) stdenv fetchurl;
       inherit runtimeDir;

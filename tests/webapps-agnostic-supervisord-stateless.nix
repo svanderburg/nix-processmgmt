@@ -3,7 +3,7 @@
 with import "${nixpkgs}/nixos/lib/testing-python.nix" { system = builtins.currentSystem; };
 
 let
-  processesEnvAuto = import ../nixproc/create-managed-process/supervisord/build-supervisord-env.nix {
+  processesEnvAuto = import ../nixproc/backends/supervisord/build-supervisord-env.nix {
     exprFile = ../examples/webapps-agnostic/processes.nix;
   };
 

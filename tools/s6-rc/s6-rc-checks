@@ -1,0 +1,32 @@
+#!/bin/bash -e
+
+checkStateDir()
+{
+    if [ "$stateDir" = "" ]
+    then
+        if [ "$NIXPROC_STATE_DIR" = "" ]
+        then
+            stateDir="/var"
+        else
+            stateDir="$NIXPROC_STATE_DIR"
+        fi
+    fi
+}
+
+checkRuntimeDir()
+{
+    if [ "$runtimeDir" = "" ]
+    then
+        if [ "$NIXPROC_RUNTIME_DIR" = "" ]
+        then
+            runtimeDir="$stateDir/run"
+        else
+            runtimeDir="$NIXPROC_RUNTIME_DIR"
+        fi
+    fi
+}
+
+checkScanDir()
+{
+    scanDir="$runtimeDir/service"
+}

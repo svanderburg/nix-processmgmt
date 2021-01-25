@@ -15,7 +15,15 @@ stdenv.mkDerivation {
       -e "s|@getopt@|${getopt}/bin/getopt|" \
       -e "s|@readlink@|$(type -p readlink)|" \
       -e "s|@commonchecks@|${../commonchecks}|" \
+      -e "s|@s6rcchecks@|${./s6-rc-checks}|" \
       ${./nixproc-s6-rc-deploy.in} > $out/bin/nixproc-s6-rc-deploy
     chmod +x $out/bin/nixproc-s6-rc-deploy
+
+    sed -e "s|/bin/bash|$SHELL|" \
+      -e "s|@getopt@|${getopt}/bin/getopt|" \
+      -e "s|@commonchecks@|${../commonchecks}|" \
+      -e "s|@s6rcchecks@|${./s6-rc-checks}|" \
+      ${./nixproc-s6-svscan.in} > $out/bin/nixproc-s6-svscan
+    chmod +x $out/bin/nixproc-s6-svscan
   '';
 }

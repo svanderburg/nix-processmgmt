@@ -1,7 +1,7 @@
 {pkgs, system, exprFile, stateDir, runtimeDir, forceDisableUserChange, extraParams}:
 
 let
-  profile = import ../create-managed-process/s6-rc/build-s6-rc-env.nix {
+  profile = import ./build-s6-rc-env.nix {
     inherit pkgs system exprFile extraParams stateDir runtimeDir forceDisableUserChange;
   };
 

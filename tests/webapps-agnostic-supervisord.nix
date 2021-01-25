@@ -3,38 +3,38 @@
 with import "${nixpkgs}/nixos/lib/testing-python.nix" { system = builtins.currentSystem; };
 
 let
-  supervisordProcessEnv = import ../nixproc/create-managed-process/systemd/build-systemd-env.nix {
+  supervisordProcessEnv = import ../nixproc/backends/systemd/build-systemd-env.nix {
     exprFile = ./processes-supervisord.nix;
   };
 
-  processesEnvForeground = import ../nixproc/create-managed-process/supervisord/build-supervisord-env.nix {
+  processesEnvForeground = import ../nixproc/backends/supervisord/build-supervisord-env.nix {
     exprFile = ../examples/webapps-agnostic/processes.nix;
     extraParams = {
       webappMode = "foreground";
     };
   };
 
-  processesEnvDaemon = import ../nixproc/create-managed-process/supervisord/build-supervisord-env.nix {
+  processesEnvDaemon = import ../nixproc/backends/supervisord/build-supervisord-env.nix {
     exprFile = ../examples/webapps-agnostic/processes.nix;
     extraParams = {
       webappMode = "daemon";
     };
   };
 
-  processesEnvAuto = import ../nixproc/create-managed-process/supervisord/build-supervisord-env.nix {
+  processesEnvAuto = import ../nixproc/backends/supervisord/build-supervisord-env.nix {
     exprFile = ../examples/webapps-agnostic/processes.nix;
   };
 
-  processesEnvAutoUnprivileged = import ../nixproc/create-managed-process/supervisord/build-supervisord-env.nix {
+  processesEnvAutoUnprivileged = import ../nixproc/backends/supervisord/build-supervisord-env.nix {
     exprFile = ../examples/webapps-agnostic/processes.nix;
     forceDisableUserChange = true;
   };
 
-  processesEnvAdvanced = import ../nixproc/create-managed-process/supervisord/build-supervisord-env.nix {
+  processesEnvAdvanced = import ../nixproc/backends/supervisord/build-supervisord-env.nix {
     exprFile = ../examples/webapps-agnostic/processes-advanced.nix;
   };
 
-  processesEnvEmpty = import ../nixproc/create-managed-process/supervisord/build-supervisord-env.nix {
+  processesEnvEmpty = import ../nixproc/backends/supervisord/build-supervisord-env.nix {
     exprFile = null;
   };
 

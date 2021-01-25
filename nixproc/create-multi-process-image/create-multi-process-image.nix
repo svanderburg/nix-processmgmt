@@ -1,4 +1,4 @@
-{dockerTools, stdenv, pkgs, system}:
+{dockerTools, stdenv, pkgs, system, generators}:
 
 { interactive ? true
 , exprFile
@@ -20,22 +20,15 @@ let
 
   commonTools = (import ../../tools { inherit pkgs; }).common;
 
-  processManagerArgs =
-    if processManager == "disnix" then import ./generate-disnix-args.nix {
-      inherit exprFile stateDir runtimeDir forceDisableUserChange extraParams pkgs system;
-    }
-    else if processManager == "s6-rc" then import ./generate-s6-rc-args.nix {
-      inherit exprFile stateDir runtimeDir forceDisableUserChange extraParams pkgs system;
-    }
-    else if processManager == "supervisord" then import ./generate-supervisord-args.nix {
-      inherit exprFile stateDir runtimeDir forceDisableUserChange extraParams pkgs system;
-    }
-    else if processManager == "sysvinit" then import ./generate-sysvinit-args.nix {
-      inherit exprFile stateDir runtimeDir forceDisableUserChange extraParams pkgs system;
-    }
-    else throw "Unsupported process manager: ${processManager}";
+  generateImageArgsModule = if builtins.hasAttr processManager generators
+    then builtins.getAttr processManager generators
+    else throw "Cannot use process manager: ${processManager} in a multi-process container!";
 
-  setupProcessManagement = import ../create-managed-process/docker/setup.nix {
+  processManagerArgs = import generateImageArgsModule {
+    inherit exprFile stateDir runtimeDir forceDisableUserChange extraParams pkgs system;
+  };
+
+  setupProcessManagement = import ../backends/docker/setup.nix {
     inherit (pkgs) dockerTools stdenv dysnomia findutils glibc;
     inherit (processManagerArgs) credentialsSpec;
     inherit commonTools stateDir runtimeDir forceDisableUserChange;

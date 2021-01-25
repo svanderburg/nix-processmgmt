@@ -5,7 +5,7 @@ with import "${nixpkgs}/nixos/lib/testing-python.nix" { system = builtins.curren
 let
   pkgs = import nixpkgs {};
 
-  dockerProcessEnv = import ../nixproc/create-managed-process/systemd/build-systemd-env.nix {
+  dockerProcessEnv = import ../nixproc/backends/systemd/build-systemd-env.nix {
     exprFile = ./processes-docker.nix;
   };
 

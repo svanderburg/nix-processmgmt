@@ -1,21 +1,21 @@
 {pkgs, system, exprFile, stateDir, runtimeDir, forceDisableUserChange, extraParams}:
 
 let
-  sysvinitTools = (import ../../tools {
+  sysvinitTools = (import ../../../tools {
     inherit pkgs system;
   }).sysvinit;
 
-  generateCompoundProxy = import ./generate-compound-proxy.nix {
+  generateCompoundProxy = import ../util/generate-compound-proxy.nix {
     inherit (pkgs) stdenv writeTextFile;
   };
 
   disnixDataDir = "${pkgs.disnix}/share/disnix";
 
-  profile = import ../create-managed-process/disnix/build-disnix-env.nix {
+  profile = import ./build-disnix-env.nix {
     inherit pkgs system exprFile stateDir runtimeDir forceDisableUserChange extraParams disnixDataDir;
   };
 
-  emptyProfile = import ../create-managed-process/disnix/build-disnix-env.nix {
+  emptyProfile = import ./build-disnix-env.nix {
     inherit pkgs system stateDir runtimeDir forceDisableUserChange extraParams disnixDataDir;
     exprFile = null;
   };

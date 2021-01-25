@@ -32,8 +32,8 @@ Currently, the following process managers are supported:
 * `systemd`: [systemd](https://www.freedesktop.org/wiki/Software/systemd)
 * `launchd`: [launchd](https://www.launchd.info)
 * `cygrunsrv`: Cygwin's [cygrunsrv](http://web.mit.edu/cygwin/cygwin_v1.3.2/usr/doc/Cygwin/cygrunsrv.README)
-* `s6-rc`: the [s6-rc](https://skarnet.org/software/s6-rc) tool that manages
-  services, using [s6](https://skarnet.org/software/s6) as a supervising process
+* `s6-rc`: [s6-rc](https://skarnet.org/software/s6-rc) for managing services
+  supervised by [s6](https://skarnet.org/software/s6)
 
 It can also work with the following solutions that are technically not
 categorized as process managers (but can still be used as such):

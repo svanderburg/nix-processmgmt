@@ -3,29 +3,29 @@
 with import "${nixpkgs}/nixos/lib/testing-python.nix" { system = builtins.currentSystem; };
 
 let
-  processesEnvForeground = import ../nixproc/create-managed-process/systemd/build-systemd-env.nix {
+  processesEnvForeground = import ../nixproc/backends/systemd/build-systemd-env.nix {
     exprFile = ../examples/webapps-agnostic/processes.nix;
     extraParams = {
       webappMode = "foreground";
     };
   };
 
-  processesEnvDaemon = import ../nixproc/create-managed-process/systemd/build-systemd-env.nix {
+  processesEnvDaemon = import ../nixproc/backends/systemd/build-systemd-env.nix {
     exprFile = ../examples/webapps-agnostic/processes.nix;
     extraParams = {
       webappMode = "daemon";
     };
   };
 
-  processesEnvAuto = import ../nixproc/create-managed-process/systemd/build-systemd-env.nix {
+  processesEnvAuto = import ../nixproc/backends/systemd/build-systemd-env.nix {
     exprFile = ../examples/webapps-agnostic/processes.nix;
   };
 
-  processesEnvAdvanced = import ../nixproc/create-managed-process/systemd/build-systemd-env.nix {
+  processesEnvAdvanced = import ../nixproc/backends/systemd/build-systemd-env.nix {
     exprFile = ../examples/webapps-agnostic/processes-advanced.nix;
   };
 
-  processesEnvEmpty = import ../nixproc/create-managed-process/systemd/build-systemd-env.nix {
+  processesEnvEmpty = import ../nixproc/backends/systemd/build-systemd-env.nix {
     exprFile = null;
   };
 

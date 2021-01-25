@@ -1,7 +1,7 @@
 {pkgs, system, exprFile, stateDir, runtimeDir, forceDisableUserChange, extraParams}:
 
 let
-  profile = import ../create-managed-process/supervisord/build-supervisord-env.nix {
+  profile = import ./build-supervisord-env.nix {
     inherit pkgs system exprFile extraParams stateDir runtimeDir forceDisableUserChange;
   };
 in

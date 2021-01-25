@@ -3,13 +3,13 @@
 with import "${nixpkgs}/nixos/lib/testing-python.nix" { system = builtins.currentSystem; };
 
 let
-  processesEnvAuto = import ../nixproc/create-managed-process/systemd/build-systemd-env.nix {
+  processesEnvAuto = import ../nixproc/backends/systemd/build-systemd-env.nix {
     exprFile = ../examples/webapps-agnostic/processes.nix;
     stateDir = "/home/unprivileged/var";
     forceDisableUserChange = true;
   };
 
-  processesEnvEmpty = import ../nixproc/create-managed-process/systemd/build-systemd-env.nix {
+  processesEnvEmpty = import ../nixproc/backends/systemd/build-systemd-env.nix {
     exprFile = null;
     stateDir = "/home/unprivileged/var";
     forceDisableUserChange = true;

@@ -24,31 +24,31 @@ let
     webappMode = null;
   }).webapp.pkg;
 
-  processesEnv = import ../nixproc/create-managed-process/sysvinit/build-sysvinit-env.nix {
+  processesEnv = import ../nixproc/backends/sysvinit/build-sysvinit-env.nix {
     exprFile = ../examples/webapps-agnostic/processes.nix;
   };
 
-  processesEnvUnprivileged = import ../nixproc/create-managed-process/sysvinit/build-sysvinit-env.nix {
+  processesEnvUnprivileged = import ../nixproc/backends/sysvinit/build-sysvinit-env.nix {
     exprFile = ../examples/webapps-agnostic/processes.nix;
     stateDir = "/home/unprivileged/var";
     forceDisableUserChange = true;
   };
 
-  processesEnvAdvanced = import ../nixproc/create-managed-process/sysvinit/build-sysvinit-env.nix {
+  processesEnvAdvanced = import ../nixproc/backends/sysvinit/build-sysvinit-env.nix {
     exprFile = ../examples/webapps-agnostic/processes-advanced.nix;
   };
 
-  processesEnvAdvancedUnprivileged = import ../nixproc/create-managed-process/sysvinit/build-sysvinit-env.nix {
+  processesEnvAdvancedUnprivileged = import ../nixproc/backends/sysvinit/build-sysvinit-env.nix {
     exprFile = ../examples/webapps-agnostic/processes-advanced.nix;
     stateDir = "/home/unprivileged/var";
     forceDisableUserChange = true;
   };
 
-  processesEnvEmpty = import ../nixproc/create-managed-process/sysvinit/build-sysvinit-env.nix {
+  processesEnvEmpty = import ../nixproc/backends/sysvinit/build-sysvinit-env.nix {
     exprFile = null;
   };
 
-  processesEnvEmptyUnprivileged = import ../nixproc/create-managed-process/sysvinit/build-sysvinit-env.nix {
+  processesEnvEmptyUnprivileged = import ../nixproc/backends/sysvinit/build-sysvinit-env.nix {
     exprFile = null;
     stateDir = "/home/unprivileged/var";
     forceDisableUserChange = true;

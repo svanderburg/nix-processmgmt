@@ -5,7 +5,7 @@ with import "${nixpkgs}/nixos/lib/testing-python.nix" { system = builtins.curren
 let
   disnixDataDir = "${pkgs.disnix}/share/disnix";
 
-  processesEnvForeground = import ../nixproc/create-managed-process/disnix/build-disnix-env.nix {
+  processesEnvForeground = import ../nixproc/backends/disnix/build-disnix-env.nix {
     inherit disnixDataDir;
     exprFile = ../examples/webapps-agnostic/processes.nix;
     extraParams = {
@@ -13,7 +13,7 @@ let
     };
   };
 
-  processesEnvDaemon = import ../nixproc/create-managed-process/disnix/build-disnix-env.nix {
+  processesEnvDaemon = import ../nixproc/backends/disnix/build-disnix-env.nix {
     inherit disnixDataDir;
     exprFile = ../examples/webapps-agnostic/processes.nix;
     extraParams = {
@@ -21,23 +21,23 @@ let
     };
   };
 
-  processesEnvAuto = import ../nixproc/create-managed-process/disnix/build-disnix-env.nix {
+  processesEnvAuto = import ../nixproc/backends/disnix/build-disnix-env.nix {
     inherit disnixDataDir;
     exprFile = ../examples/webapps-agnostic/processes.nix;
   };
 
-  processesEnvAdvanced = import ../nixproc/create-managed-process/disnix/build-disnix-env.nix {
+  processesEnvAdvanced = import ../nixproc/backends/disnix/build-disnix-env.nix {
     inherit disnixDataDir;
     exprFile = ../examples/webapps-agnostic/processes-advanced.nix;
   };
 
-  processesEnvNoUserChange = import ../nixproc/create-managed-process/disnix/build-disnix-env.nix {
+  processesEnvNoUserChange = import ../nixproc/backends/disnix/build-disnix-env.nix {
     inherit disnixDataDir;
     exprFile = ../examples/webapps-agnostic/processes.nix;
     forceDisableUserChange = true;
   };
 
-  processesEnvEmpty = import ../nixproc/create-managed-process/disnix/build-disnix-env.nix {
+  processesEnvEmpty = import ../nixproc/backends/disnix/build-disnix-env.nix {
     inherit disnixDataDir;
     exprFile = null;
   };

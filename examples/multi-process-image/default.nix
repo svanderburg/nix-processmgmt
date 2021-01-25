@@ -5,7 +5,7 @@
 }:
 
 let
-  createMultiProcessImage = import ../../nixproc/create-multi-process-image/create-multi-process-image.nix {
+  createMultiProcessImage = import ../../nixproc/create-multi-process-image/create-multi-process-image-universal.nix {
     inherit pkgs system;
     inherit (pkgs) dockerTools stdenv;
   };

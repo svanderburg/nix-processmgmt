@@ -3,38 +3,38 @@
 with import "${nixpkgs}/nixos/lib/testing-python.nix" { system = builtins.currentSystem; };
 
 let
-  s6-svscanProcessEnv = import ../nixproc/create-managed-process/systemd/build-systemd-env.nix {
+  s6-svscanProcessEnv = import ../nixproc/backends/systemd/build-systemd-env.nix {
     exprFile = ./processes-s6-svscan.nix;
   };
 
-  processesEnvForeground = import ../nixproc/create-managed-process/s6-rc/build-s6-rc-env.nix {
+  processesEnvForeground = import ../nixproc/backends/s6-rc/build-s6-rc-env.nix {
     exprFile = ../examples/webapps-agnostic/processes.nix;
     extraParams = {
       webappMode = "foreground";
     };
   };
 
-  processesEnvDaemon = import ../nixproc/create-managed-process/s6-rc/build-s6-rc-env.nix {
+  processesEnvDaemon = import ../nixproc/backends/s6-rc/build-s6-rc-env.nix {
     exprFile = ../examples/webapps-agnostic/processes.nix;
     extraParams = {
       webappMode = "daemon";
     };
   };
 
-  processesEnvAuto = import ../nixproc/create-managed-process/s6-rc/build-s6-rc-env.nix {
+  processesEnvAuto = import ../nixproc/backends/s6-rc/build-s6-rc-env.nix {
     exprFile = ../examples/webapps-agnostic/processes.nix;
   };
 
-  processesEnvAutoUnprivileged = import ../nixproc/create-managed-process/s6-rc/build-s6-rc-env.nix {
+  processesEnvAutoUnprivileged = import ../nixproc/backends/s6-rc/build-s6-rc-env.nix {
     exprFile = ../examples/webapps-agnostic/processes.nix;
     forceDisableUserChange = true;
   };
 
-  processesEnvAdvanced = import ../nixproc/create-managed-process/s6-rc/build-s6-rc-env.nix {
+  processesEnvAdvanced = import ../nixproc/backends/s6-rc/build-s6-rc-env.nix {
     exprFile = ../examples/webapps-agnostic/processes-advanced.nix;
   };
 
-  processesEnvEmpty = import ../nixproc/create-managed-process/s6-rc/build-s6-rc-env.nix {
+  processesEnvEmpty = import ../nixproc/backends/s6-rc/build-s6-rc-env.nix {
     exprFile = null;
   };
 

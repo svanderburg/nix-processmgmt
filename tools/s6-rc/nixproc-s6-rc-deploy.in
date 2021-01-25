@@ -94,15 +94,16 @@ profilePath="$1"
 # Validate the given options
 
 source @commonchecks@
+source @s6rcchecks@
 
 checkNixStateDir
 checkProfile
 
-stateDir="${stateDir:-/var}"
-runtimeDir="${runtimeDir:-$stateDir/run}"
+checkStateDir
+checkRuntimeDir
+checkScanDir
 compileDir="$stateDir/etc/s6/rc"
 liveDir="$runtimeDir/s6-rc"
-scanDir="$runtimeDir/service"
 
 # Initialize all state
 

@@ -128,4 +128,4 @@ NIXPROC=${NIXPROC:-@NIXPROC@}
 export PROCESSES_EXPR="$(@readlink@ -f "$processesFile")"
 
 # Assign IDs
-dydisnix-id-assign -s $NIXPROC/create-managed-process/disnix/services-adapter.nix --id-resources $idResourcesFile $idsParam $servicePropertyArg $outputFileArg $outputXmlArg $stateDirArg $runtimeDirArg $logDirArg $tmpDirArg $cacheDirArg $forceDisableUserChangeArg
+dydisnix-id-assign -s $NIXPROC/backends/disnix/services-adapter.nix --id-resources $idResourcesFile $idsParam $servicePropertyArg $outputFileArg $outputXmlArg $stateDirArg $runtimeDirArg $logDirArg $tmpDirArg $cacheDirArg $forceDisableUserChangeArg
