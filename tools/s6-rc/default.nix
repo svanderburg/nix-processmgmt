@@ -13,7 +13,7 @@ stdenv.mkDerivation {
 
     sed -e "s|/bin/bash|$SHELL|" \
       -e "s|@getopt@|${getopt}/bin/getopt|" \
-      -e "s|@readlink@|$(type -p readlink)|" \
+      -e "s|@readlink@|$(type -p readlink)|g" \
       -e "s|@commonchecks@|${../commonchecks}|" \
       -e "s|@s6rcchecks@|${./s6-rc-checks}|" \
       ${./nixproc-s6-rc-deploy.in} > $out/bin/nixproc-s6-rc-deploy

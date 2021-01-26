@@ -127,8 +127,12 @@ fi
 
 if [ -d "$liveDir" ]
 then
-    s6-rc-update -l $liveDir $compileDir/$compiledDatabaseName
-    rm -rf $(@readlink@ -f $compileDir/compiled)
+    # Only update when the database to be deployed is different
+    if [ ! -e "$compileDir/compiled" ] || [ "$(@readlink@ -f $compileDir/$compiledDatabaseName)" != "$(@readlink@ -f $compileDir/compiled)" ]
+    then
+        s6-rc-update -l $liveDir $compileDir/$compiledDatabaseName
+        rm -rf $(@readlink@ -f $compileDir/compiled)
+    fi
 else
     s6-rc-init -c $compileDir/$compiledDatabaseName -l $liveDir $scanDir
 fi
