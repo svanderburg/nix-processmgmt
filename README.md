@@ -944,7 +944,7 @@ createMultiProcessImage {
   name = "multiprocess";
   tag = "test";
   exprFile = ../webapps-agnostic/processes.nix;
-  processManager = "supervisord"; # sysvinit, disnix are also valid options
+  processManager = "supervisord"; # sysvinit, disnix, s6-rc are also valid options
   interactive = true; # the default option
   forceDisableUserChange = false; # the default option
 }
@@ -1004,7 +1004,7 @@ $ ps aux
 
 Examples
 ========
-This repository contains three example systems, that can be found in the
+This repository contains a number of example systems, that can be found in the
 `examples/` folder:
 
 * `webapps-sysvinit` is a processes configuration set using the example `webapp`
