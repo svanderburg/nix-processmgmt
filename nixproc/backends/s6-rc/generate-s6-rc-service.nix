@@ -57,7 +57,7 @@ let
     };
 
   initializeScript =
-    if initialize == null then null
+    if initialize == "" then null
     else writeTextFile {
       name = "initialize";
       text = ''
