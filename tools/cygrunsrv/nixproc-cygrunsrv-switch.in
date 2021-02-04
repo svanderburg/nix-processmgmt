@@ -5,7 +5,7 @@ shopt -s nullglob
 showUsage()
 {
     cat <<EOF
-Usage: $0 [OPTION] PATH
+Usage: $0 [OPTION] [PATH]
   or: $0 --undeploy [OPTION]
   or: $0 --rollback [OPTION]
   or: $0 --switch-generation NUM [OPTION]
@@ -52,6 +52,7 @@ Options:
 
 Environment:
   NIX_STATE_DIR         Overrides the location of the Nix state directory
+  NIXPROC_PROCESSES     Path to a processes model
   NIXPROC_STATE_DIR     Changes the directory in which the state of the
                         processes is stored
   NIXPROC_RUNTIME_DIR   Changes the directory in which the PID files are stored
@@ -144,12 +145,11 @@ done
 
 shift
 
-path="$1"
-
 # Validate the given options
 
 source @commonchecks@
 
+checkProcessesFile "$1"
 checkNixStateDir
 checkProfile
 composeProfileBaseDir

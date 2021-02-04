@@ -5,7 +5,7 @@
 showUsage()
 {
     cat <<EOF
-Usage: $0 [OPTION] PATH
+Usage: $0 [OPTION] [PATH]
   or: $0 --undeploy [OPTION]
 
 This command builds a Nix profile containing multiple sysvinit scripts, and
@@ -32,6 +32,7 @@ Options:
   -h, --help          Shows the usage of this command
 
 Environment:
+  NIXPROC_PROCESSES    Path to a processes model
   NIXPROC_STATE_DIR    Changes the directory in which the state of the
                        processes is stored
   NIXPROC_RUNTIME_DIR  Changes the directory in which the PID files are stored
@@ -115,17 +116,21 @@ else
     processManagerArg="--argstr processManager $processManager"
 fi
 
-if [ "$1" = "" ]
+if [ "$undeploy" = "1" ]
 then
-    if [ "$undeploy" = "1" ]
+    exprFileArg="--arg exprFile null"
+else
+    if [ "$1" != "" ]
     then
-        exprFileArg="--arg exprFile null"
+        exprFile="$(@readlink@ -f "$1")"
+    elif [ "$NIXPROC_PROCESSES" != "" ]
+    then
+        exprFile="$(@readlink@ -f "$NIXPROC_PROCESSES")"
     else
         echo "No processes expression provided!" >&2
         exit 1
     fi
-else
-    exprFile="$(@readlink@ -f "$1")"
+
     exprFileArg="--argstr exprFile $exprFile"
 fi
 

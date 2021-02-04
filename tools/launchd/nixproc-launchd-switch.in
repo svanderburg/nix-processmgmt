@@ -55,6 +55,7 @@ Environment:
   NIX_STATE_DIR         Overrides the location of the Nix state directory
   LAUNCHD_TARGET_DIR    Directory in which the plist configuration files are
                         managed (defaults to: /Library/LaunchDaemons)
+  NIXPROC_PROCESSES     Path to a processes model
   NIXPROC_STATE_DIR     Changes the directory in which the state of the
                         processes is stored
   NIXPROC_RUNTIME_DIR   Changes the directory in which the PID files are stored
@@ -147,12 +148,11 @@ done
 
 shift
 
-path="$1"
-
 # Validate the given options
 
 source @commonchecks@
 
+checkProcessesFile "$1"
 checkNixStateDir
 checkProfile
 composeProfileBaseDir

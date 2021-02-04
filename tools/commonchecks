@@ -24,6 +24,17 @@ checkProfile()
     profile=${profile:-processes}
 }
 
+checkProcessesFile()
+{
+    if [ "$1" != "" ]
+    then
+        processesFile="$1"
+    elif [ "$NIXPROC_PROCESSES" != "" ]
+    then
+        processesFile="$NIXPROC_PROCESSES"
+    fi
+}
+
 buildProfile()
 {
     local processManager="$1"
@@ -32,7 +43,7 @@ buildProfile()
     then
         local deployArg="--undeploy"
     else
-        local deployArg="$path"
+        local deployArg="$processesFile"
     fi
 
     profilePath=$(nixproc-build --process-manager $processManager $stateDirArg $runtimeDirArg $logDirArg $tmpDirArg $cacheDirArg $forceDisableUserChangeArg $showTraceArg "${extraParamsArg[@]}" --no-out-link $deployArg)

@@ -93,10 +93,12 @@ done
 
 shift
 
-path="$1"
+source @commonchecks@
+
+checkProcessesFile "$1"
 
 # Build the environment with supervisord config files
-profilePath=$(nixproc-build --process-manager supervisord $stateDirArg $runtimeDirArg $logDirArg $tmpDirArg $cacheDirArg $forceDisableUserChangeArg $showTraceArg "${extraParamsArg[@]}" --no-out-link "$path")
+profilePath=$(nixproc-build --process-manager supervisord $stateDirArg $runtimeDirArg $logDirArg $tmpDirArg $cacheDirArg $forceDisableUserChangeArg $showTraceArg "${extraParamsArg[@]}" --no-out-link "$processesFile")
 
 # Initialize all state
 nixproc-init-state $stateDirArg $runtimeDirArg $logDirArg $tmpDirArg $cacheDirArg $forceDisableUserChangeArg
