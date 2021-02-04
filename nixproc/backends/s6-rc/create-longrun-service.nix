@@ -23,7 +23,7 @@
 , downSignal ? null
 # Directory of data files to be included with the service configuration
 , data ? null
-# Directory of environment variable configuration files to be included with service configuration
+# Directory of environment variable configuration files to be included with the service configuration
 , env ? null
 # Longrun service for which this service produces data. The corresponding service must also declare this service as a consumer. null specifies that this service is not a producer.
 , producerFor ? null

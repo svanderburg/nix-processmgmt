@@ -191,7 +191,7 @@ and deactivated in the right order.
 In addition to sysvinit, there are also functions that can be used to create
 configurations for the other supported process managers, e.g.
 `createSystemdUnit`, `createSupervisordProgram`, `createBSDRCScript`. Check
-the implementations in `nixproc/create-managed-process` for more information.
+the implementations in `nixproc/backends` for more information.
 
 Writing a process manager-agnostic process management configuration
 -------------------------------------------------------------------
