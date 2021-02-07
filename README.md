@@ -1013,15 +1013,20 @@ This repository contains a number of example systems, that can be found in the
 * `webapps-agnostic` is the same as the previous example, but using a process
   manager agnostic configuration. It can be used to target all process managers
   that this toolset supports.
-* `services-agnostic` is a process manager-agnostic configuration set of common
-  system services, such as Apache HTTP server, MySQL, PostgreSQL and
-  Apache Tomcat.
+* `services-agnostic` is a process manager-agnostic configuration set of
+  additional system services used for tests, such as docker, supervisord, and
+  nginx
 * `service-containers-agnostic` extends the previous examples with configuration
   files so that these system services can be deployed as Disnix containers --
   services in which other services can be hosted.
 * `multi-process-image` is an example demonstrating how to construct a Docker
   image that concurrently runs all processes described in the `webapps-agnostic`
   example managed by a process management solution of choice.
+
+The
+[Nix process management services](https://github.com/svanderburg/nix-processmgmt-services)
+contains a collection of commonly used services that can be managed with the Nix
+process management framework.
 
 Troubleshooting
 ===============
