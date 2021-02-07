@@ -29,6 +29,10 @@ rec {
         inherit nixpkgs;
       };
 
+      s6-rc = import ./tests/webapps-agnostic-s6-rc.nix {
+        inherit nixpkgs;
+      };
+
       supervisord = import ./tests/webapps-agnostic-supervisord.nix {
         inherit nixpkgs;
       };

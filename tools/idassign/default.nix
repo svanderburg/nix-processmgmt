@@ -16,6 +16,7 @@ stdenv.mkDerivation {
       -e "s|@getopt@|${getopt}/bin/getopt|" \
       -e "s|@readlink@|$readlink|" \
       -e "s|@NIXPROC@|${../../nixproc}|" \
+      -e "s|@commonchecks@|${../commonchecks}|" \
       ${./nixproc-id-assign.in} > $out/bin/nixproc-id-assign
     chmod +x $out/bin/nixproc-id-assign
   '';
