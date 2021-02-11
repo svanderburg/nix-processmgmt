@@ -935,9 +935,8 @@ To construct such as an image, we can evaluate a Nix expression (e.g.
 }:
 
 let
-  createMultiProcessImage = import ../../nixproc/create-multi-process-image/create-multi-process-image.nix {
-    inherit pkgs system;
-    inherit (pkgs) dockerTools stdenv;
+  createMultiProcessImage = import ../../nixproc/create-image-from-steps/create-multi-process-image-universal.nix {
+    inherit pkgs;
   };
 in
 createMultiProcessImage {
@@ -946,6 +945,7 @@ createMultiProcessImage {
   exprFile = ../webapps-agnostic/processes.nix;
   processManager = "supervisord"; # sysvinit, disnix, s6-rc are also valid options
   interactive = true; # the default option
+  manpages = false; # the default option
   forceDisableUserChange = false; # the default option
 }
 ```
@@ -964,6 +964,8 @@ with the following parameters:
   this setting has been enabled, a `.bashrc` will be configured to make
   the bash shell usable, and a number of additional packages will be installed
   for file and process management operations.
+* We can also optionally install `man` in the container so that you can access
+  manual pages. By default, it is disabled
 * It is also possible to adjust the state settings in the processes model.
   With `forceDisableUserChange` we can disable user creation and user
   switching. It is also possible to control the other state variables, such

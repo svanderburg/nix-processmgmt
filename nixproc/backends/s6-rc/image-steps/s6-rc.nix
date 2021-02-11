@@ -1,10 +1,6 @@
-{pkgs, system, exprFile, stateDir, runtimeDir, forceDisableUserChange, extraParams}:
+{pkgs, common, input, result}:
 
 let
-  profile = import ./build-s6-rc-env.nix {
-    inherit pkgs system exprFile extraParams stateDir runtimeDir forceDisableUserChange;
-  };
-
   skelDir = pkgs.stdenv.mkDerivation {
     name = "s6-skel-dir";
     buildCommand = ''
@@ -38,8 +34,8 @@ let
     '';
   };
 in
-{
-  runAsRoot = ''
+result // {
+ runAsRoot = result.runAsRoot or "" + ''
     # Run s6-linux-init-maker to configure s6-linux-init as an init system
     mkdir -p /etc/s6
     s6-linux-init-maker -c /etc/s6/current -p /bin -m 0022 -f ${skelDir} -N -C -B /etc/s6/current
@@ -49,12 +45,11 @@ in
     # Create s6-log user and group
     groupadd -g 2 s6-log
     useradd -u 2 -d /dev/null -g s6-log s6-log
-
-    # Initialize s6-rc with a compiled database
-    mkdir -p /etc/s6/rc
-    s6-rc-compile /etc/s6/rc/compiled ${profile}/etc/s6/sv
   '';
-  contents = [ pkgs.s6-linux-init pkgs.s6 pkgs.s6-rc pkgs.execline ];
-  cmd = [ "/bin/init" ];
-  credentialsSpec = profile;
+
+  contents = result.contents or [] ++ [ pkgs.s6-linux-init pkgs.s6 pkgs.s6-rc pkgs.execline ];
+
+  config = result.config or {} // {
+    cmd = [ "/bin/init" ];
+  };
 }
