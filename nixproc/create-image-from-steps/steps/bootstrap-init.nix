@@ -2,6 +2,8 @@
 
 let
   cmd = pkgs.lib.escapeShellArgs result.config.Cmd;
+
+  channelURL = input.channelURL or "https://nixos.org/channels/nixpkgs-unstable";
 in
 result // pkgs.lib.optionalAttrs (!(input ? bootstrap) || input.bootstrap) {
   runAsRoot = result.runAsRoot or "" + ''
@@ -9,7 +11,7 @@ result // pkgs.lib.optionalAttrs (!(input ? bootstrap) || input.bootstrap) {
     #! ${pkgs.stdenv.shell} -e
 
     # Add nix channel configuration
-    nix-channel --add https://nixos.org/channels/nixpkgs-unstable
+    nix-channel --add ${channelURL}
     nix-channel --update
     nixproc-${input.processManager}-switch &
 

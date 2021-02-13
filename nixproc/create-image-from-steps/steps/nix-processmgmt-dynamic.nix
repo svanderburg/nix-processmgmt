@@ -60,6 +60,18 @@ result // {
   '')
   + ''
     chmod 644 /etc/nixproc/processes.nix
+  '' + pkgs.lib.optionalString (input ? idResourcesFile) ''
+    idResourcesFileName=$(basename ${input.idResourcesFile})
+    idResourcesTarget=/etc/nixproc/''${idResourcesFileName:33}
+
+    cp ${input.idResourcesFile} $idResourcesTarget
+    chmod 644 $idResourcesTarget
+  '' + pkgs.lib.optionalString (input ? idsFile) ''
+    idsFileName=$(basename ${input.idsFile})
+    idsFileTarget=/etc/nixproc/''${idsFileName:33}
+
+    cp ${input.idsFile} $idsFileTarget
+    chmod 644 $idsFileTarget
   '';
 
   config = result.config or {} // {
