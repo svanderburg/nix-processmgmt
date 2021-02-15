@@ -36,7 +36,7 @@ let
       ExecStart = if foregroundProcess != null then "${foregroundProcess} ${stdenv.lib.escapeShellArgs foregroundProcessArgs}" else "${daemon} ${stdenv.lib.escapeShellArgs daemonArgs}";
       Type = if foregroundProcess != null then "simple" else "forking";
     } // stdenv.lib.optionalAttrs (initialize != "") {
-      ExecStartPre = stdenv.lib.optionalString (user != null) "+" + generatePreStartScript {
+      ExecStartPre = generatePreStartScript {
         inherit name initialize;
       };
     } // stdenv.lib.optionalAttrs (directory != null) {
