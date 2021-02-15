@@ -25,6 +25,7 @@ import ./create-image-from-steps.nix {
     ./steps/interactive.nix
     ./steps/man.nix
     ./steps/nix-processmgmt-static.nix
+    ./steps/su-pam.nix
   ]
   ++ import processManagerSpecificStepsFile;
 }

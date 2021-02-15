@@ -22,6 +22,7 @@ import ./create-image-from-steps.nix {
     ./steps/interactive.nix
     ./steps/man.nix
     ./steps/nix-processmgmt-dynamic.nix
+    ./steps/su-pam.nix
   ]
   ++ import processManagerSpecificStepsFile
   ++ [
