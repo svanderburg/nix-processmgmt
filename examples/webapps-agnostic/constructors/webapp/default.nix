@@ -2,18 +2,21 @@
 {port, instanceSuffix ? "", instanceName ? "webapp${instanceSuffix}"}:
 
 let
-  webapp = import ../../webapp;
+  webapp = import ../../../../webapp;
 in
 createManagedProcess {
   name = instanceName;
   description = "Simple web application";
   inherit instanceName;
 
-  # This expression only specifies how to run the webapp in foreground mode
-  foregroundProcess = "${webapp}/bin/webapp";
+  # This expression can both run in foreground or daemon mode.
+  # The process manager can pick which mode it prefers.
+  process = "${webapp}/bin/webapp";
+  daemonArgs = [ "-D" ];
 
   environment = {
     PORT = port;
+    PID_FILE = "${tmpDir}/${instanceName}.pid";
   };
   user = instanceName;
   credentials = {

@@ -11,7 +11,7 @@
 let
   ids = if builtins.pathExists ./ids-advanced.nix then (import ./ids-advanced.nix).ids else {};
 
-  constructors = import ./constructors.nix {
+  constructors = import ./constructors/constructors.nix {
     inherit pkgs stateDir runtimeDir logDir cacheDir tmpDir forceDisableUserChange ids;
   };
 in

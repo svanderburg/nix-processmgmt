@@ -13,11 +13,11 @@
 let
   ids = if builtins.pathExists ./ids.nix then (import ./ids.nix).ids else {};
 
-  sharedConstructors = import ../services-agnostic/constructors.nix {
+  sharedConstructors = import ../services-agnostic/constructors/constructors.nix {
     inherit pkgs stateDir runtimeDir logDir cacheDir tmpDir forceDisableUserChange processManager ids;
   };
 
-  constructors = import ./constructors.nix {
+  constructors = import ./constructors/constructors.nix {
     inherit pkgs stateDir runtimeDir logDir tmpDir forceDisableUserChange processManager webappMode ids;
   };
 in

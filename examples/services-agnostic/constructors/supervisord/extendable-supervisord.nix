@@ -4,7 +4,7 @@
 let
   includeDir = "${stateDir}/lib/${instanceName}/conf.d";
 in
-import ./supervisord.nix {
+import ./default.nix {
   inherit createManagedProcess supervisor logDir runtimeDir;
 } {
   inherit instanceName postInstall;

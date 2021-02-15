@@ -10,7 +10,7 @@
 }:
 
 let
-  constructors = import ../examples/services-agnostic/constructors.nix {
+  constructors = import ../examples/services-agnostic/constructors/constructors.nix {
     inherit pkgs stateDir runtimeDir logDir tmpDir cacheDir forceDisableUserChange processManager;
   };
 in

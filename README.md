@@ -1027,8 +1027,8 @@ This repository contains a number of example systems, that can be found in the
 
 The
 [Nix process management services](https://github.com/svanderburg/nix-processmgmt-services)
-contains a collection of commonly used services that can be managed with the Nix
-process management framework.
+repository contains a collection of commonly used services that can be managed
+with the Nix process management framework.
 
 Troubleshooting
 ===============

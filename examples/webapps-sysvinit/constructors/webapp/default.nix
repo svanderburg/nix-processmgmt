@@ -2,7 +2,7 @@
 {port, instanceSuffix ? "", instanceName ? "webapp${instanceSuffix}"}:
 
 let
-  webapp = import ../../webapp;
+  webapp = import ../../../../webapp;
 in
 createSystemVInitScript {
   name = instanceName;

@@ -10,13 +10,13 @@
 }:
 
 let
-  createManagedProcess = import ../../nixproc/create-managed-process/universal/create-managed-process-universal.nix {
+  createManagedProcess = import ../../../nixproc/create-managed-process/universal/create-managed-process-universal.nix {
     inherit pkgs runtimeDir stateDir logDir tmpDir forceDisableUserChange processManager ids;
   };
 
-  webappExpr = if webappMode == "foreground" then ./webapp-fg.nix
-    else if webappMode == "daemon" then ./webapp-daemon.nix
-    else ./webapp.nix;
+  webappExpr = if webappMode == "foreground" then ./webapp/webapp-fg.nix
+    else if webappMode == "daemon" then ./webapp/webapp-daemon.nix
+    else ./webapp;
 in
 {
   webapp = import webappExpr {

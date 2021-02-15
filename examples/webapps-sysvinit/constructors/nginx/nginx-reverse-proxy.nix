@@ -10,7 +10,7 @@ let
   nginxLogDir = "${nginxStateDir}/logs";
   nginxCacheDir = "${cacheDir}/${instanceName}";
 in
-import ./nginx.nix {
+import ./default.nix {
   inherit createSystemVInitScript stdenv nginx runtimeDir cacheDir forceDisableUserChange;
   stateDir = nginxStateDir;
 } {

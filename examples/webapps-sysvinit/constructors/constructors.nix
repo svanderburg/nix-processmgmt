@@ -9,16 +9,16 @@
 }:
 
 let
-  createSystemVInitScript = import ../../nixproc/backends/sysvinit/create-sysvinit-script.nix {
+  createSystemVInitScript = import ../../../nixproc/backends/sysvinit/create-sysvinit-script.nix {
     inherit (pkgs) stdenv writeTextFile daemon;
     inherit runtimeDir logDir tmpDir forceDisableUserChange;
 
-    createCredentials = import ../../nixproc/create-credentials {
+    createCredentials = import ../../../nixproc/create-credentials {
       inherit (pkgs) stdenv;
       inherit ids forceDisableUserChange;
     };
 
-    initFunctions = import ../../nixproc/backends/sysvinit/init-functions.nix {
+    initFunctions = import ../../../nixproc/backends/sysvinit/init-functions.nix {
       basePackages = [ pkgs.coreutils pkgs.gnused pkgs.inetutils pkgs.gnugrep pkgs.sysvinit ];
       inherit (pkgs) stdenv fetchurl;
       inherit runtimeDir;
@@ -26,11 +26,11 @@ let
   };
 in
 {
-  webapp = import ./webapp.nix {
+  webapp = import ./webapp {
     inherit createSystemVInitScript tmpDir;
   };
 
-  nginxReverseProxy = import ./nginx-reverse-proxy.nix {
+  nginxReverseProxy = import ./nginx/nginx-reverse-proxy.nix {
     inherit createSystemVInitScript stateDir logDir cacheDir runtimeDir forceDisableUserChange;
     inherit (pkgs) stdenv writeTextFile nginx;
   };

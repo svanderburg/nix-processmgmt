@@ -10,7 +10,7 @@ let
   nginxLogDir = "${nginxStateDir}/logs";
   nginxCacheDir = "${cacheDir}/${instanceName}";
 in
-import ./nginx.nix {
+import ./default.nix {
   inherit createManagedProcess stdenv nginx stateDir forceDisableUserChange runtimeDir cacheDir;
 } {
   inherit instanceName;
