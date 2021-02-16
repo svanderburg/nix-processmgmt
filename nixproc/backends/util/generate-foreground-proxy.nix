@@ -1,4 +1,5 @@
 {stdenv, writeTextFile}:
+
 { name
 , wrapDaemon
 , initialize
@@ -7,9 +8,12 @@
 , runtimeDir
 , instanceName ? null
 , pidFile ? (if instanceName == null then null else "${runtimeDir}/${instanceName}.pid")
+, user ? null
 }:
 
 let
+  chainload-user = (import ../../../tools {}).chainload-user;
+
   _pidFile = if pidFile == null then "${runtimeDir}/$(basename ${executable}).pid" else pidFile;
 in
 writeTextFile {
@@ -39,7 +43,7 @@ writeTextFile {
       trap _interrupt SIGINT
 
       # Start process in the background as a daemon
-      ${executable} "$@"
+      ${stdenv.lib.optionalString (user != null) "${chainload-user}/bin/nixproc-chainload-user ${user}"} ${executable} "$@"
 
       # Wait for the PID file to become available. Useful to work with daemons that don't behave well enough.
       count=1 # Start with 1, because 0 returns a non-zero exit status when incrementing it
@@ -76,7 +80,7 @@ writeTextFile {
       blocker_pid=$!
       wait $blocker_pid
     '' else ''
-      exec "${executable}" "$@"
+      exec ${stdenv.lib.optionalString (user != null) "${chainload-user}/bin/nixproc-chainload-user ${user} "}"${executable}" "$@"
     ''}
   '';
   executable = true;

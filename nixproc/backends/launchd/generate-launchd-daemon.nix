@@ -2,6 +2,7 @@
 , stdenv
 , writeTextFile
 , runtimeDir ? "/var/run"
+, forceDisableUserChange
 }:
 
 { name
@@ -30,10 +31,14 @@ let
     inherit stdenv writeTextFile;
   };
 
+  chainLoadUser = if initialize == "" || forceDisableUserChange then null
+    else user;
+
   Program = if foregroundProcess != null then
     if initialize == "" then foregroundProcess
     else generateForegroundProxy ({
       wrapDaemon = false;
+      user = chainLoadUser;
       executable = foregroundProcess;
       inherit name initialize runtimeDir stdenv;
     } // stdenv.lib.optionalAttrs (instanceName != null) {
@@ -43,6 +48,7 @@ let
     })
   else generateForegroundProxy ({
     wrapDaemon = true;
+    user = chainLoadUser;
     executable = daemon;
     inherit name initialize runtimeDir stdenv;
   } // stdenv.lib.optionalAttrs (instanceName != null) {
@@ -66,7 +72,7 @@ let
     Umask = umask;
   } // stdenv.lib.optionalAttrs (nice != null) {
     Nice = nice;
-  } // stdenv.lib.optionalAttrs (user != null) {
+  } // stdenv.lib.optionalAttrs (user != null && chainLoadUser == null) {
     UserName = user;
   };
 

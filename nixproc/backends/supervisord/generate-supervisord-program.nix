@@ -1,4 +1,4 @@
-{ createSupervisordProgram, stdenv, writeTextFile, runtimeDir }:
+{ createSupervisordProgram, stdenv, writeTextFile, runtimeDir, forceDisableUserChange }:
 
 { name
 , description
@@ -26,10 +26,14 @@ let
     inherit stdenv writeTextFile;
   };
 
+  chainLoadUser = if initialize == "" || forceDisableUserChange then null
+    else user;
+
   command = if foregroundProcess != null then
     (if initialize == ""
       then foregroundProcess
       else generateForegroundProxy ({
+        user = chainLoadUser;
         wrapDaemon = false;
         executable = foregroundProcess;
         inherit name initialize runtimeDir stdenv;
@@ -40,6 +44,7 @@ let
       })) + " ${stdenv.lib.escapeShellArgs foregroundProcessArgs}"
     else (generateForegroundProxy ({
       wrapDaemon = true;
+      user = chainLoadUser;
       executable = daemon;
       inherit name initialize runtimeDir stdenv;
     } // stdenv.lib.optionalAttrs (instanceName != null) {
@@ -56,7 +61,7 @@ let
     inherit nice;
   } // stdenv.lib.optionalAttrs (pidFile != null) {
     inherit pidFile;
-  } // stdenv.lib.optionalAttrs (user != null) {
+  } // stdenv.lib.optionalAttrs (user != null && chainLoadUser == null) {
     inherit user;
   };
 

@@ -13,6 +13,8 @@ result // {
     auth required pam_deny.so
     password sufficient pam_unix.so nullok sha512
     EOF
+
+    sed -i -e "s|PATH=/bin:/usr/bin|PATH=/bin:/usr/bin:/nix/var/nix/profiles/default/bin|" /etc/login.defs
   '';
 
   contents = result.contents or [] ++ [ pkgs.su pkgs.shadow ];

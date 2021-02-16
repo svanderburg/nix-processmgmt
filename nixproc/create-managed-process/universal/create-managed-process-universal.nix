@@ -46,7 +46,7 @@ let
   };
 
   generateSupervisordProgram = import ../../backends/supervisord/generate-supervisord-program.nix {
-    inherit createSupervisordProgram runtimeDir;
+    inherit createSupervisordProgram runtimeDir forceDisableUserChange;
     inherit (pkgs) stdenv writeTextFile;
   };
 
@@ -72,7 +72,7 @@ let
 
   generateLaunchdDaemon = import ../../backends/launchd/generate-launchd-daemon.nix {
     inherit (pkgs) stdenv writeTextFile;
-    inherit createLaunchdDaemon runtimeDir;
+    inherit createLaunchdDaemon runtimeDir forceDisableUserChange;
   };
 
   createCygrunsrvParams = import ../../backends/cygrunsrv/create-cygrunsrv-params.nix {

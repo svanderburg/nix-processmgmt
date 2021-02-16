@@ -3,6 +3,10 @@
 }:
 
 rec {
+  chainload-user = import ./chainload-user {
+    inherit (pkgs) stdenv;
+  };
+
   common = import ./common {
     inherit (pkgs) stdenv getopt;
   };
