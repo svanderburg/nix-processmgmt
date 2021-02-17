@@ -109,8 +109,8 @@ let
   };
 
   generateS6RCService = import ../../backends/s6-rc/generate-s6-rc-service.nix {
-    inherit (pkgs) stdenv writeTextFile execline;
-    inherit s6-rc tmpDir runtimeDir forceDisableUserChange;
+    inherit (pkgs) stdenv writeTextFile execline s6;
+    inherit s6-rc basePackages tmpDir runtimeDir forceDisableUserChange;
   };
 in
 import ../agnostic/create-managed-process.nix {

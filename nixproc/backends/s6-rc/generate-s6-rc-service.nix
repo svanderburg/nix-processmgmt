@@ -1,4 +1,4 @@
-{ s6-rc, stdenv, writeTextFile, execline, tmpDir, runtimeDir, forceDisableUserChange }:
+{ s6, s6-rc, basePackages, stdenv, writeTextFile, execline, tmpDir, runtimeDir, forceDisableUserChange }:
 
 { name
 , description
@@ -26,8 +26,11 @@ let
     inherit (stdenv) lib;
   };
 
+  s6-rcBasePackages = basePackages ++ [ execline s6 ];
+
   _environment = util.appendPathToEnvironment {
-    inherit environment path;
+    inherit environment;
+    path = s6-rcBasePackages ++ path;
   };
 
   _user = util.determineUser {
