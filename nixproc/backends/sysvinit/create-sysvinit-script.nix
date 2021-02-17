@@ -150,6 +150,11 @@ let
         in
         ''
           ${initialize}
+        ''
+        + stdenv.lib.optionalString (directory != null) ''
+          cd ${directory}
+        ''
+        + ''
           ${invocationCommand}
         '';
     };
@@ -219,9 +224,6 @@ let
     ''
     + stdenv.lib.optionalString (umask != null) ''
       umask ${umask}
-    ''
-    + stdenv.lib.optionalString (directory != null) ''
-      cd ${directory}
     ''
     + util.printShellEnvironmentVariables {
       environment = _environment;

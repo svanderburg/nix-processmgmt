@@ -87,14 +87,14 @@ let
       + stdenv.lib.optionalString (umask != null) ''
         umask ${umask}
       ''
+      + stdenv.lib.optionalString (initialize != null) ''
+        ${initialize}
+      ''
       + stdenv.lib.optionalString (directory != null) ''
         cd ${directory}
       ''
       + stdenv.lib.optionalString (nice != null) ''
         nice -n ${toString nice}
-      ''
-      + stdenv.lib.optionalString (initialize != null) ''
-        ${initialize}
       ''
       + "exec ${invocationCommand}";
     };
