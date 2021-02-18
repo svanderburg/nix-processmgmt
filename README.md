@@ -999,9 +999,199 @@ When interactive mode has been enabled, you should be able to "connect" to
 a container in which you can execute shell commands, for example to control
 the life-cycle of the sub processes:
 
-```
+```bash
 $ docker exec -it mycontainer /bin/bash
 $ ps aux
+```
+
+Building a mutable multi-process Docker container
+-------------------------------------------------
+A big drawback of the multi-process container deployed in the previous
+section is that its deployment is *immutable* -- the deployment is done from an
+image that configures all process instances, but when it is desired to change
+the configuration, a new image needs to be generated and the container must
+be discarded and redeployed from that new image.
+
+It is also possible to deploy *mutable* multi-process containers in which the
+configuration of the managed system can be updated without the need to bring
+the container down.
+
+The following Nix expression (`default.nix`) can be used to construct a mutable
+multi-process image:
+
+```nix
+{ pkgs ? import <nixpkgs> { inherit system; }
+, system ? builtins.currentSystem
+}:
+
+let
+  createMutableMultiProcessImage = import ../../nixproc/create-image-from-steps/create-mutable-multi-process-image-universal.nix {
+    inherit pkgs;
+  };
+in
+createMutableMultiProcessImage {
+  name = "multiprocess";
+  tag = "test";
+  exprFile = ./processes.nix;
+  idResourcesFile = ./idresources.nix;
+  idsFile = ./ids.nix;
+  processManager = "supervisord";
+  interactive = true;
+  manpages = false;
+  forceDisableUserChange = false;
+  bootstrap = true;
+}
+```
+
+The Nix expression shown above invokes the `createMutableMultiProcessImage`
+function that has a similar interface to the immutable variant shown in the
+previous section, with the following differences:
+
+* The `exprFile` is also used for specifying the process model to deploy from,
+  but a notable difference is that for mutable containers this model is copied
+  into the container and deployed from within the container.
+* To make deploying process models model possible that also use
+  `nixproc-id-assign` to automatically assign unique numeric IDs, the
+  `idResourcesFile` and `idsFile` parameters can be used to copy these models
+  into the container as well. These parameters are not mandatory.
+* As a container entry point, a *bootstrap* script is executed, that on first
+  deployment, uses the Nix package manager, and the corresponding
+  `nixproc-*-switch` tool to deploy the system.
+* The `bootstrap` parameter allows you to disable the bootstrap entry point.
+  By default, it is enabled.
+
+To make deployments in mutable containers possible, the processes model should
+not contain any references to files on the local file system (with the exception
+of the `ids.nix` model that should reside in the same base directory).
+
+The following process model (`processes.nix`) eliminates local file dependencies
+by using `builtins.fetchGit` to obtain the Nix process management framework:
+
+```nix
+{ pkgs ? import <nixpkgs> { inherit system; }
+, system ? builtins.currentSystem
+, stateDir ? "/var"
+, runtimeDir ? "${stateDir}/run"
+, logDir ? "${stateDir}/log"
+, cacheDir ? "${stateDir}/cache"
+, tmpDir ? (if stateDir == "/var" then "/tmp" else "${stateDir}/tmp")
+, forceDisableUserChange ? false
+, processManager
+, webappMode ? null
+}:
+
+let
+  nix-processmgmt = builtins.fetchGit {
+    url = https://github.com/svanderburg/nix-processmgmt.git;
+    ref = "master";
+  };
+
+  ids = if builtins.pathExists ./ids.nix then (import ./ids.nix).ids else {};
+
+  sharedConstructors = import "${nix-processmgmt}/examples/services-agnostic/constructors.nix" {
+    inherit pkgs stateDir runtimeDir logDir cacheDir tmpDir forceDisableUserChange processManager ids;
+  };
+
+  constructors = import "${nix-processmgmt}/examples/webapps-agnostic/constructors.nix" {
+    inherit pkgs stateDir runtimeDir logDir tmpDir forceDisableUserChange processManager webappMode ids;
+  };
+in
+rec {
+  webapp = rec {
+    port = ids.webappPorts.webapp or 0;
+    dnsName = "webapp.local";
+
+    pkg = constructors.webapp {
+      inherit port;
+    };
+
+    requiresUniqueIdsFor = [ "webappPorts" "uids" "gids" ];
+  };
+
+  nginx = rec {
+    port = ids.nginxPorts.nginx or 0;
+
+    pkg = sharedConstructors.nginxReverseProxyHostBased {
+      webapps = [ webapp ];
+      inherit port;
+    } {};
+
+    requiresUniqueIdsFor = [ "nginxPorts" "uids" "gids" ];
+  };
+}
+```
+
+To deploy a mutable multi-process image container, we can run the following
+command to build the image:
+
+```bash
+$ nix-build
+```
+
+and load it into Docker as follows:
+
+```bash
+$ docker load -i result
+```
+
+We can deploy a container instance from the image in interactive mode as
+follows:
+
+```bash
+$ docker run --name mycontainer --rm --network host -it multiprocess:test
+```
+
+On first startup, the container will carry out a bootstrap procedure that uses
+the Nix process management framework to deploy all the processes in the
+processes model.
+
+When the deployment of the system is complete, we can "connect" to the container
+instance as follows:
+
+```bash
+$ docker exec -it mycontainer /bin/bash
+```
+
+In the container, we can edit the process model (to for example, add a new
+`webapp` instance):
+
+```bash
+$ mcedit /etc/nixproc/processes.nix
+```
+
+and redeploy the new configuration with the following command:
+
+```bash
+$ nixproc-supervisord-switch
+```
+
+then the new configuration should become active without the need to restart the
+container. Moreover, when stopping the container and starting it again, the last
+deployed configuration should become active again.
+
+Building a Nix-enabled Docker container
+---------------------------------------
+One of the interesting aspects of a mutable multi-process image is that it
+provides a fully featured Nix installation in a container that can be used
+to deploy arbitrary Nix packages.
+
+It is also possible to generate an image whose only purpose is to provide a
+working Nix installation:
+
+```nix
+{ pkgs ? import <nixpkgs> { inherit system; }
+, system ? builtins.currentSystem
+}:
+
+let
+  createNixImage = import ../../nixproc/create-image-from-steps/create-nix-image.nix {
+    inherit pkgs;
+  };
+in
+createNixImage {
+  name = "foobar";
+  tag = "test";
+}
 ```
 
 Examples
