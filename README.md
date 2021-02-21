@@ -1049,7 +1049,8 @@ previous section, with the following differences:
 
 * The `exprFile` is also used for specifying the process model to deploy from,
   but a notable difference is that for mutable containers this model is copied
-  into the container and deployed from within the container.
+  into the container and deployed from within the container. If the `exprFile`
+  parameter is omitted, an empty configuration is deployed.
 * To make deploying process models model possible that also use
   `nixproc-id-assign` to automatically assign unique numeric IDs, the
   `idResourcesFile` and `idsFile` parameters can be used to copy these models

@@ -10,12 +10,14 @@ result // pkgs.lib.optionalAttrs (!(input ? bootstrap) || input.bootstrap) {
     cat > /bin/bootstrap <<EOF
     #! ${pkgs.stdenv.shell} -e
 
-    # Add nix channel configuration
+    # Configure Nix channels
     nix-channel --add ${channelURL}
     nix-channel --update
+
+    # Deploy the processes model (in a child process)
     nixproc-${input.processManager}-switch &
 
-    # Overwrite the bootstrap script, so that it simply just starts the process manager
+    # Overwrite the bootstrap script, so that it simply just starts the process manager the next time we start the container
     cat > /bin/bootstrap <<EOR
     #! ${pkgs.stdenv.shell} -e
     exec ${cmd}
