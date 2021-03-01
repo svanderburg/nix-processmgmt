@@ -1,4 +1,4 @@
-{stdenv, writeTextFile}:
+{stdenv, lib, writeTextFile}:
 {startCommand, stopCommand, path ? []}:
 
 writeTextFile {
@@ -14,7 +14,7 @@ writeTextFile {
         exit 0
     }
 
-    export PATH=${stdenv.lib.escapeShellArg (builtins.concatStringsSep ":" (map (pathComponent: "${pathComponent}/bin") path))}:$PATH
+    export PATH=${lib.escapeShellArg (builtins.concatStringsSep ":" (map (pathComponent: "${pathComponent}/bin") path))}:$PATH
 
     ${startCommand}
 

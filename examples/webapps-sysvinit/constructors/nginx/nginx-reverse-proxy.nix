@@ -1,4 +1,4 @@
-{createSystemVInitScript, stdenv, writeTextFile, nginx, runtimeDir, stateDir, cacheDir, logDir, forceDisableUserChange}:
+{createSystemVInitScript, stdenv, lib, writeTextFile, nginx, runtimeDir, stateDir, cacheDir, logDir, forceDisableUserChange}:
 {port ? 80, webapps ? [], instanceSuffix ? "", instanceName ? "nginx${instanceSuffix}"}:
 interDependencies:
 
@@ -11,7 +11,7 @@ let
   nginxCacheDir = "${cacheDir}/${instanceName}";
 in
 import ./default.nix {
-  inherit createSystemVInitScript stdenv nginx runtimeDir cacheDir forceDisableUserChange;
+  inherit createSystemVInitScript lib nginx runtimeDir cacheDir forceDisableUserChange;
   stateDir = nginxStateDir;
 } {
   inherit instanceName;
@@ -25,7 +25,7 @@ import ./default.nix {
       pid ${runtimeDir}/${instanceName}.pid;
       error_log ${nginxLogDir}/error.log;
 
-      ${stdenv.lib.optionalString (!forceDisableUserChange) ''
+      ${lib.optionalString (!forceDisableUserChange) ''
         user ${user} ${group};
       ''}
 
@@ -43,13 +43,13 @@ import ./default.nix {
         uwsgi_temp_path ${nginxCacheDir}/uwsgi;
         scgi_temp_path ${nginxCacheDir}/scgi;
 
-        ${stdenv.lib.concatMapStrings (dependency: ''
+        ${lib.concatMapStrings (dependency: ''
           upstream webapp${toString dependency.port} {
             server localhost:${toString dependency.port};
           }
         '') webapps}
 
-        ${stdenv.lib.concatMapStrings (paramName:
+        ${lib.concatMapStrings (paramName:
           let
             dependency = builtins.getAttr paramName interDependencies;
           in
@@ -71,7 +71,7 @@ import ./default.nix {
           root ${./errorpage};
         }
 
-        ${stdenv.lib.concatMapStrings (dependency: ''
+        ${lib.concatMapStrings (dependency: ''
           server {
             client_body_temp_path ${nginxCacheDir}/client_body;
             listen ${toString port};

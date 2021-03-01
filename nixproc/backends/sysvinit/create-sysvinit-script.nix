@@ -1,4 +1,5 @@
 { stdenv
+, lib
 , writeTextFile
 , daemon
 , initFunctions
@@ -31,7 +32,7 @@
   $0 start
 ''
 # Specifies which runlevels are supported
-, supportedRunlevels ? stdenv.lib.range 0 6
+, supportedRunlevels ? lib.range 0 6
 # The minimum start/stop sequence number
 , minSequence ? 0
 # The maximum start/stop sequence number
@@ -97,7 +98,7 @@ name
 
 let
   util = import ../util {
-    inherit (stdenv) lib;
+    inherit lib;
   };
 
   isCommonActivity = {activityName}:
@@ -105,13 +106,13 @@ let
 
   # Enumerates the activities in a logical order -- the common activities first, then the remaining activities in alphabetical order
   enumerateActivities = activities:
-    stdenv.lib.optional (activities ? start) "start"
-    ++ stdenv.lib.optional (activities ? stop) "stop"
-    ++ stdenv.lib.optional (activities ? reload) "reload"
-    ++ stdenv.lib.optional (activities ? restart) "restart"
-    ++ stdenv.lib.optional (activities ? status) "status"
+    lib.optional (activities ? start) "start"
+    ++ lib.optional (activities ? stop) "stop"
+    ++ lib.optional (activities ? reload) "reload"
+    ++ lib.optional (activities ? restart) "restart"
+    ++ lib.optional (activities ? status) "status"
     ++ builtins.filter (activityName: !isCommonActivity { inherit activityName; }) (builtins.attrNames activities)
-    ++ stdenv.lib.optional (activities ? "*") "*";
+    ++ lib.optional (activities ? "*") "*";
 
   _user = util.determineUser {
     inherit user forceDisableUserChange;
@@ -125,13 +126,13 @@ let
     inherit pidFile instanceName pidFilesDir;
   };
 
-  _instructions = (stdenv.lib.optionalAttrs (process != null) {
+  _instructions = (lib.optionalAttrs (process != null) {
     start = {
       activity = "Starting";
       instruction =
         let
           invocationCommand =
-            if processIsDaemon then "${startDaemon} ${stdenv.lib.optionalString (_pidFile != null) "-f -p ${_pidFile}"} ${stdenv.lib.optionalString (nice != null) "-n ${nice}"} "
+            if processIsDaemon then "${startDaemon} ${lib.optionalString (_pidFile != null) "-f -p ${_pidFile}"} ${lib.optionalString (nice != null) "-n ${nice}"} "
               + util.invokeDaemon {
                 inherit process args;
                 su = "$(type -p su)"; # the loadproc command requires a full path to an executable
@@ -151,7 +152,7 @@ let
         ''
           ${initialize}
         ''
-        + stdenv.lib.optionalString (directory != null) ''
+        + lib.optionalString (directory != null) ''
           cd ${directory}
         ''
         + ''
@@ -160,17 +161,17 @@ let
     };
     stop = {
       activity = "Stopping";
-      instruction = "${stopDaemon} ${stdenv.lib.optionalString (_pidFile != null) "-p ${_pidFile}"} ${process}";
+      instruction = "${stopDaemon} ${lib.optionalString (_pidFile != null) "-p ${_pidFile}"} ${process}";
     };
     reload = {
       activity = "Reloading";
-      instruction = "${reloadDaemon} ${stdenv.lib.optionalString (_pidFile != null) "-p ${_pidFile}"} ${process} ${reloadSignal}";
+      instruction = "${reloadDaemon} ${lib.optionalString (_pidFile != null) "-p ${_pidFile}"} ${process} ${reloadSignal}";
     };
   }) // instructions;
 
   _activities =
     let
-      convertedInstructions = stdenv.lib.mapAttrs (name: instruction:
+      convertedInstructions = lib.mapAttrs (name: instruction:
         ''
           log_info_msg "${instruction.activity} ${description}..."
           ${instruction.instruction}
@@ -178,8 +179,8 @@ let
         ''
       ) _instructions;
 
-      defaultActivities = stdenv.lib.optionalAttrs (process != null) {
-        status = "${statusCommand} ${stdenv.lib.optionalString (_pidFile != null) "-p ${_pidFile}"} ${process}";
+      defaultActivities = lib.optionalAttrs (process != null) {
+        status = "${statusCommand} ${lib.optionalString (_pidFile != null) "-p ${_pidFile}"} ${process}";
         restart = restartActivity;
       } // {
         "*" = ''
@@ -190,10 +191,10 @@ let
     in
     removeAttrs (convertedInstructions // defaultActivities // activities) removeActivities;
 
-  _defaultStart = if runlevels != [] then stdenv.lib.intersectLists runlevels supportedRunlevels
+  _defaultStart = if runlevels != [] then lib.intersectLists runlevels supportedRunlevels
     else defaultStart;
 
-  _defaultStop = if runlevels != [] then stdenv.lib.subtractLists _defaultStart supportedRunlevels
+  _defaultStop = if runlevels != [] then lib.subtractLists _defaultStart supportedRunlevels
     else defaultStop;
 
   _environment = util.appendPathToEnvironment {
@@ -209,9 +210,9 @@ let
       ## BEGIN INIT INFO
       # Provides:      ${name}
     ''
-    + stdenv.lib.optionalString (_defaultStart != []) "# Default-Start: ${toString _defaultStart}\n"
-    + stdenv.lib.optionalString (_defaultStop != []) "# Default-Stop:  ${toString _defaultStop}\n"
-    + stdenv.lib.optionalString (dependencies != []) ''
+    + lib.optionalString (_defaultStart != []) "# Default-Start: ${toString _defaultStart}\n"
+    + lib.optionalString (_defaultStop != []) "# Default-Stop:  ${toString _defaultStop}\n"
+    + lib.optionalString (dependencies != []) ''
       # Should-Start:  ${toString (map (dependency: dependency.name) dependencies)}
       # Should-Stop:   ${toString (map (dependency: dependency.name) dependencies)}
     ''
@@ -222,7 +223,7 @@ let
       ${initialInstructions}
       ${globalInstructions}
     ''
-    + stdenv.lib.optionalString (umask != null) ''
+    + lib.optionalString (umask != null) ''
       umask ${umask}
     ''
     + util.printShellEnvironmentVariables {
@@ -232,7 +233,7 @@ let
     + ''
 
       case "$1" in
-        ${stdenv.lib.concatMapStrings (activityName:
+        ${lib.concatMapStrings (activityName:
           let
             instructions = builtins.getAttr activityName _activities;
           in
@@ -271,12 +272,12 @@ stdenv.mkDerivation {
     mkdir -p init.d
     ln -s ${initdScript} init.d/${name}
 
-    ${stdenv.lib.concatMapStrings (runlevel: ''
+    ${lib.concatMapStrings (runlevel: ''
       mkdir -p rc${toString runlevel}.d
       ln -s ../init.d/${name} rc${toString runlevel}.d/S${sequenceNumberToString startSequenceNumber}${name}
     '') _defaultStart}
 
-    ${stdenv.lib.concatMapStrings (runlevel: ''
+    ${lib.concatMapStrings (runlevel: ''
       mkdir -p rc${toString runlevel}.d
       ln -s ../init.d/${name} rc${toString runlevel}.d/K${sequenceNumberToString stopSequenceNumber}${name}
     '') _defaultStop}

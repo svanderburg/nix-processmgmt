@@ -12,6 +12,10 @@ rec {
   };
 
   tests = {
+    builds = import ./tests/builds.nix {
+      inherit pkgs;
+    };
+
     multi-process-images = import ./tests/multi-process-images.nix {
       inherit nixpkgs;
     };
@@ -62,6 +66,7 @@ rec {
   release = pkgs.releaseTools.aggregate {
     name = "nix-processmgmt";
     constituents = builtins.attrValues tools
+      ++ builtins.attrValues tests.builds
       ++ builtins.attrValues tests.webapps-agnostic
       ++ [
         tests.webapps-sysvinit

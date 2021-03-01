@@ -1,5 +1,6 @@
 { createLaunchdDaemon
 , stdenv
+, lib
 , writeTextFile
 , runtimeDir ? "/var/run"
 , forceDisableUserChange
@@ -28,7 +29,7 @@
 
 let
   generateForegroundProxy = import ../util/generate-foreground-proxy.nix {
-    inherit stdenv writeTextFile;
+    inherit stdenv lib writeTextFile;
   };
 
   chainLoadUser = if initialize == "" || forceDisableUserChange then null
@@ -41,9 +42,9 @@ let
       user = chainLoadUser;
       executable = foregroundProcess;
       inherit name initialize runtimeDir stdenv;
-    } // stdenv.lib.optionalAttrs (instanceName != null) {
+    } // lib.optionalAttrs (instanceName != null) {
       inherit instanceName;
-    } // stdenv.lib.optionalAttrs (pidFile != null) {
+    } // lib.optionalAttrs (pidFile != null) {
       inherit pidFile;
     })
   else generateForegroundProxy ({
@@ -51,34 +52,34 @@ let
     user = chainLoadUser;
     executable = daemon;
     inherit name initialize runtimeDir stdenv;
-  } // stdenv.lib.optionalAttrs (instanceName != null) {
+  } // lib.optionalAttrs (instanceName != null) {
     inherit instanceName;
-  } // stdenv.lib.optionalAttrs (pidFile != null) {
+  } // lib.optionalAttrs (pidFile != null) {
     inherit pidFile;
   });
   ProgramArguments = [ Program ] ++ (if foregroundProcess != null then foregroundProcessArgs else daemonArgs);
 
   generatedTargetSpecificArgs = {
     inherit name credentials postInstall Program;
-  } // stdenv.lib.optionalAttrs (ProgramArguments != [ Program ]) {
+  } // lib.optionalAttrs (ProgramArguments != [ Program ]) {
     inherit ProgramArguments;
-  } // stdenv.lib.optionalAttrs (environment != {}) {
+  } // lib.optionalAttrs (environment != {}) {
     EnvironmentVariables = environment;
-  } // stdenv.lib.optionalAttrs (path != []) {
+  } // lib.optionalAttrs (path != []) {
     inherit path;
-  } // stdenv.lib.optionalAttrs (directory != null) {
+  } // lib.optionalAttrs (directory != null) {
     WorkingDirectory = directory;
-  } // stdenv.lib.optionalAttrs (umask != null) {
+  } // lib.optionalAttrs (umask != null) {
     Umask = umask;
-  } // stdenv.lib.optionalAttrs (nice != null) {
+  } // lib.optionalAttrs (nice != null) {
     Nice = nice;
-  } // stdenv.lib.optionalAttrs (user != null && chainLoadUser == null) {
+  } // lib.optionalAttrs (user != null && chainLoadUser == null) {
     UserName = user;
   };
 
   targetSpecificArgs =
     if builtins.isFunction overrides then overrides generatedTargetSpecificArgs
-    else stdenv.lib.recursiveUpdate generatedTargetSpecificArgs overrides;
+    else lib.recursiveUpdate generatedTargetSpecificArgs overrides;
 
   daemonConfig = createLaunchdDaemon targetSpecificArgs;
 in

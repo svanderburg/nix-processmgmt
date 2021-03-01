@@ -1,4 +1,4 @@
-{createSystemVInitScript, stdenv, nginx, stateDir, runtimeDir, cacheDir, forceDisableUserChange}:
+{createSystemVInitScript, lib, nginx, stateDir, runtimeDir, cacheDir, forceDisableUserChange}:
 {configFile, dependencies ? [], instanceSuffix ? "", instanceName ? "nginx${instanceSuffix}"}:
 
 let
@@ -14,7 +14,7 @@ createSystemVInitScript {
     mkdir -p ${nginxLogDir}
     mkdir -p ${nginxCacheDir}
 
-    ${stdenv.lib.optionalString (!forceDisableUserChange) ''
+    ${lib.optionalString (!forceDisableUserChange) ''
       chown ${user}:${group} ${nginxLogDir}
     ''}
   '';

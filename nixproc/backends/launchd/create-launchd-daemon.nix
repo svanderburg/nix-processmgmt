@@ -1,5 +1,6 @@
 { writeTextFile
 , stdenv
+, lib
 , createCredentials
 
 # Specifies whether user changing functionality should be disabled or not
@@ -24,11 +25,11 @@ name
 
 let
   util = import ../util {
-    inherit (stdenv) lib;
+    inherit lib;
   };
 
   environment = util.appendPathToEnvironment {
-    environment = stdenv.lib.mapAttrs (name: value: toString value) args.EnvironmentVariables or {}; # Convert all environment variables to strings
+    environment = lib.mapAttrs (name: value: toString value) args.EnvironmentVariables or {}; # Convert all environment variables to strings
     inherit path;
   };
 
@@ -36,13 +37,13 @@ let
 
   properties = {
     Label = label;
-  } // removeAttrs args ([ "name" "path" "credentials" "postInstall" ] ++ stdenv.lib.optional forceDisableUserChange "UserName") // stdenv.lib.optionalAttrs (environment != {}) {
+  } // removeAttrs args ([ "name" "path" "credentials" "postInstall" ] ++ lib.optional forceDisableUserChange "UserName") // lib.optionalAttrs (environment != {}) {
     EnvironmentVariables = environment;
   };
 
   attrsToPList = attrs:
     "<dict>\n"
-    + stdenv.lib.concatMapStrings (name:
+    + lib.concatMapStrings (name:
       let
         value = builtins.getAttr name attrs;
       in
@@ -55,7 +56,7 @@ let
 
   listToPList = list:
     "<array>\n"
-    + stdenv.lib.concatMapStrings (value: exprToPList value + "\n") list
+    + lib.concatMapStrings (value: exprToPList value + "\n") list
     + "</array>\n";
 
   exprToPList = expr:
@@ -68,7 +69,7 @@ let
     else if exprType == "float" then "<real>${toString expr}</real>"
     else if exprType == "string" then "<string>${expr}</string>"
     else if exprType == "set" then
-      if stdenv.lib.isDerivation expr
+      if lib.isDerivation expr
       then "<string>${expr}</string>"
       else attrsToPList expr
     else if exprType == "list" then listToPList expr

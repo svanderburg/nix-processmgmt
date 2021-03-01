@@ -1,4 +1,4 @@
-{ createDockerContainer, dockerTools, stdenv, writeTextFile, findutils, glibc, dysnomia, basePackages, runtimeDir, stateDir, forceDisableUserChange, createCredentials }:
+{ createDockerContainer, dockerTools, stdenv, lib, writeTextFile, findutils, glibc, dysnomia, basePackages, runtimeDir, stateDir, forceDisableUserChange, createCredentials }:
 
 { name
 , description
@@ -26,13 +26,13 @@
 
 let
   util = import ../util {
-    inherit (stdenv) lib;
+    inherit lib;
   };
 
   commonTools = (import ../../../tools {}).common;
 
   generateForegroundProxy = import ../util/generate-foreground-proxy.nix {
-    inherit stdenv writeTextFile;
+    inherit stdenv lib writeTextFile;
   };
 
   cmd = if foregroundProcess != null
@@ -45,9 +45,9 @@ let
             wrapDaemon = false;
             executable = foregroundProcess;
             inherit name initialize runtimeDir stdenv;
-          } // stdenv.lib.optionalAttrs (instanceName != null) {
+          } // lib.optionalAttrs (instanceName != null) {
             inherit instanceName;
-          } // stdenv.lib.optionalAttrs (pidFile != null) {
+          } // lib.optionalAttrs (pidFile != null) {
             inherit pidFile;
           });
         in
@@ -58,9 +58,9 @@ let
           wrapDaemon = true;
           executable = daemon;
           inherit name runtimeDir initialize stdenv;
-        } // stdenv.lib.optionalAttrs (instanceName != null) {
+        } // lib.optionalAttrs (instanceName != null) {
           inherit instanceName;
-        } // stdenv.lib.optionalAttrs (pidFile != null) {
+        } // lib.optionalAttrs (pidFile != null) {
           inherit pidFile;
         });
       in
@@ -86,16 +86,16 @@ let
     tag = "latest";
 
     runAsRoot = import ../docker/setup.nix {
-      inherit dockerTools commonTools stdenv dysnomia findutils glibc stateDir runtimeDir forceDisableUserChange credentialsSpec;
+      inherit dockerTools commonTools lib dysnomia findutils glibc stateDir runtimeDir forceDisableUserChange credentialsSpec;
     };
 
     config = {
       Cmd = cmdWithoutContext;
-    } // stdenv.lib.optionalAttrs (_environment != {}) {
+    } // lib.optionalAttrs (_environment != {}) {
       Env = map (varName: "${varName}=${toString (builtins.getAttr varName _environment)}") (builtins.attrNames _environment);
-    } // stdenv.lib.optionalAttrs (directory != null) {
+    } // lib.optionalAttrs (directory != null) {
       WorkingDir = directory;
-    } // stdenv.lib.optionalAttrs (_user != null) {
+    } // lib.optionalAttrs (_user != null) {
       User = _user;
     };
   };
@@ -104,7 +104,7 @@ let
     if overrides ? image
     then
       if builtins.isFunction overrides.image then overrides.image generatedDockerImageArgs
-      else stdenv.lib.recursiveUpdate generatedDockerImageArgs overrides.image
+      else lib.recursiveUpdate generatedDockerImageArgs overrides.image
     else generatedDockerImageArgs;
 
   dockerImage = dockerTools.buildImage dockerImageArgs;
@@ -121,7 +121,7 @@ let
     if overrides ? container
     then
       if builtins.isFunction overrides.container then overrides.container generatedDockerContainerArgs
-      else stdenv.lib.recursiveUpdate generatedDockerContainerArgs overrides.container
+      else lib.recursiveUpdate generatedDockerContainerArgs overrides.container
     else generatedDockerContainerArgs;
 in
 createDockerContainer dockerContainerArgs

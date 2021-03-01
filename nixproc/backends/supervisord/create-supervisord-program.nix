@@ -1,4 +1,4 @@
-{writeTextFile, stdenv, createCredentials, supervisor, basePackages, forceDisableUserChange ? false, runtimeDir}:
+{writeTextFile, stdenv, lib, createCredentials, supervisor, basePackages, forceDisableUserChange ? false, runtimeDir}:
 
 {
 # A name that identifies the process instance
@@ -25,15 +25,15 @@ name
 
 let
   util = import ../util {
-    inherit (stdenv) lib;
+    inherit lib;
   };
 
-  properties = removeAttrs params ([ "name" "command" "useProxy" "pidFile" "path" "environment" "dependencies" "credentials" "postInstall" ] ++ stdenv.lib.optional forceDisableUserChange "user");
+  properties = removeAttrs params ([ "name" "command" "useProxy" "pidFile" "path" "environment" "dependencies" "credentials" "postInstall" ] ++ lib.optional forceDisableUserChange "user");
 
   priority = if dependencies == [] then 1
     else builtins.head (builtins.sort (a: b: a > b) (map (dependency: dependency.priority) dependencies)) + 1;
 
-  _command = (stdenv.lib.optionalString useProxy "${supervisor}/bin/pidproxy ${runtimeDir}/${pidFile} ") + command;
+  _command = (lib.optionalString useProxy "${supervisor}/bin/pidproxy ${runtimeDir}/${pidFile} ") + command;
 
   _environment = util.appendPathToEnvironment {
     inherit environment;
@@ -47,14 +47,14 @@ let
       command=${_command}
       priority=${toString priority}
     ''
-    + (if _environment == {} then "" else "environment=" + stdenv.lib.concatMapStringsSep "," (name:
+    + (if _environment == {} then "" else "environment=" + lib.concatMapStringsSep "," (name:
       let
         value = builtins.getAttr name _environment;
       in
-      "${name}=\"${stdenv.lib.escape [ "\"" ] (toString value)}\""
+      "${name}=\"${lib.escape [ "\"" ] (toString value)}\""
     ) (builtins.attrNames _environment)) +
     "\n"
-    + stdenv.lib.concatMapStrings (name:
+    + lib.concatMapStrings (name:
       let
         value = builtins.getAttr name properties;
       in

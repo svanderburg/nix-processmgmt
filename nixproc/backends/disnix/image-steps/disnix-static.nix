@@ -2,7 +2,7 @@
 
 let
   generateCompoundProxy = import ../../util/generate-compound-proxy.nix {
-    inherit (pkgs) stdenv writeTextFile;
+    inherit (pkgs) stdenv lib writeTextFile;
   };
 
   disnixDataDir = "${pkgs.disnix}/share/disnix";

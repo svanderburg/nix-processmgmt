@@ -1,4 +1,4 @@
-{ createSystemVInitScript, stdenv }:
+{ createSystemVInitScript, lib }:
 
 { name
 , description
@@ -29,12 +29,12 @@ let
     process = if daemon != null then daemon else foregroundProcess;
     processIsDaemon = daemon != null;
     args = if daemon != null then daemonArgs else foregroundProcessArgs;
-  } // stdenv.lib.optionalAttrs (pidFile != null) {
+  } // lib.optionalAttrs (pidFile != null) {
     inherit pidFile;
   };
 
   targetSpecificArgs =
     if builtins.isFunction overrides then overrides generatedTargetSpecificArgs
-    else stdenv.lib.recursiveUpdate generatedTargetSpecificArgs overrides;
+    else lib.recursiveUpdate generatedTargetSpecificArgs overrides;
 in
 createSystemVInitScript targetSpecificArgs

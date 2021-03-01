@@ -19,7 +19,7 @@ let
 
       properties = builtins.fromJSON (builtins.readFile configFile);
 
-      normalizedProperties = properties // pkgs.stdenv.lib.optionalAttrs (properties ? dependencies) {
+      normalizedProperties = properties // pkgs.lib.optionalAttrs (properties ? dependencies) {
         dependencies = map (dependency: createManagedProcessFromConfig "${dependency}/${builtins.substring 33 (builtins.stringLength dependency) (baseNameOf dependency)}.json") properties.dependencies;
       };
     in

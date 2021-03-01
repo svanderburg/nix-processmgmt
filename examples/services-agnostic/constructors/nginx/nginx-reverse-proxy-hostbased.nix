@@ -1,4 +1,4 @@
-{createManagedProcess, stdenv, writeTextFile, nginx, runtimeDir, stateDir, cacheDir, forceDisableUserChange}:
+{createManagedProcess, stdenv, lib, writeTextFile, nginx, runtimeDir, stateDir, cacheDir, forceDisableUserChange}:
 {port ? 80, webapps ? [], instanceSuffix ? "", instanceName ? "nginx${instanceSuffix}"}:
 interDependencies:
 
@@ -11,7 +11,7 @@ let
   nginxCacheDir = "${cacheDir}/${instanceName}";
 in
 import ./default.nix {
-  inherit createManagedProcess stdenv nginx stateDir forceDisableUserChange runtimeDir cacheDir;
+  inherit createManagedProcess lib nginx stateDir forceDisableUserChange runtimeDir cacheDir;
 } {
   inherit instanceName;
 
@@ -24,7 +24,7 @@ import ./default.nix {
       pid ${runtimeDir}/${instanceName}.pid;
       error_log ${nginxLogDir}/error.log;
 
-      ${stdenv.lib.optionalString (!forceDisableUserChange) ''
+      ${lib.optionalString (!forceDisableUserChange) ''
         user ${user} ${group};
       ''}
 
@@ -42,13 +42,13 @@ import ./default.nix {
         uwsgi_temp_path ${nginxCacheDir}/uwsgi;
         scgi_temp_path ${nginxCacheDir}/scgi;
 
-        ${stdenv.lib.concatMapStrings (dependency: ''
+        ${lib.concatMapStrings (dependency: ''
           upstream webapp${toString dependency.port} {
             server localhost:${toString dependency.port};
           }
         '') webapps}
 
-        ${stdenv.lib.concatMapStrings (paramName:
+        ${lib.concatMapStrings (paramName:
           let
             dependency = builtins.getAttr paramName interDependencies;
           in
@@ -69,7 +69,7 @@ import ./default.nix {
           root ${./errorpage};
         }
 
-        ${stdenv.lib.concatMapStrings (dependency: ''
+        ${lib.concatMapStrings (dependency: ''
           server {
             listen ${toString port};
             server_name ${dependency.dnsName};

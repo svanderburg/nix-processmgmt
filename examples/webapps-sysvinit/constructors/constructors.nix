@@ -10,11 +10,11 @@
 
 let
   createSystemVInitScript = import ../../../nixproc/backends/sysvinit/create-sysvinit-script.nix {
-    inherit (pkgs) stdenv writeTextFile daemon;
+    inherit (pkgs) stdenv writeTextFile lib daemon;
     inherit runtimeDir logDir tmpDir forceDisableUserChange;
 
     createCredentials = import ../../../nixproc/create-credentials {
-      inherit (pkgs) stdenv;
+      inherit (pkgs) stdenv lib;
       inherit ids forceDisableUserChange;
     };
 
@@ -32,6 +32,6 @@ in
 
   nginxReverseProxy = import ./nginx/nginx-reverse-proxy.nix {
     inherit createSystemVInitScript stateDir logDir cacheDir runtimeDir forceDisableUserChange;
-    inherit (pkgs) stdenv writeTextFile nginx;
+    inherit (pkgs) stdenv lib writeTextFile nginx;
   };
 }

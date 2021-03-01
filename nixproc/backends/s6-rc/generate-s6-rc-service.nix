@@ -1,4 +1,4 @@
-{ s6, s6-rc, basePackages, stdenv, writeTextFile, execline, tmpDir, runtimeDir, forceDisableUserChange }:
+{ s6, s6-rc, basePackages, stdenv, lib, writeTextFile, execline, tmpDir, runtimeDir, forceDisableUserChange }:
 
 { name
 , description
@@ -23,7 +23,7 @@
 
 let
   util = import ../util {
-    inherit (stdenv) lib;
+    inherit lib;
   };
 
   s6-rcBasePackages = basePackages ++ [ execline s6 ];
@@ -49,7 +49,7 @@ let
     if _environment == {} then null
     else writeTextFile {
       name = "envfile";
-      text = stdenv.lib.concatMapStrings (envName:
+      text = lib.concatMapStrings (envName:
         let
           envValue = builtins.getAttr envName _environment;
         in
@@ -74,22 +74,22 @@ let
     #!${execline}/bin/execlineb -P
 
   ''
-  + stdenv.lib.optionalString (envFile != null) ''
+  + lib.optionalString (envFile != null) ''
     envfile ${envFile}
   ''
-  + stdenv.lib.optionalString (initializeScript != null) ''
+  + lib.optionalString (initializeScript != null) ''
     foreground { ${initializeScript} }
   ''
-  + stdenv.lib.optionalString (umask != null) ''
+  + lib.optionalString (umask != null) ''
     execline-umask ${umask}
   ''
-  + stdenv.lib.optionalString (directory != null) ''
+  + lib.optionalString (directory != null) ''
     execline-cd ${directory}
   ''
-  + stdenv.lib.optionalString (_user != null) ''
+  + lib.optionalString (_user != null) ''
     s6-setuidgid ${_user}
   ''
-  + stdenv.lib.optionalString (nice != null) ''
+  + lib.optionalString (nice != null) ''
     nice -n ${toString nice}
   ''
   # Always forward standard error so that it can be captured by the s6-log service
@@ -98,7 +98,7 @@ let
   '';
 
   escapeArgs = args:
-    stdenv.lib.concatMapStringsSep " " (arg: "\"${stdenv.lib.replaceStrings ["\""] ["\\\""] (toString arg)}\"") args;
+    lib.concatMapStringsSep " " (arg: "\"${lib.replaceStrings ["\""] ["\\\""] (toString arg)}\"") args;
 in
 if foregroundProcess != null then
   let
@@ -115,7 +115,7 @@ if foregroundProcess != null then
 
     targetSpecificArgs =
       if builtins.isFunction overrides then overrides generatedTargetSpecificArgs
-      else stdenv.lib.recursiveUpdate generatedTargetSpecificArgs overrides;
+      else lib.recursiveUpdate generatedTargetSpecificArgs overrides;
   in
   s6-rc.createLongRunService targetSpecificArgs
 else if daemon != null then
@@ -143,7 +143,7 @@ else if daemon != null then
 
     targetSpecificArgs =
       if builtins.isFunction overrides then overrides generatedTargetSpecificArgs
-      else stdenv.lib.recursiveUpdate generatedTargetSpecificArgs overrides;
+      else lib.recursiveUpdate generatedTargetSpecificArgs overrides;
   in
   s6-rc.createOneShotService targetSpecificArgs
 else throw "No foreground process or daemon known!"

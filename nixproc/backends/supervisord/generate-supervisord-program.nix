@@ -1,4 +1,4 @@
-{ createSupervisordProgram, stdenv, writeTextFile, runtimeDir, forceDisableUserChange }:
+{ createSupervisordProgram, stdenv, lib, writeTextFile, runtimeDir, forceDisableUserChange }:
 
 { name
 , description
@@ -23,7 +23,7 @@
 
 let
   generateForegroundProxy = import ../util/generate-foreground-proxy.nix {
-    inherit stdenv writeTextFile;
+    inherit stdenv lib writeTextFile;
   };
 
   chainLoadUser = if initialize == "" || forceDisableUserChange then null
@@ -37,36 +37,36 @@ let
         wrapDaemon = false;
         executable = foregroundProcess;
         inherit name initialize runtimeDir stdenv;
-      } // stdenv.lib.optionalAttrs (instanceName != null) {
+      } // lib.optionalAttrs (instanceName != null) {
         inherit instanceName;
-      } // stdenv.lib.optionalAttrs (pidFile != null) {
+      } // lib.optionalAttrs (pidFile != null) {
         inherit pidFile;
-      })) + " ${stdenv.lib.escapeShellArgs foregroundProcessArgs}"
+      })) + " ${lib.escapeShellArgs foregroundProcessArgs}"
     else (generateForegroundProxy ({
       wrapDaemon = true;
       user = chainLoadUser;
       executable = daemon;
       inherit name initialize runtimeDir stdenv;
-    } // stdenv.lib.optionalAttrs (instanceName != null) {
+    } // lib.optionalAttrs (instanceName != null) {
       inherit instanceName;
-    } // stdenv.lib.optionalAttrs (pidFile != null) {
+    } // lib.optionalAttrs (pidFile != null) {
       inherit pidFile;
-    })) + " ${stdenv.lib.escapeShellArgs daemonArgs}";
+    })) + " ${lib.escapeShellArgs daemonArgs}";
 
   generatedTargetSpecificArgs = {
     inherit name command path environment dependencies credentials postInstall;
-  } // stdenv.lib.optionalAttrs (umask != null) {
+  } // lib.optionalAttrs (umask != null) {
     inherit umask;
-  } // stdenv.lib.optionalAttrs (nice != null) {
+  } // lib.optionalAttrs (nice != null) {
     inherit nice;
-  } // stdenv.lib.optionalAttrs (pidFile != null) {
+  } // lib.optionalAttrs (pidFile != null) {
     inherit pidFile;
-  } // stdenv.lib.optionalAttrs (user != null && chainLoadUser == null) {
+  } // lib.optionalAttrs (user != null && chainLoadUser == null) {
     inherit user;
   };
 
   targetSpecificArgs =
     if builtins.isFunction overrides then overrides generatedTargetSpecificArgs
-    else stdenv.lib.recursiveUpdate generatedTargetSpecificArgs overrides;
+    else lib.recursiveUpdate generatedTargetSpecificArgs overrides;
 in
 createSupervisordProgram targetSpecificArgs

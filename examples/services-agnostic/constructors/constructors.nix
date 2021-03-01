@@ -22,7 +22,7 @@ in
 
   nginxReverseProxyHostBased = import ./nginx/nginx-reverse-proxy-hostbased.nix {
     inherit createManagedProcess stateDir runtimeDir cacheDir forceDisableUserChange;
-    inherit (pkgs) stdenv writeTextFile nginx;
+    inherit (pkgs) stdenv lib writeTextFile nginx;
   };
 
   supervisord = import ./supervisord {

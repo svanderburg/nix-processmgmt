@@ -1,11 +1,11 @@
-{stdenv, execline, logDir, logDirUser, logDirGroup, forceDisableUserChange}:
+{stdenv, lib, execline, logDir, logDirUser, logDirGroup, forceDisableUserChange}:
 {name}:
 
 let
   serviceName = "${name}-log";
 
   util = import ./util.nix {
-    inherit (stdenv) lib;
+    inherit lib;
   };
 
   serviceLogDir = "${logDir}/s6-log/${name}";
@@ -24,7 +24,7 @@ stdenv.mkDerivation {
     #!${execline}/bin/execlineb -P
 
     foreground { mkdir -p ${serviceLogDir} }
-    ${stdenv.lib.optionalString (!forceDisableUserChange) ''
+    ${lib.optionalString (!forceDisableUserChange) ''
       foreground { chown -R ${logDirUser}:${logDirGroup} ${serviceLogDir} }
       s6-setuidgid ${logDirUser}
     ''}

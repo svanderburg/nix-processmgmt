@@ -1,4 +1,4 @@
-{createManagedProcess, stdenv, nginx, stateDir, runtimeDir, cacheDir, forceDisableUserChange}:
+{createManagedProcess, lib, nginx, stateDir, runtimeDir, cacheDir, forceDisableUserChange}:
 {configFile, dependencies ? [], instanceSuffix ? "", instanceName ? "nginx${instanceSuffix}"}:
 
 let
@@ -15,7 +15,7 @@ createManagedProcess {
   initialize = ''
     mkdir -p ${nginxLogDir}
     mkdir -p ${nginxCacheDir}
-    ${stdenv.lib.optionalString (!forceDisableUserChange) ''
+    ${lib.optionalString (!forceDisableUserChange) ''
       chown ${user}:${group} ${nginxLogDir}
       chown ${user}:${group} ${nginxCacheDir}
     ''}

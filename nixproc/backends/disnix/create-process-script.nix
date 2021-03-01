@@ -1,4 +1,4 @@
-{stdenv, createCredentials, forceDisableUserChange}:
+{stdenv, lib, createCredentials, forceDisableUserChange}:
 
 { name
 , process
@@ -17,7 +17,7 @@ stdenv.mkDerivation {
     mkdir -p $out/etc/dysnomia/process
     cat > $out/etc/dysnomia/process/${name} <<EOF
     process=${process}
-    ${stdenv.lib.optionalString (pidFile != null) "pidFile=${pidFile}"}
+    ${lib.optionalString (pidFile != null) "pidFile=${pidFile}"}
     EOF
 
     ln -s ${credentialsSpec}/dysnomia-support $out/dysnomia-support

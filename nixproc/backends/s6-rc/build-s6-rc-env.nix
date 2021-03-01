@@ -23,7 +23,7 @@ let
   processes = if exprFile == null then {} else processesFun processesArgs;
 
   createServiceBundle = import ./create-service-bundle.nix {
-    inherit (pkgs) stdenv;
+    inherit (pkgs) stdenv lib;
   };
 
   processesList = map (processName:

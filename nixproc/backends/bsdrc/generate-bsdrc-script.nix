@@ -1,4 +1,4 @@
-{ createBSDRCScript, stdenv }:
+{ createBSDRCScript, lib }:
 
 { name
 , description
@@ -31,14 +31,14 @@ let
     command = if daemon != null then daemon else foregroundProcess;
     commandIsDaemon = daemon != null;
     commandArgs = if daemon != null then daemonArgs else foregroundProcessArgs;
-  } // stdenv.lib.optionalAttrs (pidFile != null) {
+  } // lib.optionalAttrs (pidFile != null) {
     inherit pidFile;
-  } // stdenv.lib.optionalAttrs (initialize != "") {
+  } // lib.optionalAttrs (initialize != "") {
     commands.start.pre = initialize;
   };
 
   targetSpecificArgs =
     if builtins.isFunction overrides then overrides generatedTargetSpecificArgs
-    else stdenv.lib.recursiveUpdate generatedTargetSpecificArgs overrides;
+    else lib.recursiveUpdate generatedTargetSpecificArgs overrides;
 in
 createBSDRCScript targetSpecificArgs

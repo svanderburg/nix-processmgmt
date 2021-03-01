@@ -1,5 +1,6 @@
 { createCygrunsrvParams
 , stdenv
+, lib
 , writeTextFile
 , runtimeDir ? "/var/run"
 }:
@@ -33,7 +34,7 @@
 
 let
   generateForegroundProxy = import ../util/generate-foreground-proxy.nix {
-    inherit stdenv writeTextFile;
+    inherit stdenv lib writeTextFile;
   };
 
   generatedTargetSpecificArgs = {
@@ -59,6 +60,6 @@ let
 
   targetSpecificArgs =
     if builtins.isFunction overrides then overrides generatedTargetSpecificArgs
-    else stdenv.lib.recursiveUpdate generatedTargetSpecificArgs overrides;
+    else lib.recursiveUpdate generatedTargetSpecificArgs overrides;
 in
 createCygrunsrvParams targetSpecificArgs

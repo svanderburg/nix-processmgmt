@@ -1,4 +1,4 @@
-{stdenv}:
+{stdenv, lib}:
 
 { name
 , dockerImage
@@ -20,8 +20,8 @@ let
     else throw "Unknown type for the dockerCreateParameters";
 
   _dockerCreateParameters = dockerCreateParametersList
-    ++ stdenv.lib.optional useHostNixStore { name = "volume"; value = "/nix/store:/nix/store"; }
-    ++ stdenv.lib.optional useHostNetwork { name = "network"; value = "host"; }
+    ++ lib.optional useHostNixStore { name = "volume"; value = "/nix/store:/nix/store"; }
+    ++ lib.optional useHostNetwork { name = "network"; value = "host"; }
     ++ map (mapStateDirVolume: { name = "volume"; value = "${mapStateDirVolume}:${mapStateDirVolume}"; }) mapStateDirVolumes;
 
   priority = if dependencies == [] then 1
@@ -42,7 +42,7 @@ stdenv.mkDerivation {
     EOF
 
     cat > $out/${name}-docker-createparams <<EOF
-    ${stdenv.lib.concatMapStringsSep "\n" (nameValuePair:
+    ${lib.concatMapStringsSep "\n" (nameValuePair:
       "${if builtins.stringLength nameValuePair.name > 1 then "--" else "-"}${nameValuePair.name}"
       + (if nameValuePair ? value then "\n${toString nameValuePair.value}" else "")
     ) _dockerCreateParameters}
@@ -50,17 +50,17 @@ stdenv.mkDerivation {
 
     touch $out/${sequenceNumberToString priority}-${name}-docker-priority
 
-    ${stdenv.lib.optionalString useHostNixStore ''
+    ${lib.optionalString useHostNixStore ''
       # Add configuration files with Nix store paths used from the host system so that they will not be garbage collected
-      ${stdenv.lib.optionalString (cmd != "") ''
+      ${lib.optionalString (cmd != "") ''
         cat > $out/${name}-docker-cmd <<EOF
         ${toString cmd}
         EOF
       ''}
 
-      ${stdenv.lib.optionalString (storePaths != []) ''
+      ${lib.optionalString (storePaths != []) ''
         cat > $out/${name}-storepaths <<EOF
-        ${stdenv.lib.concatMapStrings (storePath: "${storePath}\n") storePaths}
+        ${lib.concatMapStrings (storePath: "${storePath}\n") storePaths}
         EOF
       ''}
     ''}

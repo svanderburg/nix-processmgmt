@@ -1,5 +1,6 @@
 { writeTextFile
 , stdenv
+, lib
 , createCredentials
 
 # Path to the rc.subr script
@@ -87,7 +88,7 @@ assert command == null -> commands ? start && commands ? stop;
 
 let
   util = import ../util {
-    inherit (stdenv) lib;
+    inherit lib;
   };
 
   extraCommands = builtins.attrNames (removeAttrs commands builtinCommands);
@@ -103,8 +104,8 @@ let
 
   _command = if commandIsDaemon then command else "daemon";
   _commandArgs = if commandIsDaemon then commandArgs else
-    stdenv.lib.optionals (pidFile != null) [ "-p" pidFile ]
-    ++ stdenv.lib.optionals (outputLogFile != null) [ "-o" outputLogFile ]
+    lib.optionals (pidFile != null) [ "-p" pidFile ]
+    ++ lib.optionals (outputLogFile != null) [ "-o" outputLogFile ]
     ++ [ command ]
     ++ commandArgs;
 
@@ -112,11 +113,11 @@ let
 
   envFile = if environment == {} then null else writeTextFile {
     name = "${name}-envfile";
-    text = stdenv.lib.concatMapStrings (name:
+    text = lib.concatMapStrings (name:
       let
         value = builtins.getAttr name environment;
       in
-      ''${name}=${stdenv.lib.escapeShellArg value}
+      ''${name}=${lib.escapeShellArg value}
       ''
     ) (builtins.attrNames environment);
   };
@@ -135,107 +136,107 @@ let
     text = ''
       #!/bin/sh
     ''
-    + stdenv.lib.optionalString (provides != []) ''
+    + lib.optionalString (provides != []) ''
       # PROVIDE: ${toString provides}
     ''
-    + stdenv.lib.optionalString (_requires != []) ''
+    + lib.optionalString (_requires != []) ''
       # REQUIRE: ${toString _requires}
     ''
-    + stdenv.lib.optionalString (keywords != []) ''
+    + lib.optionalString (keywords != []) ''
       # KEYWORD: ${toString keywords}
     '' +
     ''
       . ${rcSubr}
 
       name="${name}"
-    '' + stdenv.lib.optionalString (rcvar != null) ''
+    '' + lib.optionalString (rcvar != null) ''
       rcvar=''${name}_${rcvar}
     ''
     + ''
 
       load_rc_config $name
-      ${stdenv.lib.concatMapStrings (rcvarName: ''
+      ${lib.concatMapStrings (rcvarName: ''
         : ''${name}_${rcvarName}:=${toString builtins.getAttr rcvarName rcvarsDefaults}
       '') (builtins.attrNames rcvarsDefaults)}
 
     ''
-    + stdenv.lib.optionalString (_command != null) ''
+    + lib.optionalString (_command != null) ''
       command=${_command}
     ''
-    + stdenv.lib.optionalString (_commandArgs != []) ''
-      command_args="${stdenv.lib.escapeShellArgs _commandArgs}"
+    + lib.optionalString (_commandArgs != []) ''
+      command_args="${lib.escapeShellArgs _commandArgs}"
     ''
-    + stdenv.lib.optionalString (requiredDirs != []) ''
+    + lib.optionalString (requiredDirs != []) ''
       required_dirs="${toString requiredDirs}"
     ''
-    + stdenv.lib.optionalString (requiredFiles != []) ''
+    + lib.optionalString (requiredFiles != []) ''
       required_files="${toString requiredFiles}"
     ''
-    + stdenv.lib.optionalString (requiredVars != []) ''
+    + lib.optionalString (requiredVars != []) ''
       required_vars="${toString requiredVars}"
     ''
-    + stdenv.lib.optionalString (requiredModules != []) ''
+    + lib.optionalString (requiredModules != []) ''
       required_modules="${toString requiredModules}"
     ''
-    + stdenv.lib.optionalString (_pidFile != null) ''
+    + lib.optionalString (_pidFile != null) ''
       pidfile="${_pidFile}"
     ''
-    + stdenv.lib.optionalString (reloadSignal != defaultReloadSignal) ''
+    + lib.optionalString (reloadSignal != defaultReloadSignal) ''
       sig_reload="${reloadSignal}"
     ''
-    + stdenv.lib.optionalString (stopSignal != defaultStopSignal) ''
+    + lib.optionalString (stopSignal != defaultStopSignal) ''
       sig_stop="${stopSignal}"
     ''
-    + stdenv.lib.optionalString (nice != null) ''
+    + lib.optionalString (nice != null) ''
       ${name}_nice=${toString nice}
     ''
-    + stdenv.lib.optionalString (directory != null) ''
+    + lib.optionalString (directory != null) ''
       ${name}_chdir=${directory}
     ''
-    + stdenv.lib.optionalString (_user != null) ''
+    + lib.optionalString (_user != null) ''
       ${name}_user=${_user}
     ''
-    + stdenv.lib.optionalString (envFile != null) ''
+    + lib.optionalString (envFile != null) ''
       ${name}_env_file=${envFile}
     ''
-    + stdenv.lib.optionalString (extraCommands != []) ''
+    + lib.optionalString (extraCommands != []) ''
       extra_commands="${toString extraCommands}"
     ''
-    + stdenv.lib.concatMapStrings (commandName:
+    + lib.concatMapStrings (commandName:
       let
         command = builtins.getAttr commandName commands;
       in
-      stdenv.lib.optionalString (command ? pre) ''${commandName}_precmd=''${name}_pre${commandName}
+      lib.optionalString (command ? pre) ''${commandName}_precmd=''${name}_pre${commandName}
       ''
-      + stdenv.lib.optionalString (command ? implementation) ''${commandName}_cmd=''${name}_${commandName}
+      + lib.optionalString (command ? implementation) ''${commandName}_cmd=''${name}_${commandName}
       ''
-      + stdenv.lib.optionalString (command ? post) ''${commandName}_postcmd=''${name}_post${commandName}
+      + lib.optionalString (command ? post) ''${commandName}_postcmd=''${name}_post${commandName}
       ''
     ) (builtins.attrNames commands)
-    + stdenv.lib.optionalString (path != []) ''
+    + lib.optionalString (path != []) ''
 
       PATH=${util.composePathEnvVariable { inherit path; }}
       export PATH
     ''
     + "\n"
-    + stdenv.lib.concatMapStrings (commandName:
+    + lib.concatMapStrings (commandName:
       let
         command = builtins.getAttr commandName commands;
       in
       ''
-        ${stdenv.lib.optionalString (command ? pre) ''
+        ${lib.optionalString (command ? pre) ''
           ${name}_pre${commandName}()
           {
               ${command.pre}
           }
         ''}
-        ${stdenv.lib.optionalString (command ? implementation) ''
+        ${lib.optionalString (command ? implementation) ''
           ${name}_${commandName}()
           {
               ${command.implementation}
           }
         ''}
-        ${stdenv.lib.optionalString (command ? post) ''
+        ${lib.optionalString (command ? post) ''
           ${name}_post${commandName}()
           {
               ${command.post}

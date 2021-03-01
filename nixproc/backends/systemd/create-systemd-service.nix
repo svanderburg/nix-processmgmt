@@ -1,5 +1,6 @@
 { writeTextFile
 , stdenv
+, lib
 , createCredentials
 , basePackages
 
@@ -32,7 +33,7 @@ name
 
 let
   util = import ../util {
-    inherit (stdenv) lib;
+    inherit lib;
   };
 
   sections = removeAttrs args [ "name" "environment" "dependencies" "path" "credentials" "postInstall" ];
@@ -43,7 +44,7 @@ let
   };
 
   generateEnvironmentVariables = environment:
-    stdenv.lib.concatMapStrings (name:
+    lib.concatMapStrings (name:
       let
         value = builtins.getAttr name _environment;
       in
@@ -63,7 +64,7 @@ let
   ''
 
     [${title}]
-    ${stdenv.lib.concatMapStrings (name:
+    ${lib.concatMapStrings (name:
       let
         value = builtins.getAttr name properties;
       in
@@ -75,7 +76,7 @@ let
   + (if title == "Unit" then mapDependencies dependencies else "");
 
   generateSections = sections:
-    stdenv.lib.concatMapStrings (title:
+    lib.concatMapStrings (title:
       let
         properties = builtins.getAttr title sections;
       in
@@ -88,11 +89,11 @@ let
     name = "${name}.service";
     text = ''
       ${generateSections sections}
-      ${stdenv.lib.optionalString (!(sections ? Service) && _environment != {}) ''
+      ${lib.optionalString (!(sections ? Service) && _environment != {}) ''
         [Service]
 
         ${generateEnvironmentVariables _environment}''}
-      ${stdenv.lib.optionalString (!(sections ? Unit) && dependencies != []) ''
+      ${lib.optionalString (!(sections ? Unit) && dependencies != []) ''
 
         [Unit]
         ${mapDependencies dependencies}
@@ -109,10 +110,10 @@ stdenv.mkDerivation {
     mkdir -p $out/etc/systemd/system
     ln -s ${service} $out/etc/systemd/system/${prefix}${name}.service
 
-    ${stdenv.lib.optionalString (dependencies != []) ''
+    ${lib.optionalString (dependencies != []) ''
       mkdir -p $out/etc/systemd/system/${prefix}${name}.service.wants
 
-      ${stdenv.lib.concatMapStrings (dependency: ''
+      ${lib.concatMapStrings (dependency: ''
         ln -s ${dependency}/etc/systemd/system/${dependency.name}.service $out/etc/systemd/system/${prefix}${name}.service.wants
       '') dependencies}
     ''}

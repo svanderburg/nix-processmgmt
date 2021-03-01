@@ -1,4 +1,4 @@
-{stdenv}:
+{stdenv, lib}:
 
 { name
 # When a service is flagged as essential it will not stop with the command: s6-rc -d change foo, but only: s6-rc -D change foo
@@ -11,7 +11,7 @@
 
 let
   util = import ./util.nix {
-    inherit (stdenv) lib;
+    inherit lib;
   };
 in
 stdenv.mkDerivation {

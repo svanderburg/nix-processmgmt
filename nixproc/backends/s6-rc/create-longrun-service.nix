@@ -1,4 +1,4 @@
-{stdenv, createCredentials, createLogServiceForLongRunService}:
+{stdenv, lib, createCredentials, createLogServiceForLongRunService}:
 
 { name
 # When a service is flagged as essential it will not stop with the command: s6-rc -d change foo, but only: s6-rc -D change foo
@@ -45,7 +45,7 @@ let
   credentialsSpec = createCredentials credentials;
 
   util = import ./util.nix {
-    inherit (stdenv) lib;
+    inherit lib;
   };
 
   logService = createLogServiceForLongRunService {
@@ -79,7 +79,7 @@ stdenv.mkDerivation {
   + util.generateServiceName { service = _producerFor; filename = "producer-for"; }
   + util.generateServiceNameList { services = consumerFor; filename = "consumer-for"; }
   + util.generateStringProperty { value = pipelineName; filename = "pipeline-name"; }
-  + stdenv.lib.optionalString autoGenerateLogService ''
+  + lib.optionalString autoGenerateLogService ''
     cd ..
     ln -sfn ${logService}/etc/s6/sv/${name}-log
   ''

@@ -1,4 +1,4 @@
-{ createSystemdService, stdenv, writeTextFile }:
+{ createSystemdService, stdenv, lib, writeTextFile }:
 
 { name
 , description
@@ -33,27 +33,29 @@ let
       Description = description;
     };
     Service = {
-      ExecStart = if foregroundProcess != null then "${foregroundProcess} ${stdenv.lib.escapeShellArgs foregroundProcessArgs}" else "${daemon} ${stdenv.lib.escapeShellArgs daemonArgs}";
+      ExecStart = if foregroundProcess != null
+        then "${foregroundProcess} ${lib.escapeShellArgs foregroundProcessArgs}"
+        else "${daemon} ${lib.escapeShellArgs daemonArgs}";
       Type = if foregroundProcess != null then "simple" else "forking";
-    } // stdenv.lib.optionalAttrs (initialize != "") {
-      ExecStartPre = stdenv.lib.optionalString (user != null) "+" + generatePreStartScript {
+    } // lib.optionalAttrs (initialize != "") {
+      ExecStartPre = lib.optionalString (user != null) "+" + generatePreStartScript {
         inherit name initialize;
       };
-    } // stdenv.lib.optionalAttrs (directory != null) {
+    } // lib.optionalAttrs (directory != null) {
       WorkingDirectory = directory;
-    } // stdenv.lib.optionalAttrs (umask != null) {
+    } // lib.optionalAttrs (umask != null) {
       UMask = umask;
-    } // stdenv.lib.optionalAttrs (nice != null) {
+    } // lib.optionalAttrs (nice != null) {
       Nice = nice;
-    } // stdenv.lib.optionalAttrs (foregroundProcess == null && pidFile != null) {
+    } // lib.optionalAttrs (foregroundProcess == null && pidFile != null) {
       PIDFile = pidFile;
-    } // stdenv.lib.optionalAttrs (user != null) {
+    } // lib.optionalAttrs (user != null) {
       User = user;
     };
   };
 
   targetSpecificArgs =
     if builtins.isFunction overrides then overrides generatedTargetSpecificArgs
-    else stdenv.lib.recursiveUpdate generatedTargetSpecificArgs overrides;
+    else lib.recursiveUpdate generatedTargetSpecificArgs overrides;
 in
 createSystemdService targetSpecificArgs

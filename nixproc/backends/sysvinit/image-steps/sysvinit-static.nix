@@ -7,7 +7,7 @@ let
   }).sysvinit;
 
   generateCompoundProxy = import ../../util/generate-compound-proxy.nix {
-    inherit (pkgs) stdenv writeTextFile;
+    inherit (pkgs) stdenv lib writeTextFile;
   };
 
   runlevel = "3";

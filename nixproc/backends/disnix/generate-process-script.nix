@@ -1,4 +1,4 @@
-{ createProcessScript, writeTextFile, stdenv, daemon, basePackages
+{ createProcessScript, writeTextFile, stdenv, lib, daemon, basePackages
 , runtimeDir, logDir, tmpDir, forceDisableUserChange
 }:
 
@@ -29,7 +29,7 @@ in
 
 let
   util = import ../util {
-    inherit (stdenv) lib;
+    inherit lib;
   };
 
   _environment = util.appendPathToEnvironment {
@@ -84,26 +84,26 @@ let
         environment = _environment;
         allowSystemPath = true;
       }
-      + stdenv.lib.optionalString (umask != null) ''
+      + lib.optionalString (umask != null) ''
         umask ${umask}
       ''
-      + stdenv.lib.optionalString (initialize != null) ''
+      + lib.optionalString (initialize != null) ''
         ${initialize}
       ''
-      + stdenv.lib.optionalString (directory != null) ''
+      + lib.optionalString (directory != null) ''
         cd ${directory}
       ''
-      + stdenv.lib.optionalString (nice != null) ''
+      + lib.optionalString (nice != null) ''
         nice -n ${toString nice}
       ''
       + "exec ${invocationCommand}";
     };
-  } // stdenv.lib.optionalAttrs (_pidFile != null) {
+  } // lib.optionalAttrs (_pidFile != null) {
     pidFile = _pidFile;
   };
 
   targetSpecificArgs =
     if builtins.isFunction overrides then overrides generatedTargetSpecificArgs
-    else stdenv.lib.recursiveUpdate generatedTargetSpecificArgs overrides;
+    else lib.recursiveUpdate generatedTargetSpecificArgs overrides;
 in
 createProcessScript targetSpecificArgs

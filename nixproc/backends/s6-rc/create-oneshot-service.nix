@@ -1,4 +1,4 @@
-{stdenv, createCredentials}:
+{stdenv, lib, createCredentials}:
 
 { name
 # When a service is flagged as essential it will not stop with the command: s6-rc -d change foo, but only: s6-rc -D change foo
@@ -19,7 +19,7 @@ let
   credentialsSpec = createCredentials credentials;
 
   util = import ./util.nix {
-    inherit (stdenv) lib;
+    inherit lib;
   };
 in
 stdenv.mkDerivation {
