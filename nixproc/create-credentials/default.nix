@@ -12,7 +12,7 @@ stdenv.mkDerivation {
           group = builtins.getAttr groupname groups;
         in
         ''
-          ${lib.optionalString (ids ? gids && builtins.hasAttr groupname ids.gids) ''echo "gid=${toString ids.gids."${groupname}"}" > $out/dysnomia-support/groups/${groupname}''}
+          ${lib.optionalString (!(group ? gid) && ids ? gids && builtins.hasAttr groupname ids.gids) ''echo "gid=${toString ids.gids."${groupname}"}" > $out/dysnomia-support/groups/${groupname}''}
 
           cat >> $out/dysnomia-support/groups/${groupname} <<EOF
           ${lib.concatMapStrings (propertyName:
@@ -42,7 +42,7 @@ stdenv.mkDerivation {
       ''
       # Regular user creation configuration
       else ''
-        ${lib.optionalString (ids ? uids && builtins.hasAttr username ids.uids) ''echo "uid=${toString ids.uids."${username}"}" > $out/dysnomia-support/users/${username}''}
+        ${lib.optionalString (!(user ? uid) && ids ? uids && builtins.hasAttr username ids.uids) ''echo "uid=${toString ids.uids."${username}"}" > $out/dysnomia-support/users/${username}''}
 
         cat >> $out/dysnomia-support/users/${username} <<EOF
         ${lib.concatMapStrings (propertyName:
