@@ -8,8 +8,8 @@ let
   nginxCacheDir = "${cacheDir}/${instanceName}";
 in
 createSystemVInitScript {
-  name = instanceName;
   description = "Nginx";
+
   initialize = ''
     mkdir -p ${nginxLogDir}
     mkdir -p ${nginxCacheDir}

@@ -8,7 +8,8 @@
 }:
 
 createManagedProcess {
-  name = instanceName;
+  inherit instanceName;
+
   path = [ s6 ];
   foregroundProcess = "${s6}/bin/s6-svscan";
   args = [ scanDir ];

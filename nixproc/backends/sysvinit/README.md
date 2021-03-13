@@ -318,8 +318,8 @@ let
   webapp = (import ./webapp {}).package;
 in
 createSystemVInitScript {
-  name = instanceName;
   inherit instanceName;
+
   process = "${webapp}/lib/node_modules/webapp/app.js";
   processIsDaemon = false;
   runlevels = [ 3 4 5 ];
@@ -359,8 +359,8 @@ let
   webapp = (import ./webapp {}).package;
 in
 createSystemVInitScript {
-  name = instanceName;
   inherit instanceName;
+
   process = "${webapp}/lib/node_modules/webapp/app.js";
   processIsDaemon = false;
   runlevels = [ 3 4 5 ];

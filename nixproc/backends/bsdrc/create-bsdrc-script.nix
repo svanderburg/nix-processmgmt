@@ -23,7 +23,7 @@
 
 {
 # A name that identifies the process instance
-name
+name ? instanceName
 # The variable suffix that indicates whether a service has been enabled or not.
 , rcvar ? "enabled"
 # An attribute set defining default values for configuration environment variables
@@ -85,6 +85,7 @@ name
 # other properties. see rc.subr manpage
 
 assert command == null -> commands ? start && commands ? stop;
+assert name != null;
 
 let
   util = import ../util {

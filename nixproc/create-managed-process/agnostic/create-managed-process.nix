@@ -2,10 +2,10 @@
 
 {
 # A name that identifies the process instance
-name
+name ? instanceName
 # A more human-readable description of the process
 , description ? name
-# Shell commands that specify how the state should be initialized
+# Shell commands that specify how the state should be initialized. This script runs as root.
 , initialize ? ""
 # Path to a process to execute (both in foreground and daemon mode)
 , process ? null
@@ -17,9 +17,9 @@ name
 , daemonExtraArgs ? []
 # Command-line arguments propagated to the daemon
 , daemonArgs ? (args ++ daemonExtraArgs)
-# A name that uniquely identifies each process instance. It is used to generate a unique PID file.
+# A name that uniquely identifies each process instance. It is used to generate a unique PID file and as a process name when none was specified.
 , instanceName ? null
-# Path to a PID file that the system should use to manage the process. If null, it will use a default path.
+# Path to a PID file that the system should use to manage the process. If null, it will use the default path (typically the global runtime dir or temp dir).
 , pidFile ? null
 # The executable that needs to run to start the process in foreground mode
 , foregroundProcess ? process
@@ -48,6 +48,9 @@ name
 # Arbitrary build commands executed after generating the configuration files
 , postInstall ? ""
 }@properties:
+
+if name == null then throw "No process name was specified or can be inferred!"
+else
 
 let
   createAgnosticConfig = import ./create-agnostic-config.nix {

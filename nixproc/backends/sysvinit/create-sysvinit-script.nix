@@ -43,7 +43,7 @@
 
 {
 # A name that identifies the process instance
-name
+name ? instanceName
 # A name that uniquely identifies each process instance. It is used to generate a unique PID file.
 , instanceName ? null
 # A description that is added to the comments section
@@ -95,6 +95,9 @@ name
 # Arbitrary commands executed after generating the configuration files
 , postInstall ? ""
 }:
+
+if name == null then throw "No process name was specified or can be inferred!"
+else
 
 let
   util = import ../util {

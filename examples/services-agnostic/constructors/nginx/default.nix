@@ -10,7 +10,6 @@ let
   nginxCacheDir = "${cacheDir}/${instanceName}";
 in
 createManagedProcess {
-  name = instanceName;
   description = "Nginx";
   initialize = ''
     mkdir -p ${nginxLogDir}

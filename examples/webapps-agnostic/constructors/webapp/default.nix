@@ -5,7 +5,6 @@ let
   webapp = import ../../../../webapp;
 in
 createManagedProcess {
-  name = instanceName;
   description = "Simple web application";
   inherit instanceName;
 

@@ -103,7 +103,97 @@ Writing a process manager-specific process management configuration
 -------------------------------------------------------------------
 The following expression is an example of a configuration that deploys
 a sysvinit script that can be used to control a simple web application
-process that just returns a static HTML page:
+process (with an embedded HTTP server) that just returns a static HTML page:
+
+```nix
+{createSystemVInitScript, tmpDir}:
+
+let
+  webapp = import ../../webapp;
+  user = "webapp";
+  group = "webapp";
+in
+createSystemVInitScript {
+  name = "webapp";
+  process = "${webapp}/bin/webapp";
+  args = [ "-D" ];
+  environment = {
+    PORT = 5000;
+    PID_FILE = "${tmpDir}/webapp.pid";
+  };
+
+  runlevels = [ 3 4 5 ];
+
+  inherit user;
+
+  credentials = {
+    groups = {
+      "${group}" = {};
+    };
+    users = {
+      "${user}" = {
+        inherit group;
+        description = "Webapp";
+      };
+    };
+  };
+}
+```
+
+A process expression defines a function:
+
+* The function header (first line) allows build-time dependencies and common
+  configuration properties to be configured, such as the the function that
+  constructs sysvinit scripts (`createSystemVInitScript`) and the `runtimeDir`
+  in which PID files are stored (on most systems this defaults to: `/var/run`).
+
+In the body, we invoke the `createSystemVInitScript` function to declaratively
+construct a sysvinit script:
+
+* The `process` parameter specifies which process should be managed. From this
+  parameter, the generator will automatically derive `start`, `stop`, `restart`
+  and `reload` activities.
+* The `args` parameter specifies the command line parameters propagated to the
+  process. The `-D` parameter specifies that the webapp process should run in
+  daemon mode (i.e. the process spawns another process that keeps running in
+  the background and then terminates immediately).
+* The `environment` attribute set defines all environment variables that the
+  webapp process needs -- `PORT` is used to specify the TCP port it should
+  listen to and `PID_FILE` specifies the path to the PID file that stores
+  the process ID (PID) of the daemon process
+* The `runlevels` parameter specifies in which run levels the process should
+  be started (in the above example: 3, 4, and 5. It will automatically
+  configure the init system to stop the process in the other runlevels:
+  0, 1, 2, and 6.
+* It is also typically not recommended to run a service as root user. The
+  `credentials` attribute specifies which group and user account need to be
+  created. The `user` parameter specifies the user the process needs to
+  run as.
+
+The `createSystemVInitScript` function supports many more parameters than
+described in the example above. For example, it is also possible to directly
+specify how activities should be implemented.
+
+It can also be used to specify `dependencies` on other sysvinit scripts -- the
+system will automatically derive the sequence numbers so that they are activated
+and deactivated in the right order.
+
+In addition to sysvinit, there are also functions that can be used to create
+configurations for the other supported process managers, e.g.
+`createSystemdUnit`, `createSupervisordProgram`, `createBSDRCScript`. Check
+the implementations in `nixproc/backends` for more information.
+
+Writing an instantiatable process configuration
+-----------------------------------------------
+The example shown earlier only allows you to deploy a single instance of the
+`webapp` process. A second instance cannot co-exist because it will allocate
+conflicting resources, such as the TCP port it binds to and the PID file.
+These resources can only be assigned once.
+
+It is also possible to revise the example to allow multiple process instances
+to co-exist, by making conflicting resources configurable.
+
+An instantiatable process expression defines a nested function:
 
 ```nix
 {createSystemVInitScript, tmpDir}:
@@ -113,7 +203,6 @@ let
   webapp = import ../../webapp;
 in
 createSystemVInitScript {
-  name = instanceName;
   inherit instanceName;
   process = "${webapp}/bin/webapp";
   args = [ "-D" ];
@@ -140,8 +229,6 @@ createSystemVInitScript {
 }
 ```
 
-A process expression defines a nested function:
-
 * The outer function (first line) allows properties to be configured that apply
   to all process instances, such as the the function that constructs sysvinit
   scripts (`createSystemVInitScript`) and the `runtimeDir` in which PID files
@@ -152,57 +239,25 @@ A process expression defines a nested function:
   assign two unique TCP `port` numbers and we append the process name with a
   unique suffix, we can run two instances of the web application at the same
   time.
-
-In the body, we invoke the `createSystemVInitScript` function to declaratively
-construct a sysvinit script:
-
-* The `process` parameter specifies which process should be managed. From this
-  parameter, the generator will automatically derive `start`, `stop`, `restart`
-  and `reload` activities.
-* The `args` parameter specifies the command line parameters propagated to the
-  process. The `-D` parameter specifies that the webapp process should run in
-  daemon mode (i.e. the process spawns another process that keeps running in
-  the background and then terminates immediately).
-* The `environment` attribute set defines all environment variables that the
-  webapp process needs -- `PORT` is used to specify the TCP port it should
-  listen to and `PID_FILE` specifies the path to the PID file that stores
-  the process ID (PID) of the daemon process
-* To allow multiple processes to co-exist, we must make sure that each has
-  a unique PID file name. We can use the `instanceName` parameter to specify
-  what name this PID file should have. By default, it gets the same name as
-  the process name.
-* The `runlevels` parameter specifies in which run levels the process should
-  be started (in the above example: 3, 4, and 5. It will automatically
-  configure the init system to stop the process in the other runlevels:
-  0, 1, 2, and 6.
-* It is also typically not recommended to run a service as root user. The
-  `credentials` attribute specifies which group and user account need to be
-  created. The `user` parameter specifies as which user the process needs to
-  run at.
-
-The `createSystemVInitScript` function support many more parameters than
-described in the example above. For example, it is also possible to directly
-specify how activities should be implemented.
-
-It can also be used to specify dependencies on other sysvinit scripts -- the
-system will automatically derive the sequence numbers so that they are activated
-and deactivated in the right order.
-
-In addition to sysvinit, there are also functions that can be used to create
-configurations for the other supported process managers, e.g.
-`createSystemdUnit`, `createSupervisordProgram`, `createBSDRCScript`. Check
-the implementations in `nixproc/backends` for more information.
+* The process should have a unique name to identify it with. If no `name`
+  parameter was specified, then the `name` will automatically correspond to
+  `instanceName`.
+* We must make sure that each has a unique PID file name. We can use the
+  `instanceName` parameter to specify what name this PID file should have.
+  By default, the PID file gets the same name as the process instance name.
+* To also allocate a unique user and group for the process. We are using the
+  `instanceName` parameter as a unique user and group name.
 
 Writing a process manager-agnostic process management configuration
 -------------------------------------------------------------------
 This repository contains generator functions for a variety of process managers.
-What you will notice is that they require parameters that look quite similar.
+What you will notice is that they accept parameters that look quite similar.
 
 When it is desired to target multiple process managers, it is also possible to
-write a process manager-agnostic configuration from which a variety of
-configurations can be generated.
+write a process manager-agnostic configuration from which configuration files
+can be generated for all supported process management backends.
 
-This expression is a process manager-agnostic version of the previous example:
+This is a process manager-agnostic version of the previous example:
 
 ```nix
 {createManagedProcess, tmpDir}:
@@ -212,9 +267,8 @@ let
   webapp = import ../../webapp;
 in
 createManagedProcess {
-  name = instanceName;
-  description = "Simple web application";
   inherit instanceName;
+  description = "Simple web application";
 
   # This expression can both run in foreground or daemon mode.
   # The process manager can pick which mode it prefers.
@@ -299,9 +353,8 @@ let
   webapp = import ../../webapp;
 in
 createManagedProcess {
-  name = instanceName;
-  description = "Simple web application";
   inherit instanceName;
+  description = "Simple web application";
 
   # This expression can both run in foreground or daemon mode.
   # The process manager can pick which mode it prefers.
@@ -339,9 +392,8 @@ let
   webapp = import ../../webapp;
 in
 createManagedProcess {
-  name = instanceName;
-  description = "Simple web application";
   inherit instanceName;
+  description = "Simple web application";
 
   # This expression can both run in foreground or daemon mode.
   # The process manager can pick which mode it prefers.
@@ -942,8 +994,10 @@ in
 createMultiProcessImage {
   name = "multiprocess";
   tag = "test";
+
   exprFile = ../webapps-agnostic/processes.nix;
   processManager = "supervisord"; # sysvinit, disnix, s6-rc are also valid options
+
   interactive = true; # the default option
   manpages = false; # the default option
   forceDisableUserChange = false; # the default option
@@ -1032,10 +1086,12 @@ in
 createMutableMultiProcessImage {
   name = "multiprocess";
   tag = "test";
+
   exprFile = ./processes.nix;
   idResourcesFile = ./idresources.nix;
   idsFile = ./ids.nix;
   processManager = "supervisord";
+
   interactive = true;
   manpages = false;
   forceDisableUserChange = false;

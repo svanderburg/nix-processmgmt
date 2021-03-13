@@ -5,8 +5,8 @@ let
   webapp = import ../../../../webapp;
 in
 createSystemVInitScript {
-  name = instanceName;
   inherit instanceName;
+
   process = "${webapp}/bin/webapp";
   args = [ "-D" ];
   environment = {

@@ -6,7 +6,6 @@ let
   pidFile = "${tmpDir}/${instanceName}.pid";
 in
 createManagedProcess {
-  name = instanceName;
   description = "Simple web application";
   inherit instanceName;
 
