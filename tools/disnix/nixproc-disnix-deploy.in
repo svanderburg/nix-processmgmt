@@ -1,0 +1,114 @@
+#!/bin/bash -e
+
+# Shows the usage of this command to the user
+
+showUsage()
+{
+    cat <<EOF
+Usage: $0 [OPTION] PATH
+
+Deploys a prebuilt Disnix manifest file meant for process management.
+
+Options:
+  -p, --profile=NAME    Name of the Nix profile that stores the sysvinit scripts
+                        (defaults to: processes)
+  -o, --old-profile=PATH
+                        Path to the previously deployed Nix profile (by default,
+                        it gets auto detected)
+      --state-dir       Changes the directory in which the state of the
+                        processes are stored
+      --runtime-dir     Changes the directory in which the PID files are stored
+      --log-dir         Changes the directory in which the log files are stored
+      --tmp-dir         Changes the directory in which temp files are stored
+      --cache-dir       Changes the directory in which cache files are stored
+      --force-disable-user-change
+                        Forces to not create users, groups or change user
+                        permissions
+  -h, --help            Shows the usage of this command
+
+Environment:
+  NIXPROC_STATE_DIR    Changes the directory in which the state of the
+                       processes is stored
+  NIXPROC_RUNTIME_DIR  Changes the directory in which the PID files are stored
+  NIXPROC_LOG_DIR      Changes the directory in which log files are stored
+  NIXPROC_TMP_DIR      Changes the directory in which temp files are stored
+  NIXPROC_CACHE_DIR    Changes the directory in which cache files are stored
+  NIXPROC_FORCE_DISABLE_USER_CHANGE
+                       Forces to not create users, groups or change user
+                       permissions
+EOF
+}
+
+# Parse valid argument options
+
+PARAMS=`@getopt@ -n $0 -o p:o:h -l profile:,old-profile:,state-dir:,runtime-dir:,log-dir:,tmp-dir:,cache-dir:,force-disable-user-change,help -- "$@"`
+
+if [ $? != 0 ]
+then
+    showUsage
+    exit 1
+fi
+
+# Evaluate valid options
+
+eval set -- "$PARAMS"
+
+while [ "$1" != "--" ]
+do
+    case "$1" in
+        -p|--profile)
+            profile="$2"
+            ;;
+        -o|--old-profile)
+            oldProfilePath="$2"
+            oldProfileArg="-o $2"
+            ;;
+        --state-dir)
+            stateDirArg="--state-dir $2"
+            ;;
+        --runtime-dir)
+            runtimeDirArg="--runtime-dir $2"
+            ;;
+        --log-dir)
+            logDirArg="--log-dir $2"
+            ;;
+        --tmp-dir)
+            tmpDirArg="--tmp-dir $2"
+            ;;
+        --cache-dir)
+            cacheDirArg="--cache-dir $2"
+            ;;
+        --force-disable-user-change)
+            forceDisableUserChangeArg="--force-disable-user-change"
+            ;;
+        -h|--help)
+            showUsage
+            exit 0
+            ;;
+    esac
+
+    shift
+done
+
+shift
+
+profilePath="$1"
+
+# Validate the given options
+
+source @commonchecks@
+
+checkProfile
+composeOldProfilePath
+
+if [ "$profilePath" = "" ]
+then
+    echo "No profile path was provided!" >&2
+    exit 1
+fi
+
+# Initialize all state
+nixproc-init-state $stateDirArg $runtimeDirArg $logDirArg $tmpDirArg $cacheDirArg $forceDisableUserChangeArg
+
+# Execute the deployment with Disnix
+disnix-deploy $oldProfileArg $profilePath

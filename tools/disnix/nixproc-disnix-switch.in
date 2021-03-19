@@ -157,8 +157,7 @@ export DISNIX_DATA_DIR="$(readlink -f "$(dirname $(readlink -f $(type -p disnix-
 
 deploy()
 {
-    nixproc-init-state $stateDirArg $runtimeDirArg $logDirArg $tmpDirArg $cacheDirArg $forceDisableUserChangeArg
-    disnix-deploy $oldProfileArg $profilePath
+    nixproc-disnix-deploy $profileArg $oldProfileArg $profilePath $stateDirArg $runtimeDirArg $logDirArg $tmpDirArg $cacheDirArg $forceDisableUserChange
 }
 
 executeDeploymentOperation disnix
