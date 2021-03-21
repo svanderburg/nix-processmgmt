@@ -4,6 +4,9 @@
 , runtimeDir ? "${stateDir}/run"
 , logDir ? "${stateDir}/log"
 , cacheDir ? "${cacheDir}/cache"
+, spoolDir ? "${stateDir}/spool"
+, lockDir ? "${stateDir}/lock"
+, libDir ? "${stateDir}/lib"
 , tmpDir ? (if stateDir == "/var" then "/tmp" else "${stateDir}/tmp")
 , forceDisableUserChange ? false
 , clientInterface ? (if builtins.getEnv "DISNIX_CLIENT_INTERFACE" == "" then "disnix-run-activity" else builtins.getEnv "DISNIX_CLIENT_INTERFACE")

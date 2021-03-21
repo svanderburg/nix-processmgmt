@@ -3,6 +3,7 @@
 , logDir
 , runtimeDir
 , cacheDir
+, libDir
 , tmpDir
 , forceDisableUserChange
 , processManager
@@ -31,7 +32,7 @@ in
   };
 
   extendableSupervisord = import ./supervisord/extendable-supervisord.nix {
-    inherit createManagedProcess stateDir runtimeDir logDir;
+    inherit createManagedProcess libDir runtimeDir logDir;
     inherit (pkgs) writeTextFile;
     inherit (pkgs.pythonPackages) supervisor;
   };

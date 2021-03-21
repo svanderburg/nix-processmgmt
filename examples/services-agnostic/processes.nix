@@ -4,6 +4,7 @@
 , runtimeDir ? "${stateDir}/run"
 , logDir ? "${stateDir}/log"
 , cacheDir ? "${stateDir}/cache"
+, libDir ? "${stateDir}/lib"
 , tmpDir ? (if stateDir == "/var" then "/tmp" else "${stateDir}/tmp")
 , forceDisableUserChange ? false
 , processManager
@@ -13,7 +14,7 @@ let
   ids = if builtins.pathExists ./ids.nix then (import ./ids.nix).ids else {};
 
   constructors = import ./constructors/constructors.nix {
-    inherit pkgs stateDir runtimeDir logDir tmpDir cacheDir forceDisableUserChange processManager ids;
+    inherit pkgs stateDir runtimeDir logDir tmpDir cacheDir libDir forceDisableUserChange processManager ids;
   };
 in
 rec {

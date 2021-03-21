@@ -1,11 +1,12 @@
 {stdenv}:
-{name, ...}@properties:
+properties:
 
 let
   configJSON = builtins.toJSON properties;
 in
-stdenv.mkDerivation {
-  inherit name configJSON;
+stdenv.mkDerivation rec {
+  name = if properties ? name then properties.name else properties.instanceName;
+  inherit configJSON;
   passAsFile = [ "configJSON" ];
   buildCommand = ''
     mkdir -p $out

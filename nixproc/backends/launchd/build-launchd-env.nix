@@ -5,6 +5,9 @@
 , logDir ? "${stateDir}/log"
 , cacheDir ? "${cacheDir}/cache"
 , tmpDir ? (if stateDir == "/var" then "/tmp" else "${stateDir}/tmp")
+, spoolDir ? "${stateDir}/spool"
+, lockDir ? "${stateDir}/lock"
+, libDir ? "${stateDir}/lib"
 , forceDisableUserChange ? false
 , extraParams ? {}
 , exprFile ? null

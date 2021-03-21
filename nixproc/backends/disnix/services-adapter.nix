@@ -19,6 +19,12 @@ let
     tmpDir = builtins.getEnv "NIXPROC_TMP_DIR";
   } // pkgs.lib.optionalAttrs (builtins.getEnv "NIXPROC_CACHE_DIR" != "") {
     tmpDir = builtins.getEnv "NIXPROC_CACHE_DIR";
+  } // pkgs.lib.optionalAttrs (builtins.getEnv "NIXPROC_SPOOL_DIR" != "") {
+    spoolDir = builtins.getEnv "NIXPROC_SPOOL_DIR";
+  } // pkgs.lib.optionalAttrs (builtins.getEnv "NIXPROC_LOCK_DIR" != "") {
+    lockDir = builtins.getEnv "NIXPROC_LOCK_DIR";
+  } // pkgs.lib.optionalAttrs (builtins.getEnv "NIXPROC_LIB_DIR" != "") {
+    libDir = builtins.getEnv "NIXPROC_LIB_DIR";
   } // pkgs.lib.optionalAttrs (builtins.getEnv "NIXPROC_FORCE_DISABLE_USER_CHANGE" != "") {
     forceDisableUserChange = true;
   };

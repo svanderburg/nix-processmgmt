@@ -21,6 +21,9 @@ Options:
       --log-dir       Changes the directory in which the log files are stored
       --tmp-dir       Changes the directory in which temp files are stored
       --cache-dir     Changes the directory in which cache files are stored
+      --spool-dir     Changes the directory in which spool files are stored
+      --lock-dir      Changes the directory in which lock files are stored
+      --lib-dir       Changes the directory in which state files are stored
       --force-disable-user-change
                       Forces to not create users, groups or change user
                       permissions
@@ -39,6 +42,9 @@ Environment:
   NIXPROC_LOG_DIR      Changes the directory in which log files are stored
   NIXPROC_TMP_DIR      Changes the directory in which temp files are stored
   NIXPROC_CACHE_DIR    Changes the directory in which cache files are stored
+  NIXPROC_SPOOL_DIR    Changes the directory in which spool files are stored
+  NIXPROC_LOCK_DIR     Changes the directory in which lock files are stored
+  NIXPROC_LIB_DIR      Changes the directory in which state files are stored
   NIXPROC_FORCE_DISABLE_USER_CHANGE
                        Forces to not create users, groups or change user
                        permissions
@@ -47,7 +53,7 @@ EOF
 
 # Parse valid argument options
 
-PARAMS=`@getopt@ -n $0 -o P:h -l undeploy,process-manager:,state-dir:,runtime-dir:,log-dir:,tmp-dir:,cache-dir:,force-disable-user-change,no-out-link,show-trace,extra-params:,help -- "$@"`
+PARAMS=`@getopt@ -n $0 -o P:h -l undeploy,process-manager:,state-dir:,runtime-dir:,log-dir:,tmp-dir:,cache-dir:,spool-dir:,lock-dir:,lib-dir:,force-disable-user-change,no-out-link,show-trace,extra-params:,help -- "$@"`
 
 if [ $? != 0 ]
 then
@@ -75,13 +81,22 @@ do
             runtimeDirArg="--argstr runtimeDir $2"
             ;;
         --log-dir)
-            logDir="--argstr logDir $2"
+            logDirArg="--argstr logDir $2"
             ;;
         --tmp-dir)
-            tmpDir="--argstr tmpDir $2"
+            tmpDirArg="--argstr tmpDir $2"
             ;;
         --cache-dir)
-            cacheDir="--argstr cacheDir $2"
+            cacheDirArg="--argstr cacheDir $2"
+            ;;
+        --spool-dir)
+            cacheDirArg="--argstr spoolDir $2"
+            ;;
+        --lock-dir)
+            lockDirArg="--argstr lockDir $2"
+            ;;
+        --lib-dir)
+            libDirArg="--argstr libDir $2"
             ;;
         --force-disable-user-change)
             forceDisableUserChangeArg="--arg forceDisableUserChange true"
@@ -159,6 +174,21 @@ then
     cacheDirArg="--argstr cacheDir $NIXPROC_CACHE_DIR"
 fi
 
+if [ "$NIXPROC_SPOOL_DIR" != "" ]
+then
+    cacheDirArg="--argstr spoolDir $NIXPROC_SPOOL_DIR"
+fi
+
+if [ "$NIXPROC_LOCK_DIR" != "" ]
+then
+    cacheDirArg="--argstr lockDir $NIXPROC_LOCK_DIR"
+fi
+
+if [ "$NIXPROC_LIB_DIR" != "" ]
+then
+    cacheDirArg="--argstr libDir $NIXPROC_LIB_DIR"
+fi
+
 if [ "$NIXPROC_FORCE_DISABLE_USER_CHANGE" = "1" ]
 then
     forceDisableUserChangeArg="--arg forceDisableUserChange true"
@@ -167,4 +197,4 @@ fi
 NIXPROC=${NIXPROC:-@NIXPROC@}
 
 # Build the profile
-nix-build $stateDirArg $runtimeDirArg $logDirArg $tmpDirArg $cacheDirArg $forceDisableUserChangeArg $noOutLinkArg $showTraceArg $processManagerArg "${extraParamsArg[@]}" $exprFileArg $NIXPROC/backends/$processManager/build-$processManager-env.nix
+nix-build $stateDirArg $runtimeDirArg $logDirArg $tmpDirArg $cacheDirArg $spoolDirArg $lockDirArg $libDirArg $forceDisableUserChangeArg $noOutLinkArg $showTraceArg $processManagerArg "${extraParamsArg[@]}" $exprFileArg $NIXPROC/backends/$processManager/build-$processManager-env.nix

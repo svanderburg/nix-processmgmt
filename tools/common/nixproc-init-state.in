@@ -17,6 +17,9 @@ Options:
       --log-dir         Changes the directory in which the log files are stored
       --tmp-dir         Changes the directory in which temp files are stored
       --cache-dir       Changes the directory in which cache files are stored
+      --spool-dir       Changes the directory in which spool files are stored
+      --lock-dir        Changes the directory in which lock files are stored
+      --lib-dir         Changes the directory in which state files are stored
       --force-disable-user-change
                         Forces to not create users, groups or change user
                         permissions
@@ -29,6 +32,9 @@ Environment:
   NIXPROC_LOG_DIR      Changes the directory in which log files are stored
   NIXPROC_TMP_DIR      Changes the directory in which temp files are stored
   NIXPROC_CACHE_DIR    Changes the directory in which cache files are stored
+  NIXPROC_SPOOL_DIR    Changes the directory in which spool files are stored
+  NIXPROC_LOCK_DIR     Changes the directory in which lock files are stored
+  NIXPROC_LIB_DIR      Changes the directory in which state files are stored
   NIXPROC_FORCE_DISABLE_USER_CHANGE
                        Forces to not create users, groups or change user
                        permissions
@@ -37,7 +43,7 @@ EOF
 
 # Parse valid argument options
 
-PARAMS=`@getopt@ -n $0 -o h -l state-dir:,runtime-dir:,log-dir:,tmp-dir:,cache-dir:,force-disable-user-change,help -- "$@"`
+PARAMS=`@getopt@ -n $0 -o h -l state-dir:,runtime-dir:,log-dir:,tmp-dir:,cache-dir:,spool-dir:,lock-dir:,lib-dir:,force-disable-user-change,help -- "$@"`
 
 if [ $? != 0 ]
 then
@@ -66,6 +72,15 @@ do
             ;;
         --cache-dir)
             NIXPROC_CACHE_DIR="$2"
+            ;;
+        --spool-dir)
+            NIXPROC_SPOOL_DIR="$2"
+            ;;
+        --lock-dir)
+            NIXPROC_LOCK_DIR="$2"
+            ;;
+        --lib-dir)
+            NIXPROC_LIB_DIR="$2"
             ;;
         --force-disable-user-change)
             forceDisableUserChange=1
@@ -142,3 +157,18 @@ mkdir -p "$NIXPROC_LOG_DIR"
 
 NIXPROC_CACHE_DIR="${NIXPROC_CACHE_DIR:-$NIXPROC_STATE_DIR/cache}"
 mkdir -p "$NIXPROC_CACHE_DIR"
+
+# Determine and create spool directory
+
+NIXPROC_SPOOL_DIR="${NIXPROC_SPOOL_DIR:-$NIXPROC_STATE_DIR/spool}"
+mkdir -p "$NIXPROC_SPOOL_DIR"
+
+# Determine and create lock directory
+
+NIXPROC_LOCK_DIR="${NIXPROC_LOCK_DIR:-$NIXPROC_STATE_DIR/lock}"
+mkdir -p "$NIXPROC_LOCK_DIR"
+
+# Determine and create lib directory
+
+NIXPROC_LIB_DIR="${NIXPROC_LIB_DIR:-$NIXPROC_STATE_DIR/lib}"
+mkdir -p "$NIXPROC_LIB_DIR"
