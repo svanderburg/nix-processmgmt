@@ -109,6 +109,7 @@ makeTest {
     machine.succeed(
         "${env} nixproc-systemd-switch ${nix-processmgmt}/tests/processes-supervisord.nix"
     )
+    machine.wait_for_open_port(9001)
 
     # Deploy the system with foreground webapp processes
 

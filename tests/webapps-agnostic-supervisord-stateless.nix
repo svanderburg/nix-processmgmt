@@ -54,8 +54,8 @@ makeTest {
         "${env} nixproc-supervisord-deploy-stateless ${nix-processmgmt}/examples/webapps-agnostic/processes.nix &"
     )
 
+    machine.wait_for_open_port(9001)
     machine.succeed("sleep 30")
-    machine.succeed("cat supervisord.log >&2")
     check_nginx_redirection()
   '';
 }

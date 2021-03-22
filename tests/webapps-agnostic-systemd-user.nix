@@ -99,8 +99,7 @@ makeTest {
 
     start_all()
     machine.wait_for_unit("display-manager.service")
-    # Wait a little longer to be sure that the user has logged in
-    machine.succeed("sleep 10")
+    machine.wait_until_succeeds("pgrep -f 'systemd --user'")
 
     # Do an undeploy to force the state to get initialized
     machine.succeed(
