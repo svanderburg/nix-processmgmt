@@ -50,10 +50,20 @@ name ? instanceName
 , pidFile ? null
 # If not null, the nice level be changed before executing any activities
 , nice ? null
+# If not null, the umask will be changed before executing any activities
+, umask ? null
 # If not null, the current working directory will be changed before executing any activities
 , directory ? null
 # Specifies as which user the process should run. If null, the user privileges will not be changed.
 , user ? null
+# FIB Routing Table number to run command with
+, fib ? null
+# Resource limits to apply to command. This will be passed as arguments to the limits utility.
+, limits ? null
+# Login class to use. Defaults to "daemon".
+, loginClass ? null
+# Protect command from being killed when swap space is exhausted. If "YES" is used, no child processes are protected.  If "ALL", protect all child processes.
+, oomProtect ? null
 # Defines files that must be readable before running the start method
 , requiredFiles ? []
 # Defines directories that must exist before running the start method
@@ -68,7 +78,7 @@ name ? instanceName
 , flexibleParameters ? false
 # Specifies which feature the script requires. This is used by the rc init system to determine the proper activation order
 , requires ? []
-# Specifies which features the script provides. By default, it simply considers it name a feature.
+# Specifies which features the script provides. By default, it simply considers its name a feature.
 , provides ? [ "${name}" ]
 # Keywords to be display in the comments section
 , keywords ? []
@@ -79,10 +89,6 @@ name ? instanceName
 # Arbitrary commands executed after generating the configuration files
 , postInstall ? ""
 }:
-
-# TODO:
-# umask
-# other properties. see rc.subr manpage
 
 assert command == null -> commands ? start && commands ? stop;
 assert name != null;
@@ -161,6 +167,9 @@ let
       '') (builtins.attrNames rcvarsDefaults)}
 
     ''
+    + lib.optionalString (umask != null) ''
+      umask ${umask}
+    ''
     + lib.optionalString (_command != null) ''
       command=${_command}
     ''
@@ -199,6 +208,18 @@ let
     ''
     + lib.optionalString (envFile != null) ''
       ${name}_env_file=${envFile}
+    ''
+    + lib.optionalString (fib != null) ''
+      ${name}_fib=${fib}
+    ''
+    + lib.optionalString (limits != null) ''
+      ${name}_limits=${limits}
+    ''
+    + lib.optionalString (loginClass != null) ''
+      ${name}_login_class=${loginClass}
+    ''
+    + lib.optionalString (oomProtect != null) ''
+      ${name}_oomprotect=${oomProtect}
     ''
     + lib.optionalString (extraCommands != []) ''
       extra_commands="${toString extraCommands}"

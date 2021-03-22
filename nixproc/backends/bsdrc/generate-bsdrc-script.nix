@@ -21,11 +21,9 @@
 , postInstall
 }:
 
-# TODO: umask
-
 let
   generatedTargetSpecificArgs = {
-    inherit name environment path directory nice dependencies;
+    inherit name environment path directory nice umask dependencies;
     inherit user instanceName credentials postInstall;
 
     command = if daemon != null then daemon else foregroundProcess;
