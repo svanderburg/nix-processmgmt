@@ -21,6 +21,7 @@
 , postInstall
 }:
 
+# TODO:
 # umask unsupported
 # nice unsupported
 
@@ -35,15 +36,20 @@ let
     inherit stdenv lib writeTextFile;
   };
 
+  _user = util.determineUser {
+    inherit user forceDisableUserChange;
+  };
+
   cmd = if foregroundProcess != null
     then
-      if initialize == null
+      if initialize == ""
       then [ foregroundProcess ] ++ foregroundProcessArgs
       else
         let
           wrapper = generateForegroundProxy ({
             wrapDaemon = false;
             executable = foregroundProcess;
+            user = _user;
             inherit name initialize runtimeDir stdenv;
           } // lib.optionalAttrs (instanceName != null) {
             inherit instanceName;
@@ -57,6 +63,7 @@ let
         wrapper = generateForegroundProxy ({
           wrapDaemon = true;
           executable = daemon;
+          user = _user;
           inherit name runtimeDir initialize stdenv;
         } // lib.optionalAttrs (instanceName != null) {
           inherit instanceName;
@@ -77,10 +84,6 @@ let
 
   credentialsSpec = createCredentials credentials;
 
-  _user = util.determineUser {
-    inherit user forceDisableUserChange;
-  };
-
   generatedDockerImageArgs = {
     inherit name;
     tag = "latest";
@@ -95,7 +98,7 @@ let
       Env = map (varName: "${varName}=${toString (builtins.getAttr varName _environment)}") (builtins.attrNames _environment);
     } // lib.optionalAttrs (directory != null) {
       WorkingDir = directory;
-    } // lib.optionalAttrs (_user != null) {
+    } // lib.optionalAttrs (_user != null && initialize == "") {
       User = _user;
     };
   };
