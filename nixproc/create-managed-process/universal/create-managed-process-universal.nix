@@ -99,8 +99,9 @@ let
   };
 
   generateDockerContainer = import ../../backends/docker/generate-docker-container.nix {
-    inherit (pkgs) stdenv writeTextFile lib dockerTools findutils glibc dysnomia;
+    inherit (pkgs) stdenv writeTextFile lib dockerTools findutils glibc dysnomia shadow;
     inherit createDockerContainer basePackages runtimeDir stateDir forceDisableUserChange createCredentials;
+    inherit pkgs;
   };
 
   s6-rc = import ../../backends/s6-rc {

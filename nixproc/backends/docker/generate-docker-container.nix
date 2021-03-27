@@ -1,4 +1,4 @@
-{ createDockerContainer, dockerTools, stdenv, lib, writeTextFile, findutils, glibc, dysnomia, basePackages, runtimeDir, stateDir, forceDisableUserChange, createCredentials }:
+{ createDockerContainer, dockerTools, stdenv, lib, writeTextFile, findutils, glibc, shadow, dysnomia, pkgs, basePackages, runtimeDir, stateDir, forceDisableUserChange, createCredentials }:
 
 { name
 , description
@@ -22,7 +22,6 @@
 }:
 
 # TODO:
-# umask unsupported
 # nice unsupported
 
 let
@@ -30,7 +29,9 @@ let
     inherit lib;
   };
 
-  commonTools = (import ../../../tools {}).common;
+  commonTools = (import ../../../tools {
+    inherit pkgs;
+  }).common;
 
   generateForegroundProxy = import ../util/generate-foreground-proxy.nix {
     inherit stdenv lib writeTextFile;
@@ -40,31 +41,43 @@ let
     inherit user forceDisableUserChange;
   };
 
+  _initialize =
+    ''
+      nixproc-init-state --state-dir ${stateDir} --runtime-dir ${runtimeDir}
+    ''
+    + lib.optionalString (!forceDisableUserChange && credentialsSpec != null) ''
+      dysnomia-addgroups ${credentialsSpec}
+      dysnomia-addusers ${credentialsSpec}
+    ''
+    + lib.optionalString (umask != null) ''
+      umask ${umask}
+    ''
+    + initialize;
+
   cmd = if foregroundProcess != null
     then
-      if initialize == ""
-      then [ foregroundProcess ] ++ foregroundProcessArgs
-      else
-        let
-          wrapper = generateForegroundProxy ({
-            wrapDaemon = false;
-            executable = foregroundProcess;
-            user = _user;
-            inherit name initialize runtimeDir stdenv;
-          } // lib.optionalAttrs (instanceName != null) {
-            inherit instanceName;
-          } // lib.optionalAttrs (pidFile != null) {
-            inherit pidFile;
-          });
-        in
-        [ wrapper ] ++ foregroundProcessArgs
+      let
+        wrapper = generateForegroundProxy ({
+          wrapDaemon = false;
+          executable = foregroundProcess;
+          user = _user;
+          initialize = _initialize;
+          inherit name runtimeDir stdenv;
+        } // lib.optionalAttrs (instanceName != null) {
+          inherit instanceName;
+        } // lib.optionalAttrs (pidFile != null) {
+          inherit pidFile;
+        });
+      in
+      [ wrapper ] ++ foregroundProcessArgs
     else
       let
         wrapper = generateForegroundProxy ({
           wrapDaemon = true;
           executable = daemon;
           user = _user;
-          inherit name runtimeDir initialize stdenv;
+          initialize = _initialize;
+          inherit name runtimeDir stdenv;
         } // lib.optionalAttrs (instanceName != null) {
           inherit instanceName;
         } // lib.optionalAttrs (pidFile != null) {
@@ -77,9 +90,17 @@ let
   # Instead, we mount the host system's Nix store so that the software is still accessible inside the container.
   cmdWithoutContext = map (arg: if builtins.isAttrs arg then builtins.unsafeDiscardStringContext arg else toString arg) cmd;
 
+  # Add all packes added to PATH to the store paths making it possible to not
+  # garbage collect them, but discard their context so that the packages are
+  # not included in the image
+  storePaths = basePackages ++ [ commonTools ]
+    ++ lib.optionals (!forceDisableUserChange && credentialsSpec != null) [ shadow findutils glibc.bin dysnomia ]
+    ++ path;
+
   _environment = util.appendPathToEnvironment {
     inherit environment;
-    path = basePackages ++ path ++ [ "/" ]; # Also give permission to /bin to allow any package added to contents can be used
+    path = map (pathComponent: if builtins.isAttrs pathComponent then builtins.unsafeDiscardStringContext pathComponent else toString pathComponent) storePaths
+      ++ [ "" ]; # Also give permission to /bin to allow any package added to contents can be used
   };
 
   credentialsSpec = createCredentials credentials;
@@ -88,9 +109,19 @@ let
     inherit name;
     tag = "latest";
 
-    runAsRoot = import ../docker/setup.nix {
-      inherit dockerTools commonTools lib dysnomia findutils glibc stateDir runtimeDir forceDisableUserChange credentialsSpec;
-    };
+    runAsRoot = ''
+      ${dockerTools.shadowSetup}
+
+      # Always create these global state directories, because they are needed quite often
+      mkdir -p /run /tmp
+      chmod 1777 /tmp
+      mkdir -p /var
+      ln -sfn /run /var/run
+    ''
+    + lib.optionalString forceDisableUserChange ''
+      groupadd -r nogroup
+      useradd -r nobody -g nogroup -d /dev/null
+    '';
 
     config = {
       Cmd = cmdWithoutContext;
@@ -98,8 +129,6 @@ let
       Env = map (varName: "${varName}=${toString (builtins.getAttr varName _environment)}") (builtins.attrNames _environment);
     } // lib.optionalAttrs (directory != null) {
       WorkingDir = directory;
-    } // lib.optionalAttrs (_user != null && initialize == "") {
-      User = _user;
     };
   };
 
@@ -113,7 +142,7 @@ let
   dockerImage = dockerTools.buildImage dockerImageArgs;
 
   generatedDockerContainerArgs = {
-    inherit name dockerImage postInstall cmd dependencies;
+    inherit name dockerImage postInstall cmd storePaths dependencies;
     dockerImageTag = "${name}:latest";
     useHostNixStore = true;
     useHostNetwork = true;
