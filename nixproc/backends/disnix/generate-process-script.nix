@@ -93,10 +93,7 @@ let
       + lib.optionalString (directory != null) ''
         cd ${directory}
       ''
-      + lib.optionalString (nice != null) ''
-        nice -n ${toString nice}
-      ''
-      + "exec ${invocationCommand}";
+      + "exec ${lib.optionalString (nice != null) "nice -n ${toString nice}"} ${invocationCommand}";
     };
   } // lib.optionalAttrs (_pidFile != null) {
     pidFile = _pidFile;
