@@ -1,5 +1,6 @@
 { nixpkgs ? <nixpkgs>
 , system ? builtins.currentSystem
+, nix-processmgmt ? { outPath = ./.; rev = 1234; }
 }:
 
 let
@@ -13,7 +14,7 @@ rec {
 
   tests = {
     builds = import ./tests/builds.nix {
-      inherit pkgs;
+      inherit pkgs nix-processmgmt;
     };
 
     multi-process-images = import ./tests/multi-process-images.nix {
