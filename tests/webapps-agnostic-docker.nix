@@ -3,8 +3,11 @@
 with import "${nixpkgs}/nixos/lib/testing-python.nix" { system = builtins.currentSystem; };
 
 let
+  stateDir = "/dockervar";
+
   dockerProcessEnv = import ../nixproc/backends/systemd/build-systemd-env.nix {
     exprFile = ./processes-docker.nix;
+    inherit stateDir;
   };
 
   processesEnvForeground = import ../nixproc/backends/docker/build-docker-env.nix {
@@ -12,6 +15,7 @@ let
     extraParams = {
       webappMode = "foreground";
     };
+    inherit stateDir;
   };
 
   processesEnvDaemon = import ../nixproc/backends/docker/build-docker-env.nix {
@@ -19,23 +23,28 @@ let
     extraParams = {
       webappMode = "daemon";
     };
+    inherit stateDir;
   };
 
   processesEnvAuto = import ../nixproc/backends/docker/build-docker-env.nix {
     exprFile = ../examples/webapps-agnostic/processes.nix;
+    inherit stateDir;
   };
 
   processesEnvAdvanced = import ../nixproc/backends/docker/build-docker-env.nix {
     exprFile = ../examples/webapps-agnostic/processes-advanced.nix;
+    inherit stateDir;
   };
 
   processesEnvUnprivileged = import ../nixproc/backends/docker/build-docker-env.nix {
     exprFile = ../examples/webapps-agnostic/processes.nix;
     forceDisableUserChange = true;
+    inherit stateDir;
   };
 
   processesEnvEmpty = import ../nixproc/backends/docker/build-docker-env.nix {
     exprFile = null;
+    inherit stateDir;
   };
 
   tools = import ../tools {};
@@ -111,7 +120,7 @@ makeTest {
     # Deploy the system with foreground webapp processes
 
     machine.succeed(
-        '${env} nixproc-docker-switch ${nix-processmgmt}/examples/webapps-agnostic/processes.nix --extra-params \'{ "webappMode" = "foreground"; }\'${""}'
+        '${env} nixproc-docker-switch ${nix-processmgmt}/examples/webapps-agnostic/processes.nix --state-dir ${stateDir} --extra-params \'{ "webappMode" = "foreground"; }\'${""}'
     )
 
     machine.succeed("sleep 10")
@@ -124,7 +133,7 @@ makeTest {
     # Deploy the system with daemon webapp processes
 
     machine.succeed(
-        '${env} nixproc-docker-switch ${nix-processmgmt}/examples/webapps-agnostic/processes.nix --extra-params \'{ "webappMode" = "daemon"; }\'${""}'
+        '${env} nixproc-docker-switch ${nix-processmgmt}/examples/webapps-agnostic/processes.nix --state-dir ${stateDir} --extra-params \'{ "webappMode" = "daemon"; }\'${""}'
     )
 
     machine.succeed("sleep 10")
@@ -137,7 +146,7 @@ makeTest {
     # Deploy the entire system in auto mode. Should result in foreground webapp processes
 
     machine.succeed(
-        "${env} nixproc-docker-switch ${nix-processmgmt}/examples/webapps-agnostic/processes.nix"
+        "${env} nixproc-docker-switch ${nix-processmgmt}/examples/webapps-agnostic/processes.nix --state-dir ${stateDir}"
     )
 
     machine.succeed("sleep 10")
@@ -150,7 +159,7 @@ makeTest {
     # Deploy the advanced example with multiple instances and see if it works
 
     machine.succeed(
-        "${env} nixproc-docker-switch ${nix-processmgmt}/examples/webapps-agnostic/processes-advanced.nix"
+        "${env} nixproc-docker-switch ${nix-processmgmt}/examples/webapps-agnostic/processes-advanced.nix --state-dir ${stateDir}"
     )
 
     machine.succeed("sleep 40")
@@ -161,7 +170,7 @@ makeTest {
     # Deploy an instance without changing user privileges
 
     machine.succeed(
-        "${env} nixproc-docker-switch ${nix-processmgmt}/examples/webapps-agnostic/processes.nix --force-disable-user-change"
+        "${env} nixproc-docker-switch ${nix-processmgmt}/examples/webapps-agnostic/processes.nix --state-dir ${stateDir} --force-disable-user-change"
     )
 
     machine.succeed("sleep 10")

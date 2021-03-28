@@ -21,9 +21,6 @@
 , postInstall
 }:
 
-# TODO:
-# nice unsupported
-
 let
   util = import ../util {
     inherit lib;
@@ -62,7 +59,7 @@ let
           executable = foregroundProcess;
           user = _user;
           initialize = _initialize;
-          inherit name runtimeDir stdenv;
+          inherit name runtimeDir stdenv nice;
         } // lib.optionalAttrs (instanceName != null) {
           inherit instanceName;
         } // lib.optionalAttrs (pidFile != null) {
@@ -77,7 +74,7 @@ let
           executable = daemon;
           user = _user;
           initialize = _initialize;
-          inherit name runtimeDir stdenv;
+          inherit name runtimeDir stdenv nice;
         } // lib.optionalAttrs (instanceName != null) {
           inherit instanceName;
         } // lib.optionalAttrs (pidFile != null) {
