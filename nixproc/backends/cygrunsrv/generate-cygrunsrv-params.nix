@@ -26,12 +26,6 @@
 , postInstall
 }:
 
-# TODO: credentials
-# TODO: directory unused
-# TODO: umask unused
-# TODO: nice unused
-# TODO: user unused
-
 let
   generateForegroundProxy = import ../util/generate-foreground-proxy.nix {
     inherit stdenv lib writeTextFile;
@@ -43,16 +37,16 @@ let
     environmentPath = path;
 
     path = if foregroundProcess != null then
-      if initialize == "" then foregroundProcess
+      if initialize == "" && nice == null && directory == null && umask == null then foregroundProcess
       else generateForegroundProxy {
         wrapDaemon = false;
         executable = foregroundProcess;
-        inherit name initialize runtimeDir pidFile stdenv;
+        inherit name initialize runtimeDir pidFile nice directory umask stdenv;
       }
     else generateForegroundProxy {
       wrapDaemon = true;
       executable = daemon;
-      inherit name initialize runtimeDir pidFile stdenv;
+      inherit name initialize runtimeDir pidFile nice stdenv;
     };
 
     args = if foregroundProcess != null then foregroundProcessArgs else daemonArgs;
@@ -61,5 +55,8 @@ let
   targetSpecificArgs =
     if builtins.isFunction overrides then overrides generatedTargetSpecificArgs
     else lib.recursiveUpdate generatedTargetSpecificArgs overrides;
+
+  cygrunSrvConfig = createCygrunsrvParams targetSpecificArgs;
 in
-createCygrunsrvParams targetSpecificArgs
+if credentials == {} && user == null then cygrunSrvConfig else
+builtins.trace "It is not possible to create any users for cygrunsrv services. Cygwin automatically converts Windows users to UNIX users" cygrunSrvConfig

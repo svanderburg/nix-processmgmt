@@ -10,6 +10,8 @@
 , pidFile ? (if instanceName == null then null else "${runtimeDir}/${instanceName}.pid")
 , user ? null
 , nice ? null
+, directory ? null
+, umask ? null
 }:
 
 let
@@ -42,6 +44,13 @@ writeTextFile {
 
       trap _term SIGTERM
       trap _interrupt SIGINT
+
+      ${lib.optionalString (directory != null) ''
+        cd ${directory}
+      ''}
+      ${lib.optionalString (umask != null) ''
+        umask ${umask}
+      ''}
 
       # Start process in the background as a daemon
       ${lib.optionalString (user != null) "${chainload-user}/bin/nixproc-chainload-user ${user} "}${lib.optionalString (nice != null) "nice -n ${nice} "}${executable} "$@"
