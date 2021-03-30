@@ -11,7 +11,7 @@ let
     inherit pkgs system;
   };
 
-  testSystemVariantForProcessManager = {processManager, profileSettings, exprFile, nixosConfig ? null, systemPackages ? [], readiness, tests}:
+  testSystemVariantForProcessManager = {processManager, profileSettings, exprFile, nixosConfig ? null, systemPackages ? [], initialTests ? null, readiness, tests}:
     let
       processManagerModule = builtins.getAttr processManager processManagerModules;
 
@@ -55,6 +55,7 @@ let
         ''
         + processManagerSettings.deployProcessManager
         + processManagerSettings.deploySystem
+        + pkgs.lib.optionalString (initialTests != null) (initialTests profileSettings.params)
 
         # Execute readiness check for all process instances
         + pkgs.lib.concatMapStrings (instanceName:
@@ -78,6 +79,7 @@ in
 , exprFile
 , nixosConfig ? null
 , systemPackages ? []
+, initialTests ? null
 , readiness
 , tests
 }:
@@ -89,7 +91,7 @@ pkgs.lib.genAttrs profiles (profile:
   in
   pkgs.lib.genAttrs processManagers (processManager:
     testSystemVariantForProcessManager {
-      inherit processManager profileSettings exprFile nixosConfig systemPackages readiness tests;
+      inherit processManager profileSettings exprFile nixosConfig systemPackages initialTests readiness tests;
     }
   )
 )

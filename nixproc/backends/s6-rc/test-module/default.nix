@@ -25,12 +25,11 @@ in
 
   pathsInNixDB = [ processesEnvProcessManager processesEnvSystem ];
 
-  # TODO: how to determine service readiness of s6?
   deployProcessManager = ''
     machine.succeed(
         "${executeDeploy { inherit profileSettings; processManager = "sysvinit"; processesEnv = processesEnvProcessManager; }}"
     )
-    machine.succeed("sleep 3")
+    machine.wait_for_file("${profileSettings.params.runtimeDir}/service/.s6-svscan")
   '';
 
   deploySystem = ''
