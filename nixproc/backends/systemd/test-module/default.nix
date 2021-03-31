@@ -1,4 +1,4 @@
-{profileSettings, exprFile, tools, pkgs, system}:
+{profileSettings, exprFile, extraParams, tools, pkgs, system}:
 
 let
   executeDeploy = import ../../../test-driver/util/execute-deploy.nix {
@@ -6,7 +6,7 @@ let
   };
 
   processesEnvSystem = import ../build-systemd-env.nix ({
-    inherit pkgs system exprFile;
+    inherit pkgs system exprFile extraParams;
   } // profileSettings.params);
 
   deployEnv = if profileSettings.params.forceDisableUserChange

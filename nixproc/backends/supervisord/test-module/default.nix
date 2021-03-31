@@ -1,4 +1,4 @@
-{profileSettings, exprFile, tools, pkgs, system}:
+{profileSettings, exprFile, extraParams, tools, pkgs, system}:
 
 let
   executeDeploy = import ../../../test-driver/util/execute-deploy.nix {
@@ -11,7 +11,7 @@ let
   } // profileSettings.params);
 
   processesEnvSystem = import ../build-supervisord-env.nix ({
-    inherit pkgs system exprFile;
+    inherit pkgs system exprFile extraParams;
   } // profileSettings.params);
 in
 {
