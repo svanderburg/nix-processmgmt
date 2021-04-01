@@ -1,13 +1,23 @@
-{createManagedProcess, docker, kmod}:
+{createManagedProcess, docker, kmod, runtimeDir, libDir}:
+{instanceSuffix ? "", instanceName ? "docker${instanceSuffix}", extraArgs ? []}:
 
 let
-  user = "docker";
-  group = "docker";
+  user = instanceName;
+  group = instanceName;
 in
 createManagedProcess {
-  name = "docker";
+  inherit instanceName;
   foregroundProcess = "${docker}/bin/dockerd";
-  args = [ "--group=${group}" "--host=unix://" "--log-driver=json-file" ];
+  args = [
+    "--group=${group}"
+    "--host=unix://${runtimeDir}/${instanceName}.sock"
+    # Add -alt suffix. We only need PID files for the backends that requires processes to daemonize on their own.
+    # The `daemon` command will create PID files for them. Without the -alt suffix they will conflict causing the Docker daemon to refuse to start.
+    "--pidfile=${runtimeDir}/${instanceName}-alt.pid"
+    "--data-root=${libDir}/${instanceName}"
+    "--exec-root=${runtimeDir}/${instanceName}"
+    "--log-driver=json-file"
+  ] ++ extraArgs;
   path = [ kmod ];
 
   credentials = {

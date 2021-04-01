@@ -4,7 +4,7 @@ with import "${nixpkgs}/nixos/lib/testing-python.nix" { system = builtins.curren
 
 let
   s6-svscanProcessEnv = import ../nixproc/backends/systemd/build-systemd-env.nix {
-    exprFile = ./processes-s6-svscan.nix;
+    exprFile = ../nixproc/backends/s6-rc/test-module/processes-s6-svscan.nix;
   };
 
   processesEnvForeground = import ../nixproc/backends/s6-rc/build-s6-rc-env.nix {
@@ -108,7 +108,7 @@ makeTest {
     # Deploy s6-svscan as a systemd unit
 
     machine.succeed(
-        "${env} nixproc-systemd-switch ${nix-processmgmt}/tests/processes-s6-svscan.nix"
+        "${env} nixproc-systemd-switch ${nix-processmgmt}/nixproc/backends/s6-rc/test-module/processes-s6-svscan.nix"
     )
 
     # Deploy the system with foreground webapp processes

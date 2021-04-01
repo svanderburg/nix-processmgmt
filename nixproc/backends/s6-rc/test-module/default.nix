@@ -7,7 +7,7 @@ let
 
   processesEnvProcessManager = import ../../sysvinit/build-sysvinit-env.nix ({
     inherit pkgs system;
-    exprFile = ../../../../tests/processes-s6-svscan.nix;
+    exprFile = ./processes-s6-svscan.nix;
   } // profileSettings.params);
 
   processesEnvSystem = import ../build-s6-rc-env.nix ({

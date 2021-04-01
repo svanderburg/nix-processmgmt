@@ -7,7 +7,7 @@ let
 
   processesEnvProcessManager = import ../../sysvinit/build-sysvinit-env.nix ({
     inherit pkgs system;
-    exprFile = ../../../../tests/processes-supervisord.nix;
+    exprFile = ./processes-supervisord.nix;
   } // profileSettings.params);
 
   processesEnvSystem = import ../build-supervisord-env.nix ({

@@ -6,7 +6,7 @@ let
   stateDir = "/dockervar";
 
   dockerProcessEnv = import ../nixproc/backends/systemd/build-systemd-env.nix {
-    exprFile = ./processes-docker.nix;
+    exprFile = ../nixproc/backends/docker/test-module/processes-docker.nix;
     inherit stateDir;
   };
 
@@ -112,7 +112,7 @@ makeTest {
     # Deploy Docker as a systemd unit
 
     machine.succeed(
-        "${env} nixproc-systemd-switch ${nix-processmgmt}/tests/processes-docker.nix"
+        "${env} nixproc-systemd-switch ${nix-processmgmt}/nixproc/backends/docker/test-module/processes-docker.nix"
     )
 
     machine.wait_for_unit("nix-process-docker")

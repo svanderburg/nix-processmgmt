@@ -29,6 +29,6 @@ rec {
   };
 
   docker = {
-    pkg = constructors.docker;
+    pkg = constructors.docker {};
   };
 }

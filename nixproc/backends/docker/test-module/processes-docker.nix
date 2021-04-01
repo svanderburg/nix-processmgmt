@@ -11,12 +11,12 @@
 }:
 
 let
-  constructors = import ../examples/services-agnostic/constructors/constructors.nix {
+  constructors = import ../../../../examples/services-agnostic/constructors/constructors.nix {
     inherit pkgs stateDir runtimeDir logDir tmpDir cacheDir libDir forceDisableUserChange processManager;
   };
 in
 rec {
-  s6-svscan = {
-    pkg = constructors.s6-svscan {};
+  docker = {
+    pkg = constructors.docker {};
   };
 }

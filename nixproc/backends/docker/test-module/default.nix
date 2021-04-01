@@ -7,12 +7,13 @@ let
 
   processesEnvProcessManager = import ../../sysvinit/build-sysvinit-env.nix ({
     inherit pkgs system;
-    exprFile = ../../../../tests/processes-docker.nix;
+    exprFile = ./processes-docker.nix;
   } // profileSettings.params);
 
   processesEnvSystem = import ../build-docker-env.nix ({
     inherit pkgs system exprFile extraParams;
-  } // profileSettings.params);
+  }
+  // profileSettings.params);
 in
 {
   nixosModules = [];

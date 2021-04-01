@@ -4,7 +4,7 @@ with import "${nixpkgs}/nixos/lib/testing-python.nix" { system = builtins.curren
 
 let
   supervisordProcessEnv = import ../nixproc/backends/systemd/build-systemd-env.nix {
-    exprFile = ./processes-supervisord.nix;
+    exprFile = ../nixproc/backends/supervisord/test-module/processes-supervisord.nix;
   };
 
   processesEnvForeground = import ../nixproc/backends/supervisord/build-supervisord-env.nix {
@@ -107,7 +107,7 @@ makeTest {
     # Deploy supervisord as a systemd unit
 
     machine.succeed(
-        "${env} nixproc-systemd-switch ${nix-processmgmt}/tests/processes-supervisord.nix"
+        "${env} nixproc-systemd-switch ${nix-processmgmt}/nixproc/backends/supervisord/test-module/processes-supervisord.nix"
     )
     machine.wait_for_open_port(9001)
 
