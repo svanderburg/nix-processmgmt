@@ -1,5 +1,12 @@
 {createSystemVInitScript, stdenv, lib, writeTextFile, nginx, runtimeDir, stateDir, cacheDir, logDir, forceDisableUserChange}:
-{port ? 80, webapps ? [], instanceSuffix ? "", instanceName ? "nginx${instanceSuffix}"}:
+
+{ port ? 80
+, webapps ? []
+, instanceSuffix ? ""
+, instanceName ? "nginx${instanceSuffix}"
+, workerConnections ? 190000
+}:
+
 interDependencies:
 
 let
@@ -30,7 +37,7 @@ import ./default.nix {
       ''}
 
       events {
-        worker_connections 190000;
+        worker_connections ${toString workerConnections};
       }
 
       http {
