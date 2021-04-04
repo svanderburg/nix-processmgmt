@@ -19,9 +19,14 @@ let
         inherit profileSettings exprFile extraParams pkgs system tools;
       };
 
-      processes = import exprFile ({
+      processesFun = import exprFile;
+      processesFormalArgs = builtins.functionArgs processesFun;
+
+      processesArgs = builtins.intersectAttrs processesFormalArgs ({
         inherit pkgs system processManager;
-      } // extraParams // profileSettings.params);
+      } // profileSettings.params // extraParams);
+
+      processes = processesFun processesArgs;
     in
     with import "${nixpkgs}/nixos/lib/testing-python.nix" { inherit system; };
 

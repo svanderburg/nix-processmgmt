@@ -9,6 +9,8 @@
 , libDir ? "${stateDir}/lib"
 , tmpDir ? (if stateDir == "/var" then "/tmp" else "${stateDir}/tmp")
 , forceDisableUserChange ? false
+, callingUser ? null
+, callingGroup ? null
 , exprFile ? null
 , extraParams ? {}
 }@args:

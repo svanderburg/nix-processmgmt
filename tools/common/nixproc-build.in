@@ -197,4 +197,20 @@ fi
 NIXPROC=${NIXPROC:-@NIXPROC@}
 
 # Build the profile
-nix-build $stateDirArg $runtimeDirArg $logDirArg $tmpDirArg $cacheDirArg $spoolDirArg $lockDirArg $libDirArg $forceDisableUserChangeArg $noOutLinkArg $showTraceArg $processManagerArg "${extraParamsArg[@]}" $exprFileArg $NIXPROC/backends/$processManager/build-$processManager-env.nix
+nix-build $stateDirArg \
+  $runtimeDirArg \
+  $logDirArg \
+  $tmpDirArg \
+  $cacheDirArg \
+  $spoolDirArg \
+  $lockDirArg \
+  $libDirArg \
+  $forceDisableUserChangeArg \
+  --argstr callingUser "$(id -un)" \
+  --argstr callingGroup "$(id -gn)" \
+  $noOutLinkArg \
+  $showTraceArg \
+  $processManagerArg \
+  "${extraParamsArg[@]}" \
+  $exprFileArg \
+  $NIXPROC/backends/$processManager/build-$processManager-env.nix

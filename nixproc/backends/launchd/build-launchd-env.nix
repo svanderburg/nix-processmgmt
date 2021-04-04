@@ -9,6 +9,8 @@
 , lockDir ? "${stateDir}/lock"
 , libDir ? "${stateDir}/lib"
 , forceDisableUserChange ? false
+, callingUser ? null
+, callingGroup ? null
 , extraParams ? {}
 , exprFile ? null
 }@args:

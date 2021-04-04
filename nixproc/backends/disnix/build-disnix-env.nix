@@ -9,6 +9,8 @@
 , libDir ? "${stateDir}/lib"
 , tmpDir ? (if stateDir == "/var" then "/tmp" else "${stateDir}/tmp")
 , forceDisableUserChange ? false
+, callingUser ? null
+, callingGroup ? null
 , clientInterface ? (if builtins.getEnv "DISNIX_CLIENT_INTERFACE" == "" then "disnix-run-activity" else builtins.getEnv "DISNIX_CLIENT_INTERFACE")
 , disnixDataDir ? (if builtins.getEnv "DISNIX_DATA_DIR" == "" then throw "Set DISNIX_DATA_DIR to the data directory of Disnix" else builtins.getEnv "DISNIX_DATA_DIR")
 , extraParams ? {}
