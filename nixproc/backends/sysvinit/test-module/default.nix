@@ -10,6 +10,8 @@ let
   } // profileSettings.params);
 in
 {
+  inherit (profileSettings) params;
+
   nixosModules = [];
 
   systemPackages = [

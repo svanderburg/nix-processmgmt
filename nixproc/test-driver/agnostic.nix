@@ -24,7 +24,7 @@ let
 
       processesArgs = builtins.intersectAttrs processesFormalArgs ({
         inherit pkgs system processManager;
-      } // profileSettings.params // extraParams);
+      } // processManagerSettings.params // extraParams);
 
       processes = processesFun processesArgs;
     in
@@ -60,14 +60,14 @@ let
         ''
         + processManagerSettings.deployProcessManager
         + processManagerSettings.deploySystem
-        + pkgs.lib.optionalString (initialTests != null) (initialTests profileSettings.params)
+        + pkgs.lib.optionalString (initialTests != null) (initialTests processManagerSettings.params)
 
         # Execute readiness check for all process instances
         + pkgs.lib.concatMapStrings (instanceName:
           let
             instance = builtins.getAttr instanceName processes;
           in
-          readiness ({ inherit instanceName instance; } // profileSettings.params)
+          readiness ({ inherit instanceName instance; } // processManagerSettings.params)
         ) (builtins.attrNames processes)
 
         # Execute tests for all process instances
@@ -75,7 +75,7 @@ let
           let
             instance = builtins.getAttr instanceName processes;
           in
-          tests ({ inherit instanceName instance; } // profileSettings.params)
+          tests ({ inherit instanceName instance; } // processManagerSettings.params)
         ) (builtins.attrNames processes);
     };
 in

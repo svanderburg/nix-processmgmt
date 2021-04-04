@@ -26,6 +26,8 @@ let
   } // profileSettingsSystem.params);
 in
 {
+  inherit (profileSettingsSystem) params;
+
   nixosModules = [];
 
   systemPackages = [

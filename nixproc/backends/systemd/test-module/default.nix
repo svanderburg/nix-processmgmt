@@ -14,6 +14,8 @@ let
     else "SYSTEMD_TARGET_DIR=/etc/systemd-mutable/system";
 in
 {
+  inherit (profileSettings) params;
+
   nixosModules = pkgs.lib.optional profileSettings.params.forceDisableUserChange ./xserver-autologin-module.nix;
 
   systemPackages = [
