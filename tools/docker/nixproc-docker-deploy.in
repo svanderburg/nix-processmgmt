@@ -24,7 +24,7 @@ EOF
 
 # Parse valid argument options
 
-PARAMS=`@getopt@ -n $0 -o p:o:h -l profile:,old-profile:,user,help -- "$@"`
+PARAMS=`@getopt@ -n $0 -o p:o:h -l profile:,old-profile:,state-dir:,force-disable-user-change,help -- "$@"`
 
 if [ $? != 0 ]
 then

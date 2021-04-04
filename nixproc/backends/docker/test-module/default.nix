@@ -5,15 +5,25 @@ let
     inherit (pkgs) lib;
   };
 
+  # We cannot deploy Docker as unprivileged user. Use a privileged installation instead
+  profileSettingsProcessManager = import ../../../test-driver/profiles/privileged.nix;
+
+  # For privileged deployments, use a different directory than /var, because it does not have the right SELinux context to work with containers
+  profileSettingsSystem = if profileSettings.params.stateDir == "/var" then profileSettings // {
+    params = profileSettings.params // rec {
+      stateDir = "/dockervar";
+      runtimeDir = "${stateDir}/run";
+    };
+  } else profileSettings;
+
   processesEnvProcessManager = import ../../sysvinit/build-sysvinit-env.nix ({
     inherit pkgs system;
     exprFile = ./processes-docker.nix;
-  } // profileSettings.params);
+  } // profileSettingsProcessManager.params);
 
   processesEnvSystem = import ../build-docker-env.nix ({
     inherit pkgs system exprFile extraParams;
-  }
-  // profileSettings.params);
+  } // profileSettingsSystem.params);
 in
 {
   nixosModules = [];
@@ -28,14 +38,16 @@ in
 
   deployProcessManager = ''
     machine.succeed(
-        "${executeDeploy { inherit profileSettings; processManager = "sysvinit"; processesEnv = processesEnvProcessManager; }}"
+        "${executeDeploy { profileSettings = profileSettingsProcessManager; processManager = "sysvinit"; processesEnv = processesEnvProcessManager; }}"
     )
-    machine.wait_for_file("${profileSettings.params.stateDir}/run/docker.sock")
+    machine.wait_for_file("${profileSettingsProcessManager.params.stateDir}/run/docker.sock")
+  '' + pkgs.lib.optionalString profileSettings.params.forceDisableUserChange ''
+    machine.succeed("usermod -a -G docker unprivileged")
   '';
 
   deploySystem = ''
     machine.succeed(
-        "${executeDeploy { inherit profileSettings; processManager = "docker"; processesEnv = processesEnvSystem; }}"
+        "${executeDeploy { profileSettings = profileSettingsSystem; processManager = "docker"; processesEnv = processesEnvSystem; }}"
     )
   '';
 }
