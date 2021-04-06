@@ -11,7 +11,7 @@ let
     inherit pkgs system;
   };
 
-  testSystemVariantForProcessManager = {processManager, profileSettings, exprFile, extraParams ? {}, nixosConfig ? null, systemPackages ? [], initialTests ? null, readiness, tests}:
+  testSystemVariantForProcessManager = {processManager, profileSettings, exprFile, extraParams ? {}, nixosConfig ? null, systemPackages ? [], initialTests ? null, readiness ? null, tests ? null, postTests ? null}:
     let
       processManagerModule = builtins.getAttr processManager processManagerModules;
 
@@ -63,20 +63,24 @@ let
         + pkgs.lib.optionalString (initialTests != null) (initialTests processManagerSettings.params)
 
         # Execute readiness check for all process instances
-        + pkgs.lib.concatMapStrings (instanceName:
-          let
-            instance = builtins.getAttr instanceName processes;
-          in
-          readiness ({ inherit instanceName instance; } // processManagerSettings.params)
-        ) (builtins.attrNames processes)
+        + pkgs.lib.optionalString (readiness != null)
+            (pkgs.lib.concatMapStrings (instanceName:
+              let
+                instance = builtins.getAttr instanceName processes;
+              in
+              readiness ({ inherit instanceName instance; } // processManagerSettings.params)
+            ) (builtins.attrNames processes))
 
         # Execute tests for all process instances
-        + pkgs.lib.concatMapStrings (instanceName:
-          let
-            instance = builtins.getAttr instanceName processes;
-          in
-          tests ({ inherit instanceName instance; } // processManagerSettings.params)
-        ) (builtins.attrNames processes);
+        + pkgs.lib.optionalString (tests != null)
+            (pkgs.lib.concatMapStrings (instanceName:
+              let
+                instance = builtins.getAttr instanceName processes;
+              in
+              tests ({ inherit instanceName instance; } // processManagerSettings.params)
+            ) (builtins.attrNames processes))
+
+        + pkgs.lib.optionalString (postTests != null) (postTests processManagerSettings.params);
     };
 in
 { processManagers
@@ -86,8 +90,9 @@ in
 , nixosConfig ? null
 , systemPackages ? []
 , initialTests ? null
-, readiness
-, tests
+, readiness ? null
+, tests ? null
+, postTests ? null
 }:
 
 pkgs.lib.genAttrs profiles (profile:
@@ -97,7 +102,7 @@ pkgs.lib.genAttrs profiles (profile:
   in
   pkgs.lib.genAttrs processManagers (processManager:
     testSystemVariantForProcessManager {
-      inherit processManager profileSettings exprFile extraParams nixosConfig systemPackages initialTests readiness tests;
+      inherit processManager profileSettings exprFile extraParams nixosConfig systemPackages initialTests readiness tests postTests;
     }
   )
 )
