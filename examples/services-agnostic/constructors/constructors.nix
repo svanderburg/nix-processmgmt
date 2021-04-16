@@ -31,7 +31,7 @@ in
     inherit (pkgs.pythonPackages) supervisor;
   };
 
-  extendableSupervisord = import ./supervisord/extendable-supervisord.nix {
+  extendableSupervisord = import ./supervisord/extendable.nix {
     inherit createManagedProcess libDir runtimeDir logDir;
     inherit (pkgs) writeTextFile;
     inherit (pkgs.pythonPackages) supervisor;

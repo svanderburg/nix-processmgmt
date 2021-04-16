@@ -15,7 +15,7 @@ let
   };
 in
 {
-  extendableSupervisord = import ./extendable-supervisord.nix {
+  extendableSupervisord = import ./extendable.nix {
     inherit stateDir;
     inherit (pkgs) stdenv;
     supervisordConstructorFun = constructors.extendableSupervisord;
