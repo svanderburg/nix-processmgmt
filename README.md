@@ -802,6 +802,177 @@ The `nixproc-id-assign` tool is basically just a wrapper around the
 `dydisnix-id-assign` tool and internally converts a processes model to a Disnix
 services model.
 
+Writing integration tests
+-------------------------
+As explained in the introduction, the framework supports all kinds of
+interesting features producing all kinds of variants of the same service, such
+as multiple process managers, multiple process instances, unprivileged
+deployments etc.
+
+Although a service can support all these variants, writing a model does not
+guarantee that it will always work under all circumstances. The Nix process
+management framework supports code reuse, but does not facilitate a write once,
+run anywhere approach.
+
+To validate a service, we can use a test driver built on top of the NixOS test
+driver that can be used to test multiple variants of a service.
+
+The following Nix expression is an example of a test suite for the advanced
+variant of the webapp example with two Nginx reverse proxies:
+
+```nix
+{ pkgs, testService, processManagers, profiles }:
+
+testService {
+  inherit processManagers profiles;
+
+  exprFile = ./processes-advanced.nix;
+
+  readiness = {instanceName, instance, ...}:
+    ''
+      machine.wait_for_open_port(${toString instance.port})
+    '';
+
+  tests = {instanceName, instance, ...}:
+    pkgs.lib.optionalString (instanceName == "nginx" || instanceName == "nginx2")
+      (pkgs.lib.concatMapStrings (webapp: ''
+        machine.succeed(
+            "curl --fail -H 'Host: ${webapp.dnsName}' http://localhost:${toString instance.port} | grep ': ${toString webapp.port}'"
+        )
+      '') instance.webapps);
+
+}
+```
+
+The above Nix expression invokes `testService` with the following parameters:
+* `processManagers` refers to a list of names of all the process managers that
+  should be tested.
+* `profiles` refers to a list of configuration profiles that should be tested.
+  Currently, it supports `privileged` for privileged deployments, and
+  `unprivileged` for unprivileged deployments in an unprivileged user's home
+  directory, without changing user permissions.
+* The `exprFile` parameter refers to a processes model of a system, such as
+  `processes-advanced.nix` capturing the properties of a system that consists
+  of multiple `webapp` and `nginx` instances, as described earlier.
+* The `readiness` parameter refers to a function that does a readiness check
+  for each process instance. In the above example, it checks whether the service
+  is actually listening on the required TCP port.
+* The `tests` parameter refers to a function that executes tests for each
+  process instance. In the above example, it ignores all but the `nginx`
+  instances. For each `nginx` instance it checks whether all `webapp` instances
+  can be reached from it, by running the `curl` command.
+
+The `readiness` and `tests` functions take `instanceName` as a parameter that
+identifies the process instance in the processes model, and `instance` that
+refers to the attribute set containing its configuration.
+
+It is also possible to refer to global configuration parameters:
+* `stateDir`. The directory in which state files are stored (typically `/var`
+  for privileged deployments)
+* `runtimeDir`: The directory in which runtime files are stored.
+* `forceDisableUserChange`. Indicates whether to disable user changes (for
+  unprivileged deployments) or not.
+
+In addition to writing tests that work on instance level, it is also possible
+to write tests on system level, with the following parameters (not shown in the
+example):
+
+* `initialTests`: instructions that run right after deploying the system, but
+  before the `readiness` checks, and instance-level `tests`.
+* `postTests`: instructions that run after the instance-level `tests`.
+
+The above parameters refer to functions that also accept global configuration
+parameters, and `processes` that can refer to the entire processes model.
+
+The Nix expression above is not self-contained. It is a function definition
+that needs to be invoked with all the process managers and profiles that we
+want to test for.
+
+We can compose tests in the following Nix expression:
+
+```nix
+{ pkgs ? import <nixpkgs> { inherit system; }
+, system ? builtins.currentSystem
+, processManagers ? [ "supervisord" "sysvinit" "systemd" "docker" "disnix" "s6-rc" ]
+, profiles ? [ "privileged" "unprivileged" ]
+}:
+
+let
+  testService = import ../../nixproc/test-driver/universal.nix {
+    inherit system;
+  };
+in
+{
+
+  nginx-reverse-proxy-hostbased = import ./nginx-reverse-proxy-hostbased {
+    inherit pkgs processManagers profiles testService;
+  };
+
+  docker = import ./docker {
+    inherit pkgs processManagers profiles testService;
+  };
+
+  ...
+}
+```
+
+The above partial Nix expression (`default.nix`) invokes the function defined in
+the previous Nix expression that resides in the `nginx-reverse-proxy-hostbased`
+directory and propagates all required parameters. It also composes other test
+cases, such as `docker`.
+
+The parameters of the composition expression allows you to globally configure
+the service variants:
+
+* `processManagers` allows you to select the process managers you want to test
+  for.
+* `profiles` allows you to select the configuration profiles.
+
+With the following command, we can test our system as a privileged user, using
+`systemd` as a process manager:
+
+```bash
+$ nix-build -A nginx-reverse-proxy-hostbased.privileged.systemd
+```
+
+we can also run the same test, but then as an unprivileged user:
+
+```bash
+$ nix-build -A nginx-reverse-proxy-hostbased.unprivileged.systemd
+```
+
+In addition to `systemd`, any configured process manager can be used that works
+with the NixOS test driver. The following command runs a privileged test of the
+same service for `sysvinit`:
+
+```bash
+$ nix-build -A nginx-reverse-proxy-hostbased.privileged.sysvinit
+```
+
+Although the test driver makes it possible to test all possible variants of a
+service, doing so is very expensive. In the above example, we have two
+configuration profiles and six process managers, resulting in twelve possible
+variants of the same service.
+
+To get a reasonable level of confidence, it typically suffices to implement the
+following strategy:
+* Only pick two process managers: one that prefers foreground processes
+  (e.g. `supervisord`) and one that prefers daemons (e.g. `sysvinit`).
+  This is the most significant difference (from a configuration perspective)
+  between all these different process managers.
+* If a service supports multiple configuration variants, and multiple
+  instances, then create a processes model that concurrently deploys all
+  these variants.
+
+Implementing the above strategy only requires you to test four variants,
+providing a high degree of certainty that it will work with all other process
+managers as well.
+
+Since the test driver is built on top of the NixOS test driver (that is Linux
+based), we cannot use the test driver to test service variants on different
+operating systems. `launchd`, `bsdrc` and `cygrunsrv` can only be tested
+manually for now.
+
 Integration with Disnix
 -----------------------
 In addition to the fact that this toolset provides a `disnix` backend that

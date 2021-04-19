@@ -60,7 +60,7 @@ let
         ''
         + processManagerSettings.deployProcessManager
         + processManagerSettings.deploySystem
-        + pkgs.lib.optionalString (initialTests != null) (initialTests processManagerSettings.params)
+        + pkgs.lib.optionalString (initialTests != null) (initialTests (processManagerSettings.params // { inherit processes; }))
 
         # Execute readiness check for all process instances
         + pkgs.lib.optionalString (readiness != null)
@@ -80,7 +80,7 @@ let
               tests ({ inherit instanceName instance; } // processManagerSettings.params)
             ) (builtins.attrNames processes))
 
-        + pkgs.lib.optionalString (postTests != null) (postTests processManagerSettings.params);
+        + pkgs.lib.optionalString (postTests != null) (postTests (processManagerSettings.params // { inherit processes; }));
     };
 in
 { processManagers
