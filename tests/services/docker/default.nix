@@ -19,7 +19,8 @@ testService {
       )
     '';
 
-  inherit processManagers;
+  # It is useless to run Docker in Docker
+  processManagers = builtins.filter (processManager: processManager != "docker") processManagers;
 
   # There's an experimental rootless feature for Docker, but a hassle to setup. As a result, we disable unprivileged mode
   profiles = builtins.filter (profile: profile == "privileged") profiles;
