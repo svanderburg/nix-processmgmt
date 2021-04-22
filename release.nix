@@ -18,7 +18,7 @@ rec {
     };
 
     services = import ./tests/services {
-      inherit pkgs system;
+      inherit nixpkgs system;
     };
 
     multi-process-images = import ./tests/multi-process-images.nix {

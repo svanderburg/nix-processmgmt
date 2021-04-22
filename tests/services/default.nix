@@ -1,12 +1,14 @@
-{ pkgs ? import <nixpkgs> { inherit system; }
+{ nixpkgs ? <nixpkgs>
 , system ? builtins.currentSystem
 , processManagers ? [ "supervisord" "sysvinit" "systemd" "docker" "disnix" "s6-rc" ]
 , profiles ? [ "privileged" "unprivileged" ]
 }:
 
 let
+  pkgs = import nixpkgs { inherit system; };
+
   testService = import ../../nixproc/test-driver/universal.nix {
-    inherit system;
+    inherit nixpkgs system;
   };
 in
 {
