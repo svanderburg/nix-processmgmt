@@ -1,4 +1,4 @@
-{createManagedProcess, s6, runtimeDir}:
+{createManagedProcess, s6, execline, runtimeDir}:
 
 { instanceSuffix ? ""
 , instanceName ? "s6-svscan${instanceSuffix}"
@@ -10,7 +10,7 @@
 createManagedProcess {
   inherit instanceName;
 
-  path = [ s6 ];
+  path = [ s6 execline ];
   foregroundProcess = "${s6}/bin/s6-svscan";
   args = [ scanDir ];
   initialize = ''
