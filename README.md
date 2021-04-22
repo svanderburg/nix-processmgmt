@@ -855,11 +855,12 @@ The above Nix expression invokes `testService` with the following parameters:
   `processes-advanced.nix` capturing the properties of a system that consists
   of multiple `webapp` and `nginx` instances, as described earlier.
 * The `readiness` parameter refers to a function that does a readiness check
-  for each process instance. In the above example, it checks whether the service
+  for each process instance. In the above example, it checks whether each service
   is actually listening on the required TCP port.
 * The `tests` parameter refers to a function that executes tests for each
   process instance. In the above example, it ignores all but the `nginx`
-  instances. For each `nginx` instance it checks whether all `webapp` instances
+  instances, because explicitly testing a `webapp` instance is a redundant
+  operation. For each `nginx` instance, it checks whether all `webapp` instances
   can be reached from it, by running the `curl` command.
 
 The `readiness` and `tests` functions take `instanceName` as a parameter that
@@ -950,13 +951,13 @@ $ nix-build -A nginx-reverse-proxy-hostbased.privileged.sysvinit
 ```
 
 Although the test driver makes it possible to test all possible variants of a
-service, doing so is very expensive. In the above example, we have two
+service, doing so may be very expensive. In the above example, we have two
 configuration profiles and six process managers, resulting in twelve possible
 variants of the same service.
 
 To get a reasonable level of confidence, it typically suffices to implement the
 following strategy:
-* Only pick two process managers: one that prefers foreground processes
+* Pick two process managers: one that prefers foreground processes
   (e.g. `supervisord`) and one that prefers daemons (e.g. `sysvinit`).
   This is the most significant difference (from a configuration perspective)
   between all these different process managers.

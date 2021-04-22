@@ -17,6 +17,10 @@ rec {
       inherit pkgs nix-processmgmt;
     };
 
+    services = import ./tests/services {
+      inherit pkgs system;
+    };
+
     multi-process-images = import ./tests/multi-process-images.nix {
       inherit nixpkgs;
     };
