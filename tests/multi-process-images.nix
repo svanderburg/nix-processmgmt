@@ -6,7 +6,7 @@ let
   pkgs = import nixpkgs {};
 
   dockerProcessEnv = import ../nixproc/backends/systemd/build-systemd-env.nix {
-    exprFile = ./processes-docker.nix;
+    exprFile = ../nixproc/backends/docker/test-module/processes-docker.nix;
   };
 
   processManagers = [ "supervisord" "sysvinit" "disnix" "s6-rc" ];
