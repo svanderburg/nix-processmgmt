@@ -867,10 +867,12 @@ The `readiness` and `tests` functions take `instanceName` as a parameter that
 identifies the process instance in the processes model, and `instance` that
 refers to the attribute set containing its configuration.
 
-It is also possible to refer to global configuration parameters:
+In the `readiness` and `tests` functions, it is also possible to refer to global
+configuration parameters:
 * `stateDir`. The directory in which state files are stored (typically `/var`
   for privileged deployments)
-* `runtimeDir`: The directory in which runtime files are stored.
+* `runtimeDir`: The directory in which runtime files are stored (typically
+  `/var/run` for privileged installations).
 * `forceDisableUserChange`. Indicates whether to disable user changes (for
   unprivileged deployments) or not.
 
@@ -882,12 +884,19 @@ example):
   before the `readiness` checks, and instance-level `tests`.
 * `postTests`: instructions that run after the instance-level `tests`.
 
-The above parameters refer to functions that also accept global configuration
-parameters, and `processes` that can refer to the entire processes model.
+The above functions also accept the same global configuration parameters, and
+`processes` that refers to the entire processes model.
 
-The Nix expression above is not self-contained. It is a function definition
-that needs to be invoked with all the process managers and profiles that we
-want to test for.
+We can also configure other properties useful for testing:
+* `systemPackages`: installs additional packages into the system profile of the
+  test virtual machine.
+* `nixosConfig` defines a NixOS module with configuration properties that will
+  be added to the NixOS configuration of the test machine.
+* `extraParams` propagates additional parameters to the processes model.
+
+The Nix expression shown earlier is not self-contained -- it is a function
+definition that needs to be invoked with all its required parameters including
+the process managers and profiles that we want to test for.
 
 We can compose tests in the following Nix expression:
 
@@ -924,7 +933,7 @@ the previous Nix expression that resides in the `nginx-reverse-proxy-hostbased`
 directory and propagates all required parameters. It also composes other test
 cases, such as `docker`.
 
-The parameters of the composition expression allows you to globally configure
+The parameters of the composition expression allow you to globally configure
 the service variants:
 
 * `processManagers` allows you to select the process managers you want to test
@@ -945,8 +954,8 @@ $ nix-build -A nginx-reverse-proxy-hostbased.unprivileged.systemd
 ```
 
 In addition to `systemd`, any configured process manager can be used that works
-with the NixOS test driver. The following command runs a privileged test of the
-same service for `sysvinit`:
+in NixOS. The following command runs a privileged test of the same service for
+`sysvinit`:
 
 ```bash
 $ nix-build -A nginx-reverse-proxy-hostbased.privileged.sysvinit
@@ -1473,7 +1482,7 @@ processes.
 
 ### sysvinit, bsdrc, disnix
 
-For process management solutions that rely on processes that deamonize on their
+For process management solutions that rely on processes that daemonize on their
 own (`sysvinit`, `bsdrc` and `disnix`), you need to consult the logs that are
 managed by the services themselves (a daemon typically detaches itself from the
 `stdout` and `stderr`. As a result, a process manager cannot do it).
