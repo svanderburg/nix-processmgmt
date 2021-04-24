@@ -91,7 +91,7 @@ rec {
   };
 
   nginx2 = rec {
-    port = if forceDisableUserChange then 8081 else 8080;
+    port = if forceDisableUserChange then 8081 else 81;
     webapps = [ webapp5 webapp6 ];
 
     pkg = sharedConstructors.nginxReverseProxyHostBased {
