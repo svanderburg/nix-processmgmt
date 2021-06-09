@@ -16,7 +16,8 @@ in
 {
   inherit (profileSettings) params;
 
-  nixosModules = pkgs.lib.optional profileSettings.params.forceDisableUserChange ./xserver-autologin-module.nix;
+  nixosModules = pkgs.lib.optional profileSettings.params.forceDisableUserChange ./xserver-autologin-module.nix
+    ++ pkgs.lib.optional (!profileSettings.params.forceDisableUserChange) ./systemd-path.nix;
 
   systemPackages = [
     tools.systemd
