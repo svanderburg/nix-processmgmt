@@ -143,8 +143,11 @@ oldunits=()
 
 if [ -d "$oldProfilePath" ]
 then
-    for i in $oldProfilePath/etc/systemd/system/*.service
+    for i in $oldProfilePath/etc/systemd/system/*
     do
+        if [[ "$i" =~ .wants ]]; then
+          continue
+        fi
         currentPath=$(readlink -f "$i")
         oldunits+=($currentPath)
     done
@@ -154,8 +157,11 @@ fi
 
 newunits=()
 
-for i in $profilePath/etc/systemd/system/*.service
+for i in $profilePath/etc/systemd/system/*
 do
+    if [[ "$i" =~ .wants ]]; then
+      continue
+    fi
     currentPath=$(readlink -f "$i")
     newunits+=($currentPath)
 done
@@ -168,8 +174,11 @@ if [ "$oldProfilePath" != "" ]
 then
     # Stop obsolete units
 
-    for i in $oldProfilePath/etc/systemd/system/*.service
+    for i in $oldProfilePath/etc/systemd/system/*
     do
+        if [[ "$i" =~ .wants ]]; then
+          continue
+        fi
         if ! containsElement "$(readlink -f "$i")" "${newunits[@]}"
         then
             systemctl $systemdUserArg stop "$(basename "$i")"
@@ -178,8 +187,11 @@ then
 
     # Remove obsolete units
 
-    for i in $oldProfilePath/etc/systemd/system/*.service
+    for i in $oldProfilePath/etc/systemd/system/*
     do
+        if [[ "$i" =~ .wants ]]; then
+          continue
+        fi
         if ! containsElement "$(readlink -f "$i")" "${newunits[@]}"
         then
             unitTargetPath="$SYSTEMD_TARGET_DIR/$(basename "$i")"
@@ -195,8 +207,11 @@ fi
 
 # Add new units
 
-for i in $profilePath/etc/systemd/system/*.service
+for i in $profilePath/etc/systemd/system/*
 do
+    if [[ "$i" =~ .wants ]]; then
+      continue
+    fi
     if ! containsElement "$(readlink -f "$i")" "${oldunits[@]}"
     then
         if [ -d "$i.wants" ]
@@ -212,8 +227,11 @@ done
 systemctl $systemdUserArg daemon-reload
 
 # Start all units in the new configuration
-for i in $profilePath/etc/systemd/system/*.service
+for i in $profilePath/etc/systemd/system/*
 do
+    if [[ "$i" =~ .wants ]]; then
+      continue
+    fi
     systemctl $systemdUserArg start "$(basename "$i")"
 done
 
