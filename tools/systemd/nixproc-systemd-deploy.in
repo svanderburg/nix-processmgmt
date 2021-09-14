@@ -143,7 +143,7 @@ oldunits=()
 
 if [ -d "$oldProfilePath" ]
 then
-    for i in $oldProfilePath/etc/systemd/system/*.service
+    for i in $oldProfilePath/etc/systemd/system/*
     do
         currentPath=$(readlink -f "$i")
         oldunits+=($currentPath)
@@ -154,7 +154,7 @@ fi
 
 newunits=()
 
-for i in $profilePath/etc/systemd/system/*.service
+for i in $profilePath/etc/systemd/system/*
 do
     currentPath=$(readlink -f "$i")
     newunits+=($currentPath)
@@ -168,7 +168,7 @@ if [ "$oldProfilePath" != "" ]
 then
     # Stop obsolete units
 
-    for i in $oldProfilePath/etc/systemd/system/*.service
+    for i in $oldProfilePath/etc/systemd/system/*
     do
         if ! containsElement "$(readlink -f "$i")" "${newunits[@]}"
         then
@@ -178,7 +178,7 @@ then
 
     # Remove obsolete units
 
-    for i in $oldProfilePath/etc/systemd/system/*.service
+    for i in $oldProfilePath/etc/systemd/system/*
     do
         if ! containsElement "$(readlink -f "$i")" "${newunits[@]}"
         then
@@ -195,7 +195,7 @@ fi
 
 # Add new units
 
-for i in $profilePath/etc/systemd/system/*.service
+for i in $profilePath/etc/systemd/system/*
 do
     if ! containsElement "$(readlink -f "$i")" "${oldunits[@]}"
     then
@@ -212,7 +212,7 @@ done
 systemctl $systemdUserArg daemon-reload
 
 # Start all units in the new configuration
-for i in $profilePath/etc/systemd/system/*.service
+for i in $profilePath/etc/systemd/system/*
 do
     systemctl $systemdUserArg start "$(basename "$i")"
 done

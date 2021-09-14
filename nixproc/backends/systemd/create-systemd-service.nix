@@ -15,6 +15,7 @@
 name
 # An attribute set specifying arbitrary environment variables
 , environment ? {}
+, type ? "service"
 # List of supervisord services that this configuration depends on.
 # These properties are translated to Wants= and After= properties to ensure
 # proper activation ordering and that the dependencies are started first
@@ -36,7 +37,7 @@ let
     inherit lib;
   };
 
-  sections = removeAttrs args [ "name" "environment" "dependencies" "path" "credentials" "postInstall" ];
+  sections = removeAttrs args [ "type" "name" "environment" "dependencies" "path" "credentials" "postInstall" ];
 
   _environment = util.appendPathToEnvironment {
     inherit environment;
@@ -56,8 +57,8 @@ let
     if dependencies == [] then ""
     else
     ''
-      Wants=${toString (map (dependency: "${dependency.name}.service") dependencies)}
-      After=${toString (map (dependency: "${dependency.name}.service") dependencies)}
+      Wants=${toString (map (dependency: "${dependency.name}.${dependency.type}") dependencies)}
+      After=${toString (map (dependency: "${dependency.name}.${dependency.type}") dependencies)}
     '';
 
   generateSection = {title, properties}:
@@ -85,11 +86,11 @@ let
       }
    ) (builtins.attrNames sections);
 
-  service = writeTextFile {
-    name = "${name}.service";
+  systemdFile = writeTextFile {
+    name = "${name}.${type}";
     text = ''
       ${generateSections sections}
-      ${lib.optionalString (!(sections ? Service) && _environment != {}) ''
+      ${lib.optionalString (!(sections ? Service) && _environment != {} && type == "service") ''
         [Service]
 
         ${generateEnvironmentVariables _environment}''}
@@ -104,17 +105,17 @@ let
   credentialsSpec = createCredentials credentials;
 in
 stdenv.mkDerivation {
-  name = "${prefix}${name}";
+  name = "${prefix}${name}-${type}";
 
   buildCommand = ''
     mkdir -p $out/etc/systemd/system
-    ln -s ${service} $out/etc/systemd/system/${prefix}${name}.service
+    ln -s ${systemdFile} $out/etc/systemd/system/${prefix}${name}.${type}
 
     ${lib.optionalString (dependencies != []) ''
-      mkdir -p $out/etc/systemd/system/${prefix}${name}.service.wants
+      mkdir -p $out/etc/systemd/system/${prefix}${name}.${type}.wants
 
       ${lib.concatMapStrings (dependency: ''
-        ln -s ${dependency}/etc/systemd/system/${dependency.name}.service $out/etc/systemd/system/${prefix}${name}.service.wants
+        ln -s ${dependency}/etc/systemd/system/${dependency.name}.${dependency.type} $out/etc/systemd/system/${prefix}${name}.${type}.wants
       '') dependencies}
     ''}
 
