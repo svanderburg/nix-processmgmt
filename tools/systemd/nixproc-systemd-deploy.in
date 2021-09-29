@@ -224,6 +224,15 @@ do
     fi
 done
 
+# Stop all units
+for i in $profilePath/etc/systemd/system/*
+do
+    if [[ "$i" =~ .wants ]]; then
+      continue
+    fi
+    systemctl $systemdUserArg stop "$(basename "$i")"
+done
+
 # Reload the systemd configuration
 systemctl $systemdUserArg daemon-reload
 
