@@ -1,7 +1,6 @@
 #!/bin/bash
 set -e
 shopt -s nullglob
-
 showUsage()
 {
     cat <<EOF
@@ -229,7 +228,7 @@ do
     if [[ "$i" =~ .wants ]]; then
       continue
     fi
-    systemctl $systemdUserArg stop "$(basename "$i")"
+    systemctl $systemdUserArg stop "$(basename "$i")" || true
 done
 
 # Reload the systemd configuration
