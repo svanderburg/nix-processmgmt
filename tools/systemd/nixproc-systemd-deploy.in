@@ -240,6 +240,7 @@ do
     if [[ "$i" =~ .wants ]]; then
       continue
     fi
+    systemctl $systemdUserArg daemon-reload
     systemctl $systemdUserArg start "$(basename "$i")"
 done
 
