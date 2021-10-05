@@ -70,7 +70,11 @@ let
         value = builtins.getAttr name properties;
       in
       if forceDisableUserChange && (name == "User" || name == "Group") then "" else # Don't change user privileges when we force it to be disabled
-      ''${name}=${toString value}
+      ''${if builtins.isList value then
+        lib.strings.concatMapStringsSep "\n" (x: "${name}=${toString x}") value
+      else
+        "${name}=${toString value}"
+      end}
       ''
     ) (builtins.attrNames properties)}''
   + (if title == "Service" then generateEnvironmentVariables _environment else "")
