@@ -31,6 +31,7 @@ makeTest {
 
       environment.systemPackages = [
         pkgs.stdenv
+        pkgs.daemon
         pkgs.pythonPackages.supervisor
         pkgs.dysnomia
         tools.common
@@ -51,7 +52,7 @@ makeTest {
     # Deploy the advanced example with multiple instances and see if it works
 
     machine.succeed(
-        "${env} nixproc-supervisord-deploy-stateless ${nix-processmgmt}/examples/webapps-agnostic/processes.nix &"
+        "${env} daemon --inherit --unsafe -- nixproc-supervisord-deploy-stateless ${nix-processmgmt}/examples/webapps-agnostic/processes.nix"
     )
 
     machine.wait_for_open_port(9001)
