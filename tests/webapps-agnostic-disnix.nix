@@ -65,6 +65,7 @@ makeTest {
           description = "Unprivileged user";
           home = "/home/unprivileged";
           createHome = true;
+          isNormalUser = true;
         };
       };
 
