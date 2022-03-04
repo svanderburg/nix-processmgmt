@@ -30,6 +30,7 @@ in
   '' + pkgs.lib.optionalString profileSettings.params.forceDisableUserChange ''
     machine.wait_for_unit("display-manager.service")
     machine.wait_until_succeeds("pgrep -f 'systemd --user'")
+    machine.wait_for_file("/run/user/1000/systemd")
   '';
 
   deploySystem = ''
