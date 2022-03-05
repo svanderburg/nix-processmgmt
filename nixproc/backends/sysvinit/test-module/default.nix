@@ -18,7 +18,7 @@ in
     tools.sysvinit
   ];
 
-  pathsInNixDB = [ processesEnvSystem ];
+  additionalPaths = [ processesEnvSystem ];
 
   deployProcessManager = "";
 

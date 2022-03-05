@@ -25,7 +25,7 @@ in
     pkgs.s6-rc
   ];
 
-  pathsInNixDB = [ processesEnvProcessManager processesEnvSystem ];
+  additionalPaths = [ processesEnvProcessManager processesEnvSystem ];
 
   deployProcessManager = ''
     machine.succeed(

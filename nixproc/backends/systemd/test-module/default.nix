@@ -23,7 +23,7 @@ in
     tools.systemd
   ];
 
-  pathsInNixDB = [ processesEnvSystem ];
+  additionalPaths = [ processesEnvSystem ];
 
   deployProcessManager = ''
     machine.succeed("mkdir -p /etc/systemd-mutable/system")

@@ -40,7 +40,7 @@ let
             ++ processManagerSettings.nixosModules
             ++ lib.optional (nixosConfig != null) nixosConfig;
 
-          virtualisation.pathsInNixDB = processManagerSettings.pathsInNixDB;
+          virtualisation.additionalPaths = processManagerSettings.additionalPaths;
 
           nix.extraOptions = ''
             substitute = false

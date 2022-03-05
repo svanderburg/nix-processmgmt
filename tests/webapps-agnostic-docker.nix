@@ -60,7 +60,7 @@ makeTest {
     {pkgs, ...}:
 
     {
-      virtualisation.pathsInNixDB = [ pkgs.stdenv ] ++ pkgs.coreutils.all ++ [ dockerProcessEnv processesEnvForeground processesEnvDaemon processesEnvAuto processesEnvAdvanced processesEnvUnprivileged processesEnvEmpty ];
+      virtualisation.additionalPaths = [ pkgs.stdenv ] ++ pkgs.coreutils.all ++ [ dockerProcessEnv processesEnvForeground processesEnvDaemon processesEnvAuto processesEnvAdvanced processesEnvUnprivileged processesEnvEmpty ];
       virtualisation.writableStore = true;
       virtualisation.memorySize = 8192;
       virtualisation.diskSize = 4096;

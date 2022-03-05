@@ -49,7 +49,7 @@ makeTest {
     {pkgs, ...}:
 
     {
-      virtualisation.pathsInNixDB = [ pkgs.stdenv ] ++ pkgs.coreutils.all ++ [
+      virtualisation.additionalPaths = [ pkgs.stdenv ] ++ pkgs.coreutils.all ++ [
         supervisordProcessEnv
         processesEnvForeground
         processesEnvDaemon

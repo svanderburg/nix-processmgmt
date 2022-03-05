@@ -20,7 +20,7 @@ in
     pkgs.disnix
   ];
 
-  pathsInNixDB = [ processesEnvSystem ];
+  additionalPaths = [ processesEnvSystem ];
 
   deployProcessManager = "";
 

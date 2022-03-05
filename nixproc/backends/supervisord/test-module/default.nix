@@ -25,7 +25,7 @@ in
     pkgs.pythonPackages.supervisor
   ];
 
-  pathsInNixDB = [ processesEnvProcessManager processesEnvSystem ];
+  additionalPaths = [ processesEnvProcessManager processesEnvSystem ];
 
   deployProcessManager = ''
     machine.succeed(

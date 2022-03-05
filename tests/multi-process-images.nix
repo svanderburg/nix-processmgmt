@@ -32,7 +32,7 @@ makeTest {
     {pkgs, ...}:
 
     {
-      virtualisation.pathsInNixDB = [ pkgs.stdenv ] ++ pkgs.coreutils.all ++ [ dockerProcessEnv ];
+      virtualisation.additionalPaths = [ pkgs.stdenv ] ++ pkgs.coreutils.all ++ [ dockerProcessEnv ];
       virtualisation.writableStore = true;
       virtualisation.diskSize = 4096;
       virtualisation.memorySize = 8192;

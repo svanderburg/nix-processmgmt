@@ -36,7 +36,7 @@ in
     pkgs.docker
   ];
 
-  pathsInNixDB = [ processesEnvProcessManager processesEnvSystem ];
+  additionalPaths = [ processesEnvProcessManager processesEnvSystem ];
 
   deployProcessManager = ''
     machine.succeed(

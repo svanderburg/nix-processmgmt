@@ -40,7 +40,7 @@ makeTest {
     {pkgs, ...}:
 
     {
-      virtualisation.pathsInNixDB = [ pkgs.stdenv ] ++ pkgs.coreutils.all ++ [ processesEnvForeground processesEnvDaemon processesEnvAuto processesEnvAdvanced processesEnvEmpty ];
+      virtualisation.additionalPaths = [ pkgs.stdenv ] ++ pkgs.coreutils.all ++ [ processesEnvForeground processesEnvDaemon processesEnvAuto processesEnvAdvanced processesEnvEmpty ];
       virtualisation.writableStore = true;
       virtualisation.memorySize = 1024;
 
