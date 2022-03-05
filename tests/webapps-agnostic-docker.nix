@@ -65,6 +65,8 @@ makeTest {
       virtualisation.memorySize = 8192;
       virtualisation.diskSize = 4096;
 
+      boot.extraSystemdUnitPaths = [ "/etc/systemd-mutable/system" ];
+
       # We can't download any substitutes in a test environment. To make tests
       # faster, we disable substitutes so that Nix does not waste any time by
       # attempting to download them.
