@@ -22,7 +22,7 @@ in
   systemPackages = [
     tools.sysvinit
     tools.supervisord
-    pkgs.pythonPackages.supervisor
+    pkgs.python3Packages.supervisor
   ];
 
   additionalPaths = [ processesEnvProcessManager processesEnvSystem ];

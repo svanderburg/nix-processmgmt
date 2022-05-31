@@ -32,7 +32,7 @@ makeTest {
       environment.systemPackages = [
         pkgs.stdenv
         pkgs.daemon
-        pkgs.pythonPackages.supervisor
+        pkgs.python3Packages.supervisor
         pkgs.dysnomia
         tools.common
         tools.systemd

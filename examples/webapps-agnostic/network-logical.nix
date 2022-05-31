@@ -17,7 +17,7 @@ in
     services.disnix.enable = true;
     services.openssh.enable = true;
     networking.firewall.enable = false;
-    environment.systemPackages = [ pkgs.pythonPackages.supervisor nixproc-generate-config ];
+    environment.systemPackages = [ pkgs.python3Packages.supervisor nixproc-generate-config ];
   };
 
   test2 = {pkgs, ...}:
@@ -36,6 +36,6 @@ in
     services.disnix.enable = true;
     services.openssh.enable = true;
     networking.firewall.enable = false;
-    environment.systemPackages = [ pkgs.pythonPackages.supervisor nixproc-generate-config ];
+    environment.systemPackages = [ pkgs.python3Packages.supervisor nixproc-generate-config ];
   };
 }

@@ -41,7 +41,7 @@ let
 
   createSupervisordProgram = import ../../backends/supervisord/create-supervisord-program.nix {
     inherit (pkgs) writeTextFile stdenv lib;
-    inherit (pkgs.pythonPackages) supervisor;
+    inherit (pkgs.python3Packages) supervisor;
     inherit createCredentials basePackages forceDisableUserChange runtimeDir;
   };
 

@@ -27,7 +27,7 @@ let
 in
 testService {
   exprFile = ./processes.nix;
-  systemPackages = [ pkgs.pythonPackages.supervisor ];
+  systemPackages = [ pkgs.python3Packages.supervisor ];
 
   readiness = {instanceName, instance, ...}:
     ''

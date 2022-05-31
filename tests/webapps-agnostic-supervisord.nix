@@ -73,7 +73,7 @@ makeTest {
 
       environment.systemPackages = [
         pkgs.stdenv
-        pkgs.pythonPackages.supervisor
+        pkgs.python3Packages.supervisor
         pkgs.dysnomia
         tools.common
         tools.systemd

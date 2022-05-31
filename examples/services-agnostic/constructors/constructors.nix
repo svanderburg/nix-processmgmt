@@ -28,13 +28,13 @@ in
 
   supervisord = import ./supervisord {
     inherit createManagedProcess runtimeDir logDir;
-    inherit (pkgs.pythonPackages) supervisor;
+    inherit (pkgs.python3Packages) supervisor;
   };
 
   extendableSupervisord = import ./supervisord/extendable.nix {
     inherit createManagedProcess libDir runtimeDir logDir;
     inherit (pkgs) writeTextFile;
-    inherit (pkgs.pythonPackages) supervisor;
+    inherit (pkgs.python3Packages) supervisor;
   };
 
   docker = import ./docker {
