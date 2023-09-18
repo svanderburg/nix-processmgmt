@@ -22,11 +22,13 @@ let
   env = "NIX_PATH=nixpkgs=${nixpkgs}";
 in
 makeTest {
-  machine =
+  name = "webapps-agnostic-config";
+
+  nodes.machine =
     {pkgs, ...}:
 
     {
-      virtualisation.additionalPaths = [ pkgs.stdenv ] ++ pkgs.coreutils.all ++ [
+      virtualisation.additionalPaths = [ pkgs.stdenv pkgs.stdenvNoCC ] ++ pkgs.coreutils.all ++ [
         webappUnprivilegedAutoModeConfig
         webappUnprivilegedAutoModeSysvinit
       ];

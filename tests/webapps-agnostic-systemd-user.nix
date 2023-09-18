@@ -22,7 +22,9 @@ let
   env = "NIX_PATH=nixpkgs=${nixpkgs} XDG_RUNTIME_DIR=/run/user/1000";
 in
 makeTest {
-  machine =
+  name = "webapps-agnostic-systemd-user";
+
+  nodes.machine =
     {pkgs, lib, ...}:
 
     {

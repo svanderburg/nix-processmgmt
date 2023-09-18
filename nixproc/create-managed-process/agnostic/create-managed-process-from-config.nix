@@ -17,9 +17,22 @@ let
         inherit pkgs stateDir runtimeDir logDir tmpDir forceDisableUserChange processManager;
       };
 
-      properties = builtins.fromJSON (builtins.readFile configFile);
+      configFileString = builtins.readFile configFile;
 
-      normalizedProperties = properties // pkgs.lib.optionalAttrs (properties ? dependencies) {
+      properties = builtins.fromJSON (builtins.unsafeDiscardStringContext configFileString);
+
+      # This attribute is a hack. It readds the dependencies of the JSON file as context to a frequently used string property so that the generated configuration artifact retains the runtime dependencies of the original JSON file.
+      # This hack is needed because builtins.fromJSON can't work with strings that have context.
+
+      propertiesWithContext = properties // pkgs.lib.optionalAttrs (properties ? process) {
+        process = pkgs.lib.addContextFrom configFileString properties.process;
+      } // pkgs.lib.optionalAttrs (properties ? foregroundProcess) {
+        foregroundProcess = pkgs.lib.addContextFrom configFileString properties.foregroundProcess;
+      } // pkgs.lib.optionalAttrs (properties ? daemon) {
+        daemon = pkgs.lib.addContextFrom configFileString properties.daemon;
+      };
+
+      normalizedProperties = propertiesWithContext // pkgs.lib.optionalAttrs (properties ? dependencies) {
         dependencies = map (dependency: createManagedProcessFromConfig "${dependency}/${builtins.substring 33 (builtins.stringLength dependency) (baseNameOf dependency)}.json") properties.dependencies;
       };
     in

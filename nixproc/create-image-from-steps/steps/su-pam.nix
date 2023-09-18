@@ -2,8 +2,6 @@
 
 result // {
   runAsRoot = result.runAsRoot or "" + ''
-    ${pkgs.gnused}/bin/sed -i -e "s/CREATE_MAIL_SPOOL=yes/CREATE_MAIL_SPOOL=no/" /etc/default/useradd
-
     mkdir -p /etc/pam.d
     cat > /etc/pam.d/su <<EOF
     account required pam_unix.so
@@ -15,6 +13,20 @@ result // {
     EOF
 
     sed -i -e "s|PATH=/bin:/usr/bin|PATH=/bin:/usr/bin:/nix/var/nix/profiles/default/bin|" /etc/login.defs
+
+    cat > /etc/nsswitch.conf <<EOF
+    passwd:    files
+    group:     files [success=merge]
+    shadow:    files
+
+    hosts:     mymachines files myhostname dns
+    networks:  files
+
+    ethers:    files
+    services:  files
+    protocols: files
+    rpc:       files
+    EOF
   '';
 
   contents = result.contents or [] ++ [ pkgs.su pkgs.shadow ];

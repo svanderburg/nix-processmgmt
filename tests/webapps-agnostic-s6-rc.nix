@@ -45,7 +45,9 @@ let
   env = "NIX_PATH=nixpkgs=${nixpkgs} SYSTEMD_TARGET_DIR=/etc/systemd-mutable/system";
 in
 makeTest {
-  machine =
+  name = "webapps-agnostic-s6-rc";
+
+  nodes.machine =
     {pkgs, ...}:
 
     {

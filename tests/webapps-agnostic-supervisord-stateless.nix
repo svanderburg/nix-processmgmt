@@ -14,7 +14,9 @@ let
   env = "NIX_PATH=nixpkgs=${nixpkgs}";
 in
 makeTest {
-  machine =
+  name = "webapps-agnostic-supervisord-stateless";
+
+  nodes.machine =
     {pkgs, ...}:
 
     {

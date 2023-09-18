@@ -7,7 +7,6 @@ let
 
   dockerProcessEnv = import ../nixproc/backends/systemd/build-systemd-env.nix {
     exprFile = ../nixproc/backends/docker/test-module/processes-docker.nix;
-    inherit stateDir;
   };
 
   processesEnvForeground = import ../nixproc/backends/docker/build-docker-env.nix {
@@ -56,11 +55,21 @@ let
   env = "NIX_PATH=nixpkgs=${nixpkgs} SYSTEMD_TARGET_DIR=/etc/systemd-mutable/system";
 in
 makeTest {
-  machine =
+  name = "webapps-agnostic-docker";
+
+  nodes.machine =
     {pkgs, ...}:
 
     {
-      virtualisation.additionalPaths = [ pkgs.stdenv ] ++ pkgs.coreutils.all ++ [ dockerProcessEnv processesEnvForeground processesEnvDaemon processesEnvAuto processesEnvAdvanced processesEnvUnprivileged processesEnvEmpty ];
+      virtualisation.additionalPaths = [ pkgs.stdenv ] ++ pkgs.coreutils.all ++ [
+        dockerProcessEnv
+        processesEnvForeground
+        processesEnvDaemon
+        processesEnvAuto
+        processesEnvAdvanced
+        processesEnvUnprivileged
+        processesEnvEmpty
+      ];
       virtualisation.writableStore = true;
       virtualisation.memorySize = 8192;
       virtualisation.diskSize = 4096;

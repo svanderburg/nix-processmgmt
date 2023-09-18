@@ -45,7 +45,9 @@ let
   env = "NIX_PATH=nixpkgs=${nixpkgs} SYSTEMD_TARGET_DIR=/etc/systemd-mutable/system SUPERVISORD_CONF_DIR=/var/lib/supervisord";
 in
 makeTest {
-  machine =
+  name = "webapps-agnostic-supervisord";
+
+  nodes.machine =
     {pkgs, ...}:
 
     {

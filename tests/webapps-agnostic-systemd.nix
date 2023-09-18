@@ -25,6 +25,11 @@ let
     exprFile = ../examples/webapps-agnostic/processes-advanced.nix;
   };
 
+  processesEnvUnprivileged = import ../nixproc/backends/systemd/build-systemd-env.nix {
+    exprFile = ../examples/webapps-agnostic/processes.nix;
+    forceDisableUserChange = true;
+  };
+
   processesEnvEmpty = import ../nixproc/backends/systemd/build-systemd-env.nix {
     exprFile = null;
   };
@@ -36,11 +41,20 @@ let
   env = "NIX_PATH=nixpkgs=${nixpkgs} SYSTEMD_TARGET_DIR=/etc/systemd-mutable/system";
 in
 makeTest {
-  machine =
+  name = "webapps-agnostic-systemd";
+
+  nodes.machine =
     {pkgs, ...}:
 
     {
-      virtualisation.additionalPaths = [ pkgs.stdenv ] ++ pkgs.coreutils.all ++ [ processesEnvForeground processesEnvDaemon processesEnvAuto processesEnvAdvanced processesEnvEmpty ];
+      virtualisation.additionalPaths = [ pkgs.stdenv ] ++ pkgs.coreutils.all ++ [
+        processesEnvForeground
+        processesEnvDaemon
+        processesEnvAuto
+        processesEnvAdvanced
+        processesEnvUnprivileged
+        processesEnvEmpty
+      ];
       virtualisation.writableStore = true;
       virtualisation.memorySize = 1024;
 

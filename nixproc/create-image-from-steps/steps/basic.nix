@@ -12,7 +12,7 @@ result // {
     ln -s ../run /var/run
 
     # Always create nobody/nogroup
-    groupadd -g 65534 -r nogroup
-    useradd -u 65534 -r nobody -g nogroup -d /dev/null
+    groupadd -g 999 -r nogroup
+    useradd -u 999 -r nobody -g nogroup -d /dev/null
   '';
 }

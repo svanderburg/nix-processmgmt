@@ -61,7 +61,9 @@ let
   env = "NIX_PATH=nixpkgs=${nixpkgs}";
 in
 makeTest {
-  machine =
+  name = "webapps-agnostic-sysvinit";
+
+  nodes.machine =
     {pkgs, ...}:
 
     {

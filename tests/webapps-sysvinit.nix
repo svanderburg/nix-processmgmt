@@ -45,7 +45,9 @@ let
   env = "NIX_PATH=nixpkgs=${nixpkgs}";
 in
 makeTest {
-  machine =
+  name = "webapps-sysvinit";
+
+  nodes.machine =
     {pkgs, ...}:
 
     {

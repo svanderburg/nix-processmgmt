@@ -28,13 +28,15 @@ let
   env = "NIX_PATH=nixpkgs=${nixpkgs} SYSTEMD_TARGET_DIR=/etc/systemd-mutable/system";
 in
 makeTest {
-  machine =
+  name = "multi-process-images";
+
+  nodes.machine =
     {pkgs, ...}:
 
     {
       virtualisation.additionalPaths = [ pkgs.stdenv ] ++ pkgs.coreutils.all ++ [ dockerProcessEnv ];
       virtualisation.writableStore = true;
-      virtualisation.diskSize = 4096;
+      virtualisation.diskSize = 8192;
       virtualisation.memorySize = 8192;
 
       dysnomia = {
@@ -57,7 +59,7 @@ makeTest {
     # Deploy Docker as a systemd unit
 
     machine.succeed(
-        "${env} nixproc-systemd-switch ${nix-processmgmt}/tests/processes-docker.nix"
+        "${env} nixproc-systemd-switch ${nix-processmgmt}/nixproc/backends/docker/test-module/processes-docker.nix"
     )
 
     machine.wait_for_unit("nix-process-docker")

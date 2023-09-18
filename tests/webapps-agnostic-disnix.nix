@@ -49,11 +49,20 @@ let
   env = "NIX_PATH=nixpkgs=${nixpkgs} DISNIX_DATA_DIR=${disnixDataDir}";
 in
 makeTest {
-  machine =
+  name = "webapps-agnostic-disnix";
+
+  nodes.machine =
     {pkgs, ...}:
 
     {
-      virtualisation.additionalPaths = [ pkgs.stdenv ] ++ pkgs.coreutils.all ++ [ processesEnvForeground processesEnvDaemon processesEnvAuto processesEnvAdvanced processesEnvNoUserChange processesEnvEmpty ];
+      virtualisation.additionalPaths = [ pkgs.stdenv ] ++ pkgs.coreutils.all ++ [
+        processesEnvForeground
+        processesEnvDaemon
+        processesEnvAuto
+        processesEnvAdvanced
+        processesEnvNoUserChange
+        processesEnvEmpty
+      ];
       virtualisation.writableStore = true;
       virtualisation.memorySize = 1024;
 
