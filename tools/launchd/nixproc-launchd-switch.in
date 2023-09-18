@@ -4,14 +4,16 @@ shopt -s nullglob
 
 showUsage()
 {
+    me="$(basename "$0")"
+
     cat <<EOF
-Usage: $0 [OPTION] PATH
-  or: $0 --undeploy [OPTION]
-  or: $0 --rollback [OPTION]
-  or: $0 --switch-generation NUM [OPTION]
-  or: $0 --list-generations [OPTION]
-  or: $0 --delete-generations NUM [OPTION]
-  or: $0 --delete-all-generations NUM [OPTION]
+Usage: $me [OPTION] PATH
+  or: $me --undeploy [OPTION]
+  or: $me --rollback [OPTION]
+  or: $me --switch-generation NUM [OPTION]
+  or: $me --list-generations [OPTION]
+  or: $me --delete-generations NUM [OPTION]
+  or: $me --delete-all-generations NUM [OPTION]
 
 This command repopulates a folder with launchd plist files and updates the
 configuration so that obsolete services will be stoppped and new services will

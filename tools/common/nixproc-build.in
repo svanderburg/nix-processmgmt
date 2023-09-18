@@ -4,9 +4,11 @@
 
 showUsage()
 {
+    me="$(basename "$0")"
+
     cat <<EOF
-Usage: $0 [OPTION] [PATH]
-  or: $0 --undeploy [OPTION]
+Usage: $me [OPTION] [PATH]
+  or: $me --undeploy [OPTION]
 
 This command builds a Nix profile containing multiple sysvinit scripts, and
 their start and stop symlinks.

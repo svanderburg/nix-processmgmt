@@ -6,8 +6,10 @@ shopt -s nullglob
 
 showUsage()
 {
+    me="$(basename "$0")"
+
     cat <<EOF
-Usage: $0 [OPTION] PATH
+Usage: $me [OPTION] PATH
 
 Deploys a prebuilt sysvinit configuration profile.
 

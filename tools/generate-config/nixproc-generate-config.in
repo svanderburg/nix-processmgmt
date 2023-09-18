@@ -4,8 +4,10 @@
 
 showUsage()
 {
+    me="$(basename "$0")"
+
     cat <<EOF
-Usage: $0 [OPTION] -P MANAGER PATH
+Usage: $me [OPTION] -P MANAGER PATH
 
 Takes a JSON representation of a managed process configuration and translates
 it to a process manager specific configuration.

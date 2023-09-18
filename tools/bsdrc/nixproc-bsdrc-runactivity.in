@@ -6,8 +6,10 @@ shopt -s nullglob
 
 showUsage()
 {
+    me="$(basename "$0")"
+
     cat <<EOF
-Usage: $0 [OPTION] ACTIVITY [PATH]
+Usage: $me [OPTION] ACTIVITY [PATH]
 
 This command runs a deployment activity on all BSD rc scripts in a Nix profile.
 The scripts are traversed in the right dependency order.

@@ -4,8 +4,10 @@ shopt -s nullglob
 
 showUsage()
 {
+    me="$(basename "$0")"
+
     cat <<EOF
-Usage: $0 [OPTION]
+Usage: $me [OPTION]
 
 Starts the s6-svscan service for supervising process trees.
 

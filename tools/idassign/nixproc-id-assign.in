@@ -4,11 +4,13 @@
 
 showUsage()
 {
+    me="$(basename "$0")"
+
     cat <<EOF
 Assigns unique IDs to process instances based on their ID requirements and ID
 resources configuration.
 
-Usage: $0 [OPTION] --id-resources id_resources_nix [PATH]
+Usage: $me [OPTION] --id-resources id_resources_nix [PATH]
 
 Options:
       --id-resources=id_resources_nix

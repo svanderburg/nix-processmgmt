@@ -4,8 +4,10 @@ shopt -s nullglob
 
 showUsage()
 {
+    me="$(basename "$0")"
+
     cat <<EOF
-Usage: $0 [OPTION] PATH
+Usage: $me [OPTION] PATH
 
 Deploys a prebuilt s6-rc configuration profile. It requires an already running
 s6-svscan service.

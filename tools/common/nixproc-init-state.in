@@ -4,8 +4,10 @@
 
 showUsage()
 {
+    me="$(basename "$0")"
+
     cat <<EOF
-Usage: $0 [OPTION]
+Usage: $me [OPTION]
 
 Initializes the common state directories so that processes can be managed
 properly.

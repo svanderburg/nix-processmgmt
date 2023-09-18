@@ -2,8 +2,10 @@
 
 showUsage()
 {
+    me="$(basename "$0")"
+
     cat <<EOF
-Usage: $0 [OPTION] PATH
+Usage: $me [OPTION] PATH
 
 This command starts supervisord with a provided configuration and set of
 services in foreground mode. When the configuration changes, supervisord and all
