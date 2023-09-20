@@ -26,6 +26,7 @@ let
     };
 in
 testService {
+  name = "supervisord";
   exprFile = ./processes.nix;
   systemPackages = [ pkgs.python3Packages.supervisor ];
 

@@ -11,7 +11,7 @@ let
     inherit pkgs system;
   };
 
-  testSystemVariantForProcessManager = {processManager, profileSettings, exprFile, extraParams ? {}, nixosConfig ? null, systemPackages ? [], initialTests ? null, readiness ? null, tests ? null, postTests ? null}:
+  testSystemVariantForProcessManager = {name, processManager, profileSettings, exprFile, extraParams ? {}, nixosConfig ? null, systemPackages ? [], initialTests ? null, readiness ? null, tests ? null, postTests ? null}:
     let
       processManagerModule = builtins.getAttr processManager processManagerModules;
 
@@ -31,7 +31,9 @@ let
     with import "${nixpkgs}/nixos/lib/testing-python.nix" { inherit system; };
 
     makeTest {
-      machine =
+      inherit name;
+
+      nodes.machine =
         {pkgs, lib, ...}:
 
         {
@@ -77,13 +79,14 @@ let
               let
                 instance = builtins.getAttr instanceName processes;
               in
-              tests ({ inherit instanceName instance; } // processManagerSettings.params)
+              tests ({ inherit instanceName instance processManager; } // processManagerSettings.params)
             ) (builtins.attrNames processes))
 
         + pkgs.lib.optionalString (postTests != null) (postTests (processManagerSettings.params // { inherit processes; }));
     };
 in
-{ processManagers
+{ name
+, processManagers
 , profiles
 , exprFile
 , extraParams ? {}
@@ -102,7 +105,7 @@ pkgs.lib.genAttrs profiles (profile:
   in
   pkgs.lib.genAttrs processManagers (processManager:
     testSystemVariantForProcessManager {
-      inherit processManager profileSettings exprFile extraParams nixosConfig systemPackages initialTests readiness tests postTests;
+      inherit name processManager profileSettings exprFile extraParams nixosConfig systemPackages initialTests readiness tests postTests;
     }
   )
 )

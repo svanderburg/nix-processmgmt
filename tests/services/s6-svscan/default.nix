@@ -41,6 +41,7 @@ let
     };
 in
 testService {
+  name = "s6-svscan";
   exprFile = ./processes.nix;
   systemPackages = [ pkgs.s6-rc ];
 

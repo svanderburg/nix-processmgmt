@@ -1,6 +1,7 @@
 { pkgs, testService, processManagers, profiles }:
 
 testService {
+  name = "docker";
   exprFile = ./processes.nix;
   systemPackages = [ pkgs.docker ];
 

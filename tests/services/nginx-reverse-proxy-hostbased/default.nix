@@ -1,6 +1,7 @@
 { pkgs, testService, processManagers, profiles }:
 
 testService {
+  name = "nginx-reverse-proxy-hostbased";
   exprFile = ./processes.nix;
 
   readiness = {instanceName, instance, ...}:
