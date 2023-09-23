@@ -15,6 +15,7 @@
 name
 # An attribute set specifying arbitrary environment variables
 , environment ? {}
+, unitType ? "service"
 # List of supervisord services that this configuration depends on.
 # These properties are translated to Wants= and After= properties to ensure
 # proper activation ordering and that the dependencies are started first
@@ -36,7 +37,7 @@ let
     inherit lib;
   };
 
-  sections = removeAttrs args [ "name" "environment" "dependencies" "path" "credentials" "postInstall" ];
+  sections = removeAttrs args [ "unitType" "name" "environment" "dependencies" "path" "credentials" "postInstall" ];
 
   _environment = util.appendPathToEnvironment {
     inherit environment;
@@ -56,8 +57,8 @@ let
     if dependencies == [] then ""
     else
     ''
-      Wants=${toString (map (dependency: "${dependency.name}.service") dependencies)}
-      After=${toString (map (dependency: "${dependency.name}.service") dependencies)}
+      Wants=${toString (map (dependency: "${dependency.name}.${dependency.unitType}") dependencies)}
+      After=${toString (map (dependency: "${dependency.name}.${dependency.unitType}") dependencies)}
     '';
 
   generateSection = {title, properties}:
@@ -69,7 +70,7 @@ let
         value = builtins.getAttr name properties;
       in
       if forceDisableUserChange && (name == "User" || name == "Group") then "" else # Don't change user privileges when we force it to be disabled
-      ''${name}=${toString value}
+      ''${if builtins.isList value then lib.strings.concatMapStringsSep "\n" (x: "${name}=${toString x}") value else "${name}=${toString value}"}
       ''
     ) (builtins.attrNames properties)}''
   + (if title == "Service" then generateEnvironmentVariables _environment else "")
@@ -85,11 +86,11 @@ let
       }
    ) (builtins.attrNames sections);
 
-  service = writeTextFile {
-    name = "${name}.service";
+  systemdFile = writeTextFile {
+    name = "${name}.${unitType}";
     text = ''
       ${generateSections sections}
-      ${lib.optionalString (!(sections ? Service) && _environment != {}) ''
+      ${lib.optionalString (!(sections ? Service) && _environment != {} && unitType == "service") ''
         [Service]
 
         ${generateEnvironmentVariables _environment}''}
@@ -106,15 +107,17 @@ in
 stdenv.mkDerivation {
   name = "${prefix}${name}";
 
+  inherit unitType;
+
   buildCommand = ''
     mkdir -p $out/etc/systemd/system
-    ln -s ${service} $out/etc/systemd/system/${prefix}${name}.service
+    ln -s ${systemdFile} $out/etc/systemd/system/${prefix}${name}.${unitType}
 
     ${lib.optionalString (dependencies != []) ''
-      mkdir -p $out/etc/systemd/system/${prefix}${name}.service.wants
+      mkdir -p $out/etc/systemd/system/${prefix}${name}.${unitType}.wants
 
       ${lib.concatMapStrings (dependency: ''
-        ln -s ${dependency}/etc/systemd/system/${dependency.name}.service $out/etc/systemd/system/${prefix}${name}.service.wants
+        ln -s ${dependency}/etc/systemd/system/${dependency.name}.${dependency.unitType} $out/etc/systemd/system/${prefix}${name}.${unitType}.wants
       '') dependencies}
     ''}
 
