@@ -47,6 +47,10 @@ rec {
     inherit (pkgs) stdenv getopt;
   };
 
+  synit = import ./synit {
+    inherit (pkgs) stdenv getopt;
+  };
+
   systemd = import ./systemd {
     inherit (pkgs) stdenv getopt;
   };

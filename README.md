@@ -34,6 +34,7 @@ Currently, the following process managers are supported:
 * `cygrunsrv`: Cygwin's [cygrunsrv](http://web.mit.edu/cygwin/cygwin_v1.3.2/usr/doc/Cygwin/cygrunsrv.README)
 * `s6-rc`: [s6-rc](https://skarnet.org/software/s6-rc) for managing services
   supervised by [s6](https://skarnet.org/software/s6)
+* `synit`: [Synit](https://synit.org/)
 
 It can also work with the following solutions that are technically not
 categorized as process managers (but can still be used as such):
