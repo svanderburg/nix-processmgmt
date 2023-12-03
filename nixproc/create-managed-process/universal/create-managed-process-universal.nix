@@ -113,6 +113,11 @@ let
     inherit (pkgs) stdenv writeTextFile lib execline s6;
     inherit s6-rc basePackages tmpDir runtimeDir forceDisableUserChange;
   };
+
+  synit = import ../../backends/synit {
+    inherit (pkgs) lib stdenv busybox runtimeShell preserves-tools undaemonize writeScript;
+  };
+
 in
 import ../agnostic/create-managed-process.nix {
   inherit processManager;
@@ -128,5 +133,6 @@ import ../agnostic/create-managed-process.nix {
     supervisord = generateSupervisordProgram;
     systemd = generateSystemdService;
     sysvinit = generateSystemVInitScript;
+    synit = synit.generateSynitService;
   };
 }

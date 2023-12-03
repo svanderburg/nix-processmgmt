@@ -1,0 +1,203 @@
+#!/bin/bash -e
+
+showUsage()
+{
+    me="$(basename "$0")"
+
+    cat <<EOF
+Usage: $me [OPTION] PATH
+
+Deploys a prebuilt Synit configuration profile.
+
+Options:
+  -p, --profile=NAME    Name of the Nix profile that stores the sysvinit scripts
+                        (defaults to: processes)
+  -o, --old-profile=PATH
+                        Path to the previously deployed Nix profile (by default,
+                        it gets auto detected)
+      --state-dir       Changes the directory in which the state of the
+                        processes are stored
+      --runtime-dir     Changes the directory in which the PID files are stored
+      --log-dir         Changes the directory in which the log files are stored
+      --tmp-dir         Changes the directory in which temp files are stored
+      --cache-dir       Changes the directory in which cache files are stored
+      --spool-dir       Changes the directory in which spool files are stored
+      --lock-dir        Changes the directory in which lock files are stored
+      --lib-dir         Changes the directory in which state files are stored
+      --force-disable-user-change
+                        Forces to not create users, groups or change user
+                        permissions
+      --runlevel=LEVEL  Specifies which runlevel to activate (defaults to the
+                        runlevel of the system)
+  -h, --help            Shows the usage of this command
+
+Environment:
+  NIX_STATE_DIR        Overrides the location of the Nix state directory
+  SYNIT_TARGET_DIR     Directory where Synit configuration is managed.
+                       Defaults to /etc/syndicate/services/.
+  NIXPROC_STATE_DIR    Changes the directory in which the state of the
+                       processes is stored
+  NIXPROC_RUNTIME_DIR  Changes the directory in which the PID files are stored
+  NIXPROC_LOG_DIR      Changes the directory in which log files are stored
+  NIXPROC_TMP_DIR      Changes the directory in which temp files are stored
+  NIXPROC_CACHE_DIR    Changes the directory in which cache files are stored
+  NIXPROC_SPOOL_DIR    Changes the directory in which spool files are stored
+  NIXPROC_LOCK_DIR     Changes the directory in which lock files are stored
+  NIXPROC_LIB_DIR      Changes the directory in which state files are stored
+  NIXPROC_FORCE_DISABLE_USER_CHANGE
+                       Forces to not create users, groups or change user
+                       permissions
+EOF
+}
+
+# Parse valid argument options
+
+PARAMS=`@getopt@ -n $0 -o p:o:h -l profile:,old-profile:,state-dir:,runtime-dir:,log-dir:,tmp-dir:,cache-dir:,spool-dir:,lock-dir:,lib-dir:,force-disable-user-change,runlevel:,help -- "$@"`
+
+if [ $? != 0 ]
+then
+    showUsage
+    exit 1
+fi
+
+# Evaluate valid options
+
+eval set -- "$PARAMS"
+
+while [ "$1" != "--" ]
+do
+    case "$1" in
+        -p|--profile)
+            profile="$2"
+            ;;
+        -o|--old-profile)
+            oldProfilePath="$2"
+            ;;
+        --state-dir)
+            stateDirArg="--state-dir $2"
+            ;;
+        --runtime-dir)
+            runtimeDirArg="--runtime-dir $2"
+            ;;
+        --log-dir)
+            logDirArg="--log-dir $2"
+            ;;
+        --tmp-dir)
+            tmpDirArg="--tmp-dir $2"
+            ;;
+        --cache-dir)
+            cacheDirArg="--cache-dir $2"
+            ;;
+        --spool-dir)
+            spoolDirArg="--spool-dir $2"
+            ;;
+        --lock-dir)
+            lockDirArg="--lock-dir $2"
+            ;;
+        --lib-dir)
+            libDirArg="--lib-dir $2"
+            ;;
+        --force-disable-user-change)
+            forceDisableUserChangeArg="--force-disable-user-change"
+            ;;
+        --runlevel)
+            runlevel="$2"
+            ;;
+        -h|--help)
+            showUsage
+            exit 0
+            ;;
+    esac
+
+    shift
+done
+
+shift
+
+profilePath="$1"
+
+# Validate the given options
+
+source @commonchecks@
+
+checkNixStateDir
+checkProfile
+composeOldProfilePath
+
+if [ "$profilePath" = "" ]
+then
+    echo "No profile path was provided!" >&2
+    exit 1
+fi
+
+SYNIT_TARGET_DIR=${SYNIT_TARGET_DIR:-/etc/syndicate/services}
+
+# Initialize all state
+
+nixproc-init-state $stateDirArg $runtimeDirArg $logDirArg $tmpDirArg $cacheDirArg $spoolDirArg $lockDirArg $libDirArg $forceDisableUserChangeArg
+
+# Determine paths of old scripts
+
+oldscripts=()
+
+if [ -d "$oldProfilePath" ]
+then
+    echo "Using previous Nix profile: $oldProfilePath" >&2
+
+    for i in $(ls $oldProfilePath/*.pr | sort -r)
+    do
+        currentPath=$(readlink -f $i)
+        oldscripts+=($currentPath)
+    done
+fi
+
+# Determine paths of new scripts
+
+newscripts=()
+
+if [ -d "$profilePath" ]
+then
+	for i in $profilePath/etc/syndicate/services/*.pr
+    do
+       currentPath=$(readlink -f $i)
+       newscripts+=($currentPath)
+    done
+fi
+
+# Create new groups and users
+createNewGroups
+createNewUsers
+
+# Remove obsolete scripts
+
+for i in ${oldscripts[@]}
+do
+    if ! containsElement "$i" "${newscripts[@]}"
+    then
+        mutablepath="$SYNIT_TARGET_DIR/$(basename "$i")"
+        if [ -e "$mutablepath" ]
+        then
+            echo "Retract $mutablepath" >&2
+            rm "$mutablepath"
+        fi
+    fi
+done
+
+# Assert new scripts
+
+for i in $profilePath/etc/syndicate/services/*.pr
+do
+    if ! containsElement "$(readlink -f "$i")" "${oldunits[@]}"
+    then
+        mutablepath="$SYNIT_TARGET_DIR/$(basename "$i")"
+        echo "Assert  $mutablepath" >&2
+        ln -sfn "$(readlink -f "$i")" "$mutablepath"
+    fi
+done
+
+# Delete obsolete users and groups
+deleteObsoleteUsers
+deleteObsoleteGroups
+
+# Set new profile
+setNixProfile
